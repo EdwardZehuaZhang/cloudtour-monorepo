@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireOrgRole } from "@/lib/api-utils";
 import { createServiceClient } from "@cloudtour/db";
 import { PLAN_LIMITS } from "@/lib/plan-limits";
+import { STORAGE_BUCKETS, splatFilePath } from "@/lib/storage";
 import type { SplatFileFormat } from "@cloudtour/types";
 
 type RouteParams = {
   params: Promise<{ orgId: string; tourId: string; sceneId: string }>;
 };
-
-const UPLOAD_BUCKET = "splat-files";
 
 /**
  * Detect splat file format from magic bytes.
@@ -88,9 +87,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   let fileSize = 0;
 
   for (const ext of possibleExtensions) {
-    const filePath = `${basePath}/scene.${ext}`;
+    const filePath = splatFilePath(orgId, tourId, sceneId, ext);
     const { data: files } = await serviceClient.storage
-      .from(UPLOAD_BUCKET)
+      .from(STORAGE_BUCKETS.SPLAT_FILES)
       .list(basePath, { search: `scene.${ext}` });
 
     if (files && files.length > 0) {
@@ -122,7 +121,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const newTotal = org.storage_used_bytes + fileSize;
     if (newTotal > limits.storage_bytes) {
       // Remove the uploaded file since it exceeds the limit
-      await serviceClient.storage.from(UPLOAD_BUCKET).remove([uploadedPath]);
+      await serviceClient.storage.from(STORAGE_BUCKETS.SPLAT_FILES).remove([uploadedPath]);
       return NextResponse.json(
         {
           error: "PLAN_LIMIT_EXCEEDED",
@@ -136,7 +135,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
   // Download first 16 bytes for magic byte validation
   const { data: fileData, error: downloadError } = await serviceClient.storage
-    .from(UPLOAD_BUCKET)
+    .from(STORAGE_BUCKETS.SPLAT_FILES)
     .download(uploadedPath);
 
   if (downloadError || !fileData) {
@@ -150,13 +149,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   const detectedFormat = detectSplatFormat(headerBytes);
 
   // Determine the correct storage path based on detected format
-  const correctPath = `${basePath}/scene.${detectedFormat}`;
+  const correctPath = splatFilePath(orgId, tourId, sceneId, detectedFormat);
 
   // If the detected format differs from the uploaded path, move the file
   if (uploadedPath !== correctPath) {
     // Copy to correct path
     const { error: copyError } = await serviceClient.storage
-      .from(UPLOAD_BUCKET)
+      .from(STORAGE_BUCKETS.SPLAT_FILES)
       .copy(uploadedPath, correctPath);
 
     if (copyError) {
@@ -167,12 +166,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Remove old path
-    await serviceClient.storage.from(UPLOAD_BUCKET).remove([uploadedPath]);
+    await serviceClient.storage.from(STORAGE_BUCKETS.SPLAT_FILES).remove([uploadedPath]);
   }
 
   // Get the public/signed URL for the stored file
   const { data: urlData } = await serviceClient.storage
-    .from(UPLOAD_BUCKET)
+    .from(STORAGE_BUCKETS.SPLAT_FILES)
     .createSignedUrl(correctPath, 60 * 60 * 24 * 365); // 1 year signed URL
 
   const splatUrl = urlData?.signedUrl ?? correctPath;
@@ -185,14 +184,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       const oldPath = `${basePath}/scene.${ext}`;
       if (oldPath === correctPath) continue;
       const { data: oldFiles } = await serviceClient.storage
-        .from(UPLOAD_BUCKET)
+        .from(STORAGE_BUCKETS.SPLAT_FILES)
         .list(basePath, { search: `scene.${ext}` });
       if (oldFiles) {
         const oldFile = oldFiles.find((f) => f.name === `scene.${ext}`);
         if (oldFile) {
           oldFileSize = oldFile.metadata?.size ?? 0;
           // Clean up old file
-          await serviceClient.storage.from(UPLOAD_BUCKET).remove([oldPath]);
+          await serviceClient.storage.from(STORAGE_BUCKETS.SPLAT_FILES).remove([oldPath]);
           break;
         }
       }

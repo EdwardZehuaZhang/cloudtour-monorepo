@@ -3,13 +3,13 @@ import { z } from "zod";
 import { requireOrgRole } from "@/lib/api-utils";
 import { createServiceClient } from "@cloudtour/db";
 import { PLAN_LIMITS } from "@/lib/plan-limits";
+import { STORAGE_BUCKETS, splatFilePath } from "@/lib/storage";
 import type { SplatFileFormat } from "@cloudtour/types";
 
 type RouteParams = {
   params: Promise<{ orgId: string; tourId: string; sceneId: string }>;
 };
 
-const UPLOAD_BUCKET = "splat-files";
 const PRESIGNED_URL_EXPIRY = 15 * 60; // 15 minutes in seconds
 const UPLOAD_RATE_LIMIT = 10; // max uploads per hour per org
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour in ms
@@ -126,13 +126,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
   // Generate presigned upload URL using service client (needs storage admin access)
   const serviceClient = createServiceClient();
-  const storagePath = `${orgId}/${tourId}/${sceneId}/scene.${format}`;
+  const storagePath = splatFilePath(orgId, tourId, sceneId, format);
 
   // Remove any existing file at this path first
-  await serviceClient.storage.from(UPLOAD_BUCKET).remove([storagePath]);
+  await serviceClient.storage.from(STORAGE_BUCKETS.SPLAT_FILES).remove([storagePath]);
 
   const { data: signedUrl, error: signError } = await serviceClient.storage
-    .from(UPLOAD_BUCKET)
+    .from(STORAGE_BUCKETS.SPLAT_FILES)
     .createSignedUploadUrl(storagePath);
 
   if (signError || !signedUrl) {

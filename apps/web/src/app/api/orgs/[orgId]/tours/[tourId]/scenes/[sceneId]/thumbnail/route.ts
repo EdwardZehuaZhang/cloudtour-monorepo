@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOrgRole } from "@/lib/api-utils";
 import { createServiceClient } from "@cloudtour/db";
+import { STORAGE_BUCKETS, thumbnailPath } from "@/lib/storage";
 
 type RouteParams = {
   params: Promise<{ orgId: string; tourId: string; sceneId: string }>;
 };
 
-const THUMBNAIL_BUCKET = "thumbnails";
 const PRESIGNED_URL_EXPIRY = 15 * 60; // 15 minutes in seconds
 
 /**
@@ -47,13 +47,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   const serviceClient = createServiceClient();
-  const storagePath = `${orgId}/${tourId}/${sceneId}/thumbnail.webp`;
+  const storagePath = thumbnailPath(orgId, tourId, sceneId);
 
   // Remove any existing thumbnail at this path
-  await serviceClient.storage.from(THUMBNAIL_BUCKET).remove([storagePath]);
+  await serviceClient.storage.from(STORAGE_BUCKETS.THUMBNAILS).remove([storagePath]);
 
   const { data: signedUrl, error: signError } = await serviceClient.storage
-    .from(THUMBNAIL_BUCKET)
+    .from(STORAGE_BUCKETS.THUMBNAILS)
     .createSignedUploadUrl(storagePath);
 
   if (signError || !signedUrl) {
@@ -109,11 +109,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 
   const serviceClient = createServiceClient();
-  const storagePath = `${orgId}/${tourId}/${sceneId}/thumbnail.webp`;
+  const storagePath = thumbnailPath(orgId, tourId, sceneId);
 
   // Verify the file exists in storage
   const { data: files } = await serviceClient.storage
-    .from(THUMBNAIL_BUCKET)
+    .from(STORAGE_BUCKETS.THUMBNAILS)
     .list(`${orgId}/${tourId}/${sceneId}`, { search: "thumbnail.webp" });
 
   const uploaded = files?.find((f) => f.name === "thumbnail.webp");
@@ -126,7 +126,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
   // Thumbnails bucket is public CDN — get the public URL
   const { data: urlData } = serviceClient.storage
-    .from(THUMBNAIL_BUCKET)
+    .from(STORAGE_BUCKETS.THUMBNAILS)
     .getPublicUrl(storagePath);
 
   const thumbnailUrl = urlData.publicUrl;
@@ -190,10 +190,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 
   const serviceClient = createServiceClient();
-  const storagePath = `${orgId}/${tourId}/${sceneId}/thumbnail.webp`;
+  const storagePath = thumbnailPath(orgId, tourId, sceneId);
 
   // Remove from storage
-  await serviceClient.storage.from(THUMBNAIL_BUCKET).remove([storagePath]);
+  await serviceClient.storage.from(STORAGE_BUCKETS.THUMBNAILS).remove([storagePath]);
 
   // Clear thumbnail_url on scene
   const { data: updatedScene, error: updateError } = await supabase
