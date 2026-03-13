@@ -42,6 +42,10 @@
 - Editor uses `(editor)` route group at `/editor/[tourId]` — separate from `(dashboard)` to avoid DashboardShell wrapping; middleware protects both `/dashboard/*` and `/editor/*`
 - Editor components live in `apps/web/src/components/editor/`; TourEditor is the main orchestrator client component
 - HTML5 native drag-and-drop for scene reorder (no external library); optimistic UI with background PATCH sync
+- Waypoint/hotspot API routes nested under scenes: /scenes/[sceneId]/waypoints and /hotspots; PATCH/DELETE at /waypoints/[waypointId] and /hotspots/[hotspotId]
+- Editor marker placement uses `useDebouncedCallback` (500ms) for position sync — CSS transform immediately, API updates debounced
+- Screen-to-3D unprojection: NDC → unproject near/far → direction → place at fixed depth; reuse Vector3 instances to avoid GC in rAF loops
+- EditorMarkersOverlay component manages 3D→2D projection + click-to-place + drag-to-reposition; lives inside SplatViewer as child (uses ViewerContext)
 
 ---
 
@@ -364,4 +368,32 @@
   - HTML5 native drag-and-drop works well for scene reorder without external libraries — use `dragCounterRef` to track enter/leave events properly
   - Server component page fetches tour + scenes + verifies org membership before passing to client TourEditor orchestrator
   - Panel transitions use CSS transition on explicit properties (height/width) with design system tokens — avoids layout shift
+---
+
+## 2026-03-14 - US-019
+- Implemented click-to-place waypoints and hotspots in the tour editor
+- Created waypoint CRUD API: GET/POST at /scenes/[sceneId]/waypoints, PATCH/DELETE at /waypoints/[waypointId]
+- Created hotspot CRUD API: GET/POST at /scenes/[sceneId]/hotspots, PATCH/DELETE at /hotspots/[hotspotId]
+- All API routes follow existing patterns: Zod validation, requireOrgRole RBAC, tour/scene ownership verification
+- Waypoint creation verifies target_scene_id belongs to same tour
+- Created ViewportToolbar component: camera reset, waypoint/hotspot mode toggles, floor plan toggle
+- Created EditorMarkersOverlay component: handles 3D→2D projection, click-to-place, drag-to-reposition
+- Click-to-place: in waypoint/hotspot mode, cursor becomes crosshair + pulsing ring animation in 3D viewport
+- Waypoint placement animation: scale(0) → scale(1) with spring cubic-bezier(0.34, 1.56, 0.64, 1)
+- Drag-to-reposition: mousedown on marker → drag → mouseup updates position; CSS transform immediately, debounced API sync 500ms
+- Optimistic UI for all placement and movement operations
+- TourEditor fetches waypoints/hotspots when active scene changes, manages state with useState
+- InspectorPanel now shows context-sensitive properties for selected waypoint/hotspot (position, label/title, type)
+- Added editor-pulse-ring and editor-marker-appear CSS keyframe animations to globals.css
+- Files changed:
+  - New: waypoints/route.ts, waypoints/[waypointId]/route.ts, hotspots/route.ts, hotspots/[hotspotId]/route.ts, viewport-toolbar.tsx, editor-markers-overlay.tsx
+  - Modified: tour-editor.tsx, editor-viewport.tsx, inspector-panel.tsx, globals.css
+- **Learnings for future iterations:**
+  - Screen-to-3D unprojection: use NDC coords, unproject near and far points, normalize direction, then place at fixed depth (5 units)
+  - Reuse Three.js Vector3 outside component scope (`_vec3`) to avoid GC in rAF projection loops
+  - Drag handling: register mousemove/mouseup on window (not overlay) so drag continues even if mouse leaves the viewport
+  - Debounced API sync for position updates avoids flooding the server during drag operations — 500ms delay is good balance
+  - Waypoint creation requires at least 2 scenes (need a target scene) — handle this gracefully in the UI
+  - `useDebouncedCallback` helper stores callback in ref to avoid stale closures; timeout ref prevents duplicate calls
+  - Editor overlay pointer-events: "auto" in placement mode, "none" in select mode so orbit controls work through the overlay
 ---

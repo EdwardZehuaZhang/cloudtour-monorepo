@@ -327,7 +327,7 @@
         "Typecheck passes"
       ],
       "priority": 19,
-      "passes": false,
+      "passes": true,
       "notes": "The spring cubic-bezier for waypoint placement is the ONLY acceptable spring animation. Never use bounce on cards or elastic on dropdowns. Optimistic UI is required — update UI immediately and sync in background."
     },
     {

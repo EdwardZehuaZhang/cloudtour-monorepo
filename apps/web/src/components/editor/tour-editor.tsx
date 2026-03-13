@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import type { TourStatus, TourCategory, Role, SplatFileFormat, CameraPosition } from "@cloudtour/types";
+import { useState, useCallback, useEffect, useRef } from "react";
+import type { TourStatus, TourCategory, Role, SplatFileFormat, CameraPosition, Position3D, ContentType } from "@cloudtour/types";
 import { EditorHeader } from "./editor-header";
 import { SceneList } from "./scene-list";
 import { InspectorPanel } from "./inspector-panel";
 import { FloorPlanDrawer } from "./floor-plan-drawer";
 import { EditorViewport } from "./editor-viewport";
 import { MobileEditorNotice } from "./mobile-editor-notice";
+import { ViewportToolbar, type EditorMode } from "./viewport-toolbar";
+import type { EditorWaypoint, EditorHotspot } from "./editor-markers-overlay";
 
 // ---- Types ------------------------------------------------------------------
 
@@ -42,6 +44,25 @@ interface TourEditorProps {
   userRole: Role;
 }
 
+// ---- Debounce helper -------------------------------------------------------
+
+function useDebouncedCallback<T extends (...args: never[]) => void>(
+  callback: T,
+  delay: number,
+): T {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const callbackRef = useRef(callback);
+  callbackRef.current = callback;
+
+  return useCallback(
+    (...args: Parameters<T>) => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => callbackRef.current(...args), delay);
+    },
+    [delay],
+  ) as T;
+}
+
 // ---- Component --------------------------------------------------------------
 
 export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditorProps) {
@@ -53,8 +74,75 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
   );
   const [isFloorPlanOpen, setIsFloorPlanOpen] = useState(false);
 
+  // Editor mode & marker state
+  const [editorMode, setEditorMode] = useState<EditorMode>("select");
+  const [waypoints, setWaypoints] = useState<EditorWaypoint[]>([]);
+  const [hotspots, setHotspots] = useState<EditorHotspot[]>([]);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedItemType, setSelectedItemType] = useState<"waypoint" | "hotspot" | "scene" | null>(null);
+
   const canEdit = userRole !== "viewer";
   const activeScene = scenes.find((s) => s.id === activeSceneId) ?? null;
+
+  // ---- Fetch waypoints/hotspots when active scene changes ------------------
+
+  useEffect(() => {
+    if (!activeSceneId) {
+      setWaypoints([]);
+      setHotspots([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchMarkers() {
+      const [wpRes, hsRes] = await Promise.all([
+        fetch(
+          `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${activeSceneId}/waypoints`,
+        ),
+        fetch(
+          `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${activeSceneId}/hotspots`,
+        ),
+      ]);
+
+      if (cancelled) return;
+
+      if (wpRes.ok) {
+        const wpBody = await wpRes.json();
+        setWaypoints(
+          (wpBody.data ?? []).map((wp: Record<string, unknown>) => ({
+            ...wp,
+            position_3d: wp.position_3d as Position3D,
+          })),
+        );
+      }
+
+      if (hsRes.ok) {
+        const hsBody = await hsRes.json();
+        setHotspots(
+          (hsBody.data ?? []).map((hs: Record<string, unknown>) => ({
+            ...hs,
+            position_3d: hs.position_3d as Position3D,
+          })),
+        );
+      }
+    }
+
+    fetchMarkers().catch((err) =>
+      console.error("[Editor] Failed to fetch markers:", err),
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSceneId, tour.org_id, tour.id]);
+
+  // Reset editor mode and selection when scene changes
+  useEffect(() => {
+    setEditorMode("select");
+    setSelectedItemId(null);
+    setSelectedItemType(null);
+  }, [activeSceneId]);
 
   // ---- Scene reorder (optimistic) -------------------------------------------
 
@@ -129,11 +217,204 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
       `/api/orgs/${tour.org_id}/tours/${tour.id}/publish`,
       { method: "POST" }
     );
-
     if (res.ok) {
       setTourStatus("published");
     }
   }, [tour.org_id, tour.id]);
+
+  // ---- Place waypoint -------------------------------------------------------
+
+  const handlePlaceWaypoint = useCallback(
+    async (position: Position3D) => {
+      if (!activeSceneId) return;
+
+      const otherScenes = scenes.filter((s) => s.id !== activeSceneId);
+      const targetScene = otherScenes[0];
+      if (!targetScene) {
+        console.warn("[Editor] Need at least 2 scenes to create a waypoint");
+        return;
+      }
+
+      const tempId = `temp-${Date.now()}`;
+      const tempWaypoint: EditorWaypoint = {
+        id: tempId,
+        scene_id: activeSceneId,
+        target_scene_id: targetScene.id,
+        label: `Go to ${targetScene.title}`,
+        icon: null,
+        position_3d: position,
+      };
+      setWaypoints((prev) => [...prev, tempWaypoint]);
+      setSelectedItemId(tempId);
+      setSelectedItemType("waypoint");
+
+      const res = await fetch(
+        `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${activeSceneId}/waypoints`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            target_scene_id: targetScene.id,
+            label: `Go to ${targetScene.title}`,
+            position_3d: position,
+          }),
+        },
+      );
+
+      if (res.ok) {
+        const created = await res.json();
+        setWaypoints((prev) =>
+          prev.map((wp) =>
+            wp.id === tempId
+              ? { ...created, position_3d: created.position_3d as Position3D }
+              : wp,
+          ),
+        );
+        setSelectedItemId(created.id);
+      } else {
+        setWaypoints((prev) => prev.filter((wp) => wp.id !== tempId));
+        setSelectedItemId(null);
+        setSelectedItemType(null);
+      }
+    },
+    [activeSceneId, scenes, tour.org_id, tour.id],
+  );
+
+  // ---- Place hotspot --------------------------------------------------------
+
+  const handlePlaceHotspot = useCallback(
+    async (position: Position3D) => {
+      if (!activeSceneId) return;
+
+      const tempId = `temp-${Date.now()}`;
+      const tempHotspot: EditorHotspot = {
+        id: tempId,
+        scene_id: activeSceneId,
+        title: "New hotspot",
+        content_type: "text" as ContentType,
+        content_markdown: null,
+        media_url: null,
+        icon: null,
+        position_3d: position,
+      };
+      setHotspots((prev) => [...prev, tempHotspot]);
+      setSelectedItemId(tempId);
+      setSelectedItemType("hotspot");
+
+      const res = await fetch(
+        `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${activeSceneId}/hotspots`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: "New hotspot",
+            content_type: "text",
+            position_3d: position,
+          }),
+        },
+      );
+
+      if (res.ok) {
+        const created = await res.json();
+        setHotspots((prev) =>
+          prev.map((hs) =>
+            hs.id === tempId
+              ? { ...created, position_3d: created.position_3d as Position3D }
+              : hs,
+          ),
+        );
+        setSelectedItemId(created.id);
+      } else {
+        setHotspots((prev) => prev.filter((hs) => hs.id !== tempId));
+        setSelectedItemId(null);
+        setSelectedItemType(null);
+      }
+    },
+    [activeSceneId, tour.org_id, tour.id],
+  );
+
+  // ---- Move waypoint (optimistic + debounced sync) --------------------------
+
+  const syncWaypointPosition = useDebouncedCallback(
+    (waypointId: string, position: Position3D) => {
+      if (!activeSceneId) return;
+      fetch(
+        `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${activeSceneId}/waypoints/${waypointId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ position_3d: position }),
+        },
+      ).catch((err) =>
+        console.error("[Editor] Failed to sync waypoint position:", err),
+      );
+    },
+    500,
+  );
+
+  const handleMoveWaypoint = useCallback(
+    (id: string, position: Position3D) => {
+      setWaypoints((prev) =>
+        prev.map((wp) => (wp.id === id ? { ...wp, position_3d: position } : wp)),
+      );
+      syncWaypointPosition(id, position);
+    },
+    [syncWaypointPosition],
+  );
+
+  // ---- Move hotspot (optimistic + debounced sync) ---------------------------
+
+  const syncHotspotPosition = useDebouncedCallback(
+    (hotspotId: string, position: Position3D) => {
+      if (!activeSceneId) return;
+      fetch(
+        `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${activeSceneId}/hotspots/${hotspotId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ position_3d: position }),
+        },
+      ).catch((err) =>
+        console.error("[Editor] Failed to sync hotspot position:", err),
+      );
+    },
+    500,
+  );
+
+  const handleMoveHotspot = useCallback(
+    (id: string, position: Position3D) => {
+      setHotspots((prev) =>
+        prev.map((hs) => (hs.id === id ? { ...hs, position_3d: position } : hs)),
+      );
+      syncHotspotPosition(id, position);
+    },
+    [syncHotspotPosition],
+  );
+
+  // ---- Select item ----------------------------------------------------------
+
+  const handleSelectItem = useCallback(
+    (type: "waypoint" | "hotspot", id: string) => {
+      setSelectedItemId((prev) => (prev === id ? null : id));
+      setSelectedItemType(type);
+    },
+    [],
+  );
+
+  // ---- Camera reset placeholder ---------------------------------------------
+
+  const handleCameraReset = useCallback(() => {
+    // Camera reset placeholder — SplatViewer manages its own camera
+  }, []);
+
+  // ---- Get selected waypoint/hotspot for inspector --------------------------
+
+  const selectedWaypoint = selectedItemType === "waypoint"
+    ? waypoints.find((wp) => wp.id === selectedItemId) ?? null
+    : null;
+  const selectedHotspot = selectedItemType === "hotspot"
+    ? hotspots.find((hs) => hs.id === selectedItemId) ?? null
+    : null;
 
   return (
     <>
@@ -166,7 +447,29 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
 
           {/* Center: 3D viewport */}
           <div className="relative flex-1 overflow-hidden">
-            <EditorViewport scene={activeScene} />
+            <EditorViewport
+              scene={activeScene}
+              editorMode={editorMode}
+              waypoints={waypoints}
+              hotspots={hotspots}
+              canEdit={canEdit}
+              selectedItemId={selectedItemId}
+              onPlaceWaypoint={handlePlaceWaypoint}
+              onPlaceHotspot={handlePlaceHotspot}
+              onMoveWaypoint={handleMoveWaypoint}
+              onMoveHotspot={handleMoveHotspot}
+              onSelectItem={handleSelectItem}
+            />
+
+            {/* Viewport toolbar */}
+            <ViewportToolbar
+              editorMode={editorMode}
+              onModeChange={setEditorMode}
+              onCameraReset={handleCameraReset}
+              onFloorPlanToggle={() => setIsFloorPlanOpen((prev) => !prev)}
+              isFloorPlanOpen={isFloorPlanOpen}
+              canEdit={canEdit}
+            />
 
             {/* Floor plan drawer at the bottom of viewport */}
             <FloorPlanDrawer
@@ -179,6 +482,9 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
           <InspectorPanel
             scene={activeScene}
             canEdit={canEdit}
+            selectedWaypoint={selectedWaypoint}
+            selectedHotspot={selectedHotspot}
+            selectedItemType={selectedItemType}
           />
         </div>
       </div>

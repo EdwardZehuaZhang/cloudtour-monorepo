@@ -2,13 +2,42 @@
 
 import { Layers } from "lucide-react";
 import { SplatViewer } from "@/components/viewer/splat-viewer";
+import type { Position3D } from "@cloudtour/types";
 import type { EditorScene } from "./tour-editor";
+import {
+  EditorMarkersOverlay,
+  type EditorWaypoint,
+  type EditorHotspot,
+} from "./editor-markers-overlay";
+import type { EditorMode } from "./viewport-toolbar";
 
 interface EditorViewportProps {
   scene: EditorScene | null;
+  editorMode: EditorMode;
+  waypoints: EditorWaypoint[];
+  hotspots: EditorHotspot[];
+  canEdit: boolean;
+  selectedItemId: string | null;
+  onPlaceWaypoint: (position: Position3D) => void;
+  onPlaceHotspot: (position: Position3D) => void;
+  onMoveWaypoint: (id: string, position: Position3D) => void;
+  onMoveHotspot: (id: string, position: Position3D) => void;
+  onSelectItem: (type: "waypoint" | "hotspot", id: string) => void;
 }
 
-export function EditorViewport({ scene }: EditorViewportProps) {
+export function EditorViewport({
+  scene,
+  editorMode,
+  waypoints,
+  hotspots,
+  canEdit,
+  selectedItemId,
+  onPlaceWaypoint,
+  onPlaceHotspot,
+  onMoveWaypoint,
+  onMoveHotspot,
+  onSelectItem,
+}: EditorViewportProps) {
   if (!scene) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center bg-black/5">
@@ -55,6 +84,19 @@ export function EditorViewport({ scene }: EditorViewportProps) {
           ? [cameraPos.target.x, cameraPos.target.y, cameraPos.target.z]
           : undefined
       }
-    />
+    >
+      <EditorMarkersOverlay
+        waypoints={waypoints}
+        hotspots={hotspots}
+        editorMode={editorMode}
+        canEdit={canEdit}
+        onPlaceWaypoint={onPlaceWaypoint}
+        onPlaceHotspot={onPlaceHotspot}
+        onMoveWaypoint={onMoveWaypoint}
+        onMoveHotspot={onMoveHotspot}
+        onSelectItem={onSelectItem}
+        selectedItemId={selectedItemId}
+      />
+    </SplatViewer>
   );
 }
