@@ -68,7 +68,7 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "SUPABASE_SERVICE_ROLE_KEY must NEVER be referenced in client-side code or NEXT_PUBLIC_ env vars. The service client export should include a comment warning. Use @supabase/ssr for cookie-based auth in Next.js App Router."
     },
     {

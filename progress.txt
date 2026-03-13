@@ -14,6 +14,9 @@
 - Published tours/scenes/waypoints/hotspots are publicly readable (no JWT); all other access requires org membership
 - Slug deduplication uses sequential suffixes (-2, -3), never random — implemented in `generate_unique_slug()` DB function
 - `billing_events` and `tour_views` inserts use service role (no user INSERT policy); reads are scoped to org members/owners
+- Supabase clients: `createBrowserClient()` (client), `createServerClient()` (server w/ cookies), `createServiceClient()` (admin, server-only)
+- Env validation uses Zod in `packages/db/src/env.ts`; public vars validated separately from server vars
+- `@supabase/ssr` handles cookie-based auth for Next.js App Router server components
 
 ---
 
@@ -66,4 +69,21 @@
   - The `handle_new_user()` trigger is SECURITY DEFINER with `SET search_path = public` for safety
   - profiles.id references auth.users(id) directly (no gen_random_uuid()) since it mirrors the auth user
   - The org INSERT policy is permissive (`WITH CHECK (true)`) because the trigger runs as SECURITY DEFINER
+---
+
+## 2026-03-14 - US-004
+- Created typed Supabase client exports: createBrowserClient, createServerClient, createServiceClient
+- createBrowserClient uses @supabase/ssr createBrowserClient with anon key (client-safe)
+- createServerClient uses @supabase/ssr with Next.js cookies() for server components/API routes
+- createServiceClient uses @supabase/supabase-js createClient with service role key (server-only, bypasses RLS)
+- Created Database types file (database.types.ts) with Row/Insert/Update types for all 10 tables
+- Added Zod env validation: publicEnvSchema (URL + anon key) and serverEnvSchema (+ service role key)
+- All types exported from packages/db index.ts
+- Files changed: packages/db/src/index.ts, packages/db/src/database.types.ts, packages/db/src/env.ts, packages/db/src/client.ts, packages/db/src/server.ts, packages/db/src/service.ts, packages/db/package.json
+- **Learnings for future iterations:**
+  - `@supabase/ssr` provides `createBrowserClient` and `createServerClient` with cookie handling for Next.js
+  - `createServerClient` from @supabase/ssr requires a cookies config with `getAll`/`setAll` — setAll can throw in read-only Server Component contexts (safe to catch and ignore)
+  - The service client disables `autoRefreshToken` and `persistSession` since it doesn't run in a user session context
+  - packages/db needs `next` as a devDependency because server.ts imports `cookies` from `next/headers`
+  - Database types file should be regenerated from `supabase gen types typescript` when schema changes
 ---
