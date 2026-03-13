@@ -12,3 +12,4 @@ export {
   type HotspotInfoCardProps,
 } from "./hotspot-info-card";
 export { useViewerContext } from "./viewer-context";
+export { WebXRButton, type WebXRButtonProps } from "./webxr-button";

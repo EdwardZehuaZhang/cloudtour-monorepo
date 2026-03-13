@@ -10,6 +10,7 @@ import {
 } from "react";
 import { Maximize2, Share2 } from "lucide-react";
 import { ViewerProvider } from "./viewer-context";
+import { WebXRButton } from "./webxr-button";
 
 // ---- Types ----------------------------------------------------------------
 
@@ -278,6 +279,11 @@ export function SplatViewer({
             </ControlButton>
           )}
         </div>
+      </div>
+
+      {/* Bottom-right WebXR button — always visible when XR supported, independent of hover */}
+      <div className="absolute bottom-3 right-3 z-30">
+        <WebXRButton />
       </div>
 
       {/* Overlay children (waypoints, hotspots, etc.) — provided viewer context */}
