@@ -28,6 +28,10 @@
 - Auth pages use `(auth)` route group with shared layout; auth callback is at `app/auth/callback/route.ts` (not in route group)
 - Server actions with `redirect()` must not return a value after redirect — redirect throws internally
 - Zod v4 `z.literal(true, "error message")` syntax (not `{ errorMap }` object)
+- Org-scoped API routes use `requireOrgRole(orgId, minimumRole)` from `@/lib/api-utils` for auth + RBAC
+- Plan limits constants live in `apps/web/src/lib/plan-limits.ts` as `PLAN_LIMITS` map
+- Slug generation for tours uses `slugify()` from `@/lib/api-utils` + sequential dedup loop against DB
+- Don't import `@supabase/supabase-js` directly in apps/web — use `Awaited<ReturnType<typeof createServerClient>>` for the client type
 
 ---
 
@@ -182,4 +186,25 @@
   - Supabase `.update()` with `.select().single()` returns the updated row in one query
   - PostgreSQL unique constraint violation error code is `23505` — use this for username conflict detection
   - Zod `.strict()` on the update schema rejects unknown fields
+---
+
+## 2026-03-14 - US-010
+- Implemented Tour CRUD API routes with plan enforcement and RBAC
+- GET /api/orgs/[orgId]/tours — paginated tour list for org members (viewer+)
+- POST /api/orgs/[orgId]/tours — create tour with Zod validation, slug auto-generation, plan limit enforcement (Free=2)
+- GET /api/orgs/[orgId]/tours/[tourId] — tour detail with scenes (viewer+)
+- PATCH /api/orgs/[orgId]/tours/[tourId] — update tour fields (editor+)
+- DELETE /api/orgs/[orgId]/tours/[tourId] — delete tour (admin+ only)
+- POST /api/orgs/[orgId]/tours/[tourId]/publish — set status to published (editor+)
+- Created shared `requireOrgRole()` helper in `@/lib/api-utils` for auth + RBAC + plan fetching
+- Created `PLAN_LIMITS` constants in `@/lib/plan-limits.ts`
+- Created `slugify()` utility for URL-safe slug generation with sequential deduplication
+- Plan limit returns 403 with `{ error: 'PLAN_LIMIT_EXCEEDED', limit: 'tours', upgrade_url: '/pricing' }`
+- Files changed: apps/web/src/lib/plan-limits.ts, apps/web/src/lib/api-utils.ts, apps/web/src/app/api/orgs/[orgId]/tours/route.ts, apps/web/src/app/api/orgs/[orgId]/tours/[tourId]/route.ts, apps/web/src/app/api/orgs/[orgId]/tours/[tourId]/publish/route.ts
+- **Learnings for future iterations:**
+  - Don't import `@supabase/supabase-js` directly in apps/web — it's not a direct dependency. Use `Awaited<ReturnType<typeof createServerClient>>` for typing
+  - `requireOrgRole()` returns either an `AuthContext` or `NextResponse` — check with `instanceof NextResponse` to handle errors
+  - Slug deduplication in API layer: generate base slug, then loop checking DB for uniqueness with sequential suffixes
+  - Supabase `.select("id", { count: "exact", head: true })` is efficient for getting counts without fetching data
+  - Next.js 14 dynamic route params are async — destructure with `await params`
 ---

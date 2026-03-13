@@ -169,7 +169,7 @@
         "Typecheck passes"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "All inputs Zod-validated. Plan enforcement is server-side — do not skip it and rely on UI alone. The RBAC matrix must be checked on every operation. Slug deduplication uses sequential suffixes, never random."
     },
     {
