@@ -1,0 +1,29 @@
+## Codebase Patterns
+- pnpm workspaces with turbo for build orchestration; workspace packages use `workspace:*` protocol
+- Root tsconfig.json has `strict: true` and `noUncheckedIndexedAccess`; each package extends it
+- Tailwind CSS design tokens defined as CSS custom properties in `apps/web/src/app/globals.css` using oklch color space
+- shadcn/ui initialized in `apps/web` with components at `src/components/ui/`; use `cn()` from `@/lib/utils` for class merging
+- Fonts: Cormorant Garamond (display via next/font/google) and Geist (UI via `geist` npm package)
+- ESLint requires `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` for no-explicit-any rule
+- `NODE_ENV=production` is set in the shell; use `NODE_ENV=` prefix when running `pnpm install` or `pnpm add` to ensure devDependencies install
+- packages/types is types-only (no runtime code); packages/db and packages/ui export from `src/index.ts`
+
+---
+
+## 2026-03-14 - US-001
+- Scaffolded the full monorepo with pnpm workspaces and Turborepo
+- Created apps/web (Next.js 14 App Router with TypeScript strict mode)
+- Created packages/db, packages/ui, packages/types with package.json and tsconfig
+- Configured Tailwind CSS with oklch design tokens, fluid type scale, motion custom properties
+- Initialized shadcn/ui (components.json, cn utility, dependencies)
+- Set up Cormorant Garamond and Geist fonts
+- Created CLAUDE.md with 10 required sections
+- Created .env.local.example with all 8 env vars
+- Files changed: pnpm-workspace.yaml, turbo.json, package.json, tsconfig.json, .npmrc, .gitignore, .env.local.example, CLAUDE.md, apps/web/*, packages/db/*, packages/ui/*, packages/types/*
+- **Learnings for future iterations:**
+  - `NODE_ENV=production` is set in the dev environment shell — must unset it (`NODE_ENV=`) when running pnpm install/add to get devDependencies
+  - `@typescript-eslint/no-explicit-any` requires `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` as devDependencies plus proper ESLint config with extends, parser, and plugins
+  - next/font/local for Geist requires a .woff2 file; using the `geist` npm package is simpler
+  - turbo.json `build` task needs `"dependsOn": ["^build"]` for workspace dependency ordering
+  - pnpm interactive prompts can block non-interactive shells; clearing node_modules first avoids the prompt
+---
