@@ -152,3 +152,18 @@
   - `react-dom` is implicitly available via monorepo hoisting; no need to add as explicit dependency to packages/ui
   - Re-exporting pattern (`export { X } from "@cloudtour/ui"`) keeps existing `@/components/ui/*` imports working without a mass refactor
 ---
+
+## 2026-03-14 - US-008
+- Created comprehensive env validation module at `apps/web/src/lib/env.ts`
+- Zod schema validates all 8 env vars: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, RESEND_API_KEY, NEXT_PUBLIC_APP_URL
+- Public vars (4) validated via `getPublicEnv()` — safe for client and server
+- Server-only vars (4) validated via `getServerEnv()` — extends public schema, server-only
+- Clear error messages reference `.env.local.example` when validation fails
+- Caching prevents redundant re-validation within the same process
+- `.env.local.example` already had all 8 vars with correct descriptions
+- Files changed: apps/web/src/lib/env.ts
+- **Learnings for future iterations:**
+  - `packages/db/src/env.ts` validates only Supabase vars; `apps/web/src/lib/env.ts` validates all app vars (Supabase + Stripe + Resend + App URL)
+  - Use `getPublicEnv()` from `@/lib/env` for client-safe vars, `getServerEnv()` for server-side code needing Stripe/Resend keys
+  - Both env modules coexist — packages/db env is for the db package internals, apps/web env is for the full app
+---

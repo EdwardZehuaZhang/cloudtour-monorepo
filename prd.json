@@ -134,7 +134,7 @@
         "Typecheck passes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Use Zod for validation. Ensure SUPABASE_SERVICE_ROLE_KEY is never in a NEXT_PUBLIC_ variable or client bundle. The .env.local.example should match the CLAUDE.md documentation."
     },
     {
