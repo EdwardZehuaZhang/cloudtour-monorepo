@@ -5,9 +5,11 @@ import {
   useEffect,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import { Maximize2, Share2 } from "lucide-react";
+import { ViewerProvider } from "./viewer-context";
 
 // ---- Types ----------------------------------------------------------------
 
@@ -169,6 +171,18 @@ export function SplatViewer({
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
 
+  // ---- Context value for overlay children -----------------------------------
+
+  const viewerContextValue = useMemo(
+    () => ({
+      viewer: viewerRef.current,
+      container: containerRef.current,
+    }),
+    // Re-compute when loadingState changes (viewer becomes available on "loaded")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [loadingState],
+  );
+
   // ---- Render --------------------------------------------------------------
 
   const showControls = isHovering && loadingState !== "error";
@@ -266,8 +280,10 @@ export function SplatViewer({
         </div>
       </div>
 
-      {/* Overlay children (waypoints, hotspots, etc.) */}
-      {children}
+      {/* Overlay children (waypoints, hotspots, etc.) — provided viewer context */}
+      <ViewerProvider value={viewerContextValue}>
+        {children}
+      </ViewerProvider>
     </div>
   );
 }

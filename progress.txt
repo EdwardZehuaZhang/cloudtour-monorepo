@@ -37,6 +37,8 @@
 - @mkkellogg/gaussian-splats-3d has no @types — custom declarations live in `apps/web/src/types/gaussian-splats-3d.d.ts`
 - SplatViewer component in `apps/web/src/components/viewer/` is shared between public viewer and editor contexts
 - Dynamic import of heavy 3D libraries to keep initial bundle small; `sharedMemoryForWorkers: false` to avoid CORS requirements
+- ViewerContext provides viewer instance + container ref to overlay children; overlay div uses `pointer-events-none` with markers as `pointer-events-auto`
+- 3D→2D projection: `Vector3.project(camera)` → NDC → screen coords; reuse a single Vector3 to avoid GC in rAF loops
 
 ---
 
@@ -299,4 +301,24 @@
   - `sceneRevealMode: Gradual` enables the library's internal progressive rendering which pairs well with our blur overlay
   - The Viewer class manages its own render loop via `selfDrivenMode: true` — no manual requestAnimationFrame needed
   - Viewer.dispose() must be wrapped in try/catch as it may throw if already disposed during React strict mode double-mount
+---
+
+## 2026-03-14 - US-016
+- Implemented waypoints and hotspots overlay for the SplatViewer component
+- Created ViewerContext (React context) to share viewer instance + container ref with overlay children
+- WaypointMarker: hollow circle with directional arrow SVG in --brand color, scales 1.25× on hover, label tooltip fades in
+- HotspotMarker: filled circle with content-type icon (Info/Image/Video/Music/Link) in --accent amber, active state with ring
+- HotspotInfoCard: slides in from nearest edge (left/right/top/bottom based on marker position), blurred dark backdrop, supports text/image/video/audio/link content
+- SceneSwitcher: horizontal pill row at bottom-center, active scene has --brand underline, only renders when >1 scene
+- ViewerOverlay: orchestrates 3D→2D projection via requestAnimationFrame loop using Three.js Vector3.project(), manages active hotspot state
+- Updated SplatViewer to wrap children in ViewerProvider with viewer instance and container ref
+- All components exported from viewer/index.ts barrel
+- Files changed: apps/web/src/components/viewer/viewer-context.tsx (new), waypoint-marker.tsx (new), hotspot-marker.tsx (new), hotspot-info-card.tsx (new), scene-switcher.tsx (new), viewer-overlay.tsx (new), splat-viewer.tsx (modified), index.ts (modified)
+- **Learnings for future iterations:**
+  - ViewerContext pattern: SplatViewer provides viewer instance + container ref via React context so overlay children can access the Three.js camera for 3D→2D projection
+  - 3D→2D projection: use Three.js `Vector3.project(camera)` → NDC → multiply by container width/height; check `z >= -1 && z <= 1` for visibility (behind camera check)
+  - Reuse a single Vector3 instance (`_vec3`) outside the component to avoid GC pressure in the animation loop
+  - `useMemo` on context value with `loadingState` as dep triggers re-render when viewer becomes available (ref changes aren't reactive)
+  - Nearest-edge calculation for info card placement: compare distances to all four edges, slide in from the closest one
+  - The overlay div must be `pointer-events-none` with individual markers set to `pointer-events-auto` to allow orbit controls to work through the overlay
 ---

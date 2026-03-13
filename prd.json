@@ -275,7 +275,7 @@
         "Typecheck passes"
       ],
       "priority": 16,
-      "passes": false,
+      "passes": true,
       "notes": "Waypoints: hollow circle + directional arrow, --brand color, scale on hover. Hotspots: filled circle with icon, --accent amber, info card slides in from nearest edge. These overlays must work in both public view and editor mode."
     },
     {
