@@ -7,6 +7,8 @@
 - ESLint requires `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` for no-explicit-any rule
 - `NODE_ENV=production` is set in the shell; use `NODE_ENV=` prefix when running `pnpm install` or `pnpm add` to ensure devDependencies install
 - packages/types is types-only (no runtime code); packages/db and packages/ui export from `src/index.ts`
+- `null` in PlanLimits means "unlimited"; plan limit constants belong in packages/db or apps/web, not packages/types
+- All Supabase timestamp fields are typed as `string` (ISO 8601), not Date
 
 ---
 
@@ -26,4 +28,18 @@
   - next/font/local for Geist requires a .woff2 file; using the `geist` npm package is simpler
   - turbo.json `build` task needs `"dependsOn": ["^build"]` for workspace dependency ordering
   - pnpm interactive prompts can block non-interactive shells; clearing node_modules first avoids the prompt
+---
+
+## 2026-03-14 - US-002
+- Implemented shared TypeScript types package with all 10 database table interfaces
+- Added union types: Plan, Role, TourStatus, TourCategory, ContentType, SplatFileFormat
+- Added JSON field types: Position3D, CameraPosition, ScenePosition
+- Added PlanLimits and PlanLimitsMap types for billing plan enforcement
+- No runtime code — types only (PLAN_LIMITS constant intentionally kept out)
+- Files changed: packages/types/src/index.ts
+- **Learnings for future iterations:**
+  - packages/types must remain runtime-free; plan limit constants should live in packages/db or apps/web
+  - `null` represents "unlimited" in PlanLimits (tours, scenes_per_tour, members)
+  - All timestamp fields are `string` (ISO 8601 from Supabase), not Date objects
+  - jsonb fields (position_3d, default_camera_position, scene_positions) have typed interfaces
 ---

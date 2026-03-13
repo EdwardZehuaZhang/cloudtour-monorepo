@@ -34,7 +34,7 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "This package must have zero runtime code — only TypeScript types and interfaces. Use branded types for UUIDs if desired. All jsonb fields (position_3d, default_camera_position, scene_positions) should have typed interfaces, e.g. Position3D = { x: number; y: number; z: number }."
     },
     {
