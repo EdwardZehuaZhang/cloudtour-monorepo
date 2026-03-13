@@ -32,6 +32,7 @@
 - Plan limits constants live in `apps/web/src/lib/plan-limits.ts` as `PLAN_LIMITS` map
 - Slug generation for tours uses `slugify()` from `@/lib/api-utils` + sequential dedup loop against DB
 - Don't import `@supabase/supabase-js` directly in apps/web — use `Awaited<ReturnType<typeof createServerClient>>` for the client type
+- Nested resource routes (scenes under tours) must verify parent ownership (tour.org_id === orgId) before any operation
 
 ---
 
@@ -207,4 +208,19 @@
   - Slug deduplication in API layer: generate base slug, then loop checking DB for uniqueness with sequential suffixes
   - Supabase `.select("id", { count: "exact", head: true })` is efficient for getting counts without fetching data
   - Next.js 14 dynamic route params are async — destructure with `await params`
+---
+
+## 2026-03-14 - US-011
+- Implemented Scene CRUD API routes with plan enforcement
+- GET /api/orgs/[orgId]/tours/[tourId]/scenes — list scenes ordered by sort_order (viewer+)
+- POST /api/orgs/[orgId]/tours/[tourId]/scenes — create scene with Zod validation, auto sort_order, plan limit enforcement (Free=3/tour, Pro=20/tour, Enterprise=unlimited)
+- PATCH /api/orgs/[orgId]/tours/[tourId]/scenes/[sceneId] — update scene fields including sort_order for reordering (editor+)
+- DELETE /api/orgs/[orgId]/tours/[tourId]/scenes/[sceneId] — delete scene (admin+)
+- All routes verify tour belongs to org before operating on scenes
+- Files changed: apps/web/src/app/api/orgs/[orgId]/tours/[tourId]/scenes/route.ts, apps/web/src/app/api/orgs/[orgId]/tours/[tourId]/scenes/[sceneId]/route.ts
+- **Learnings for future iterations:**
+  - Scene routes follow same pattern as tour routes — nested under tours/[tourId]/scenes
+  - Always verify tour ownership (tour.org_id === orgId) before operating on child resources like scenes
+  - sort_order auto-increments by querying max sort_order + 1; PATCH allows explicit sort_order for reordering
+  - Plan limit for scenes checks count per tour (not total across org)
 ---

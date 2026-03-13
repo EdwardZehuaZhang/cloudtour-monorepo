@@ -186,7 +186,7 @@
         "Typecheck passes"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "Scene sort_order should support reordering. Plan enforcement checks scenes per tour, not total scenes."
     },
     {
