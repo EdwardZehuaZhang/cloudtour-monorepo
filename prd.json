@@ -148,7 +148,7 @@
         "Typecheck passes"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "All API inputs validated with Zod — reject before business logic. Use the anon Supabase client with user JWT, not the service role key."
     },
     {

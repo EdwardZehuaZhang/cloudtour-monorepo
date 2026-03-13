@@ -22,6 +22,7 @@
 - Supabase clients: `createBrowserClient()` (client), `createServerClient()` (server w/ cookies), `createServiceClient()` (admin, server-only)
 - Env validation uses Zod in `packages/db/src/env.ts`; public vars validated separately from server vars
 - `@supabase/ssr` handles cookie-based auth for Next.js App Router server components
+- API routes: use `createServerClient()` + `supabase.auth.getUser()` for JWT auth; return 401 if no user
 - React 18 uses `useFormState` from `react-dom` (not `useActionState` from `react` which is React 19+)
 - Use `useFormStatus` in a child `SubmitButton` component for pending state (must be inside `<form>`)
 - Auth pages use `(auth)` route group with shared layout; auth callback is at `app/auth/callback/route.ts` (not in route group)
@@ -166,4 +167,19 @@
   - `packages/db/src/env.ts` validates only Supabase vars; `apps/web/src/lib/env.ts` validates all app vars (Supabase + Stripe + Resend + App URL)
   - Use `getPublicEnv()` from `@/lib/env` for client-safe vars, `getServerEnv()` for server-side code needing Stripe/Resend keys
   - Both env modules coexist — packages/db env is for the db package internals, apps/web env is for the full app
+---
+
+## 2026-03-14 - US-009
+- Implemented GET /api/me and PATCH /api/me API routes
+- GET returns current user's profile (username, display_name, avatar_url, bio) with JWT auth
+- PATCH updates profile fields with Zod validation (username, display_name, avatar_url, bio)
+- Both routes require JWT authentication via Supabase session cookie
+- Handles unique constraint violation on username (409 Conflict)
+- Files changed: apps/web/src/app/api/me/route.ts
+- **Learnings for future iterations:**
+  - Next.js App Router API routes use `export async function GET/PATCH/POST()` in `route.ts` files
+  - `createServerClient()` from `@cloudtour/db` handles cookie-based auth automatically — use `supabase.auth.getUser()` to verify JWT
+  - Supabase `.update()` with `.select().single()` returns the updated row in one query
+  - PostgreSQL unique constraint violation error code is `23505` — use this for username conflict detection
+  - Zod `.strict()` on the update schema rejects unknown fields
 ---
