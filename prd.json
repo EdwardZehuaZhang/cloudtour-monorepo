@@ -221,7 +221,7 @@
         "Typecheck passes"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": "The thumbnails bucket is public CDN. No thumbnail auto-generation in v1 — this is explicitly called out as a constraint. Accept common image formats and store as webp."
     },
     {

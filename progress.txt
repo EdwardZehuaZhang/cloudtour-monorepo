@@ -244,3 +244,18 @@
   - Rate limiting via DB query (counting recent uploads) is a pragmatic approach when no Redis/KV is available
   - Service client is required for storage admin operations (presigned URLs, cross-bucket operations)
 ---
+
+## 2026-03-14 - US-013
+- Implemented thumbnail upload API for scenes at /api/orgs/[orgId]/tours/[tourId]/scenes/[sceneId]/thumbnail
+- POST: Returns presigned upload URL for thumbnails bucket (public CDN), 15 min expiry
+- PUT: Confirms upload, retrieves public URL via getPublicUrl(), saves to scenes.thumbnail_url
+- DELETE: Removes thumbnail from storage and clears scenes.thumbnail_url
+- Thumbnails stored at {org_id}/{tour_id}/{scene_id}/thumbnail.webp in the public thumbnails bucket
+- No auto-generation — manual upload only per v1 spec
+- Files changed: apps/web/src/app/api/orgs/[orgId]/tours/[tourId]/scenes/[sceneId]/thumbnail/route.ts
+- **Learnings for future iterations:**
+  - Thumbnails bucket is public CDN — use `getPublicUrl()` (synchronous, no error) instead of `createSignedUrl()`
+  - Thumbnail upload follows same presigned URL pattern as splat upload but without magic byte validation
+  - PUT method works well for confirm/finalize operations (vs POST for initial creation)
+  - No storage tracking needed for thumbnails (only splat files count toward org storage limits)
+---
