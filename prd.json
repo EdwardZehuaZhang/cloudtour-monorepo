@@ -308,7 +308,7 @@
         "Typecheck passes"
       ],
       "priority": 18,
-      "passes": false,
+      "passes": true,
       "notes": "Treat the editor like a creative tool, not a dashboard. The viewport fills all available space. Controls ghost on hover only. Panel resize uses transition: width var(--duration-base) var(--ease-out). Editor is desktop-only for editing — mobile shows view-only mode with a redirect to desktop notice."
     },
     {

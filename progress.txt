@@ -39,6 +39,9 @@
 - Dynamic import of heavy 3D libraries to keep initial bundle small; `sharedMemoryForWorkers: false` to avoid CORS requirements
 - ViewerContext provides viewer instance + container ref to overlay children; overlay div uses `pointer-events-none` with markers as `pointer-events-auto`
 - 3D→2D projection: `Vector3.project(camera)` → NDC → screen coords; reuse a single Vector3 to avoid GC in rAF loops
+- Editor uses `(editor)` route group at `/editor/[tourId]` — separate from `(dashboard)` to avoid DashboardShell wrapping; middleware protects both `/dashboard/*` and `/editor/*`
+- Editor components live in `apps/web/src/components/editor/`; TourEditor is the main orchestrator client component
+- HTML5 native drag-and-drop for scene reorder (no external library); optimistic UI with background PATCH sync
 
 ---
 
@@ -338,4 +341,27 @@
   - Avoid importing Three.js types directly in lightweight UI components; use inline type shapes for renderer interfaces
   - WebXR button should be independent of hover state since it's a discovery/CTA element, unlike utility controls (fullscreen, share)
   - `navigator.xr` may not exist on all browsers — always check with `"xr" in navigator` before accessing
+---
+
+## 2026-03-14 - US-018
+- Implemented four-panel tour editor layout with scene list
+- Created `(editor)` route group at `/editor/[tourId]` — separate from `(dashboard)` to avoid DashboardShell wrapping
+- Updated middleware to protect `/editor/*` routes alongside `/dashboard/*`
+- EditorHeader: inline-editable tour title (click-to-edit, Enter/Escape/blur), status badge (draft/published/archived), back-to-dashboard, preview, settings, publish actions
+- SceneList (240px left panel): sortable via HTML5 native drag-and-drop, thumbnails with sort order badges, drag handle on hover, active scene highlight with brand ring, empty state, [+] Add Scene button
+- EditorViewport: center panel renders shared `<SplatViewer>` component for the active scene, with empty/no-file states
+- InspectorPanel (280px right panel): placeholder showing scene properties (title, description, splat file format) — full editing in US-020
+- FloorPlanDrawer: bottom drawer collapsed by default (36px), slides up to 200px with chevron toggle — full implementation in US-021
+- MobileEditorNotice: shown on mobile, hides editor layout, directs users to desktop
+- Scene reorder uses optimistic UI: instant CSS update + background PATCH sync for each moved scene
+- Scene add creates via POST API and appends to list with auto-select
+- Tour title updates via optimistic debounced PATCH
+- All panel widths use transition with `--duration-base` and `--ease-out` per spec
+- Files changed: apps/web/src/middleware.ts (modified), apps/web/src/app/(editor)/layout.tsx (new), apps/web/src/app/(editor)/editor/[tourId]/page.tsx (new), apps/web/src/components/editor/tour-editor.tsx (new), editor-header.tsx (new), scene-list.tsx (new), inspector-panel.tsx (new), floor-plan-drawer.tsx (new), editor-viewport.tsx (new), mobile-editor-notice.tsx (new)
+- **Learnings for future iterations:**
+  - Editor route must be outside `(dashboard)` route group to avoid DashboardShell sidebar/padding wrapping — use separate `(editor)` route group
+  - Middleware matcher must include `/editor/:path*` alongside `/dashboard/:path*` for auth protection
+  - HTML5 native drag-and-drop works well for scene reorder without external libraries — use `dragCounterRef` to track enter/leave events properly
+  - Server component page fetches tour + scenes + verifies org membership before passing to client TourEditor orchestrator
+  - Panel transitions use CSS transition on explicit properties (height/width) with design system tokens — avoids layout shift
 ---
