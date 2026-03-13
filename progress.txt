@@ -34,6 +34,9 @@
 - Don't import `@supabase/supabase-js` directly in apps/web — use `Awaited<ReturnType<typeof createServerClient>>` for the client type
 - Nested resource routes (scenes under tours) must verify parent ownership (tour.org_id === orgId) before any operation
 - Storage bucket names and path conventions centralized in `apps/web/src/lib/storage.ts` — use STORAGE_BUCKETS and path helpers (splatFilePath, thumbnailPath, assetPath)
+- @mkkellogg/gaussian-splats-3d has no @types — custom declarations live in `apps/web/src/types/gaussian-splats-3d.d.ts`
+- SplatViewer component in `apps/web/src/components/viewer/` is shared between public viewer and editor contexts
+- Dynamic import of heavy 3D libraries to keep initial bundle small; `sharedMemoryForWorkers: false` to avoid CORS requirements
 
 ---
 
@@ -275,4 +278,25 @@
   - Storage bucket INSERT policies use `WITH CHECK`, while SELECT/UPDATE/DELETE use `USING`
   - Published tour check for storage RLS needs to join scenes → tours to verify tour.status = 'published'
   - Centralizing bucket names and path conventions in a storage utility prevents drift between routes
+---
+
+## 2026-03-14 - US-015
+- Implemented reusable <SplatViewer> component for 3D Gaussian splat rendering
+- Uses Three.js + @mkkellogg/gaussian-splats-3d (dynamically imported to keep initial bundle small)
+- Progressive blur-to-sharp loading reveal (blur(40px) → blur(0) over ~1.6s) — no spinner
+- Scene title fades in during load and fades out as blur clears
+- Error state: elegant fallback with thumbnail image + "Preview unavailable" message
+- Controls overlay (fullscreen + share) ghost in on hover with backdrop-filter: blur(8px) tinted pill style
+- Orbit controls built-in for desktop mouse/trackpad; touch controls for mobile via library defaults
+- Component fills container, accepts children for overlays (waypoints/hotspots in future stories)
+- Created type declarations for @mkkellogg/gaussian-splats-3d (no @types package available)
+- Files changed: apps/web/src/components/viewer/splat-viewer.tsx, apps/web/src/components/viewer/index.ts, apps/web/src/types/gaussian-splats-3d.d.ts, apps/web/package.json
+- **Learnings for future iterations:**
+  - @mkkellogg/gaussian-splats-3d has no TypeScript types — need custom .d.ts in src/types/
+  - Dynamic import of gaussian-splats-3d keeps it out of the initial bundle (~140KB library)
+  - Viewer `sharedMemoryForWorkers: false` avoids CORS header requirements (SharedArrayBuffer needs cross-origin isolation)
+  - `showLoadingUI: false` disables the library's built-in spinner; we implement our own blur reveal
+  - `sceneRevealMode: Gradual` enables the library's internal progressive rendering which pairs well with our blur overlay
+  - The Viewer class manages its own render loop via `selfDrivenMode: true` — no manual requestAnimationFrame needed
+  - Viewer.dispose() must be wrapped in try/catch as it may throw if already disposed during React strict mode double-mount
 ---

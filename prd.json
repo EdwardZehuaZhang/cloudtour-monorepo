@@ -257,7 +257,7 @@
         "Typecheck passes"
       ],
       "priority": 15,
-      "passes": false,
+      "passes": true,
       "notes": "This is the MOST important component — 'The SplatViewer is the product. Every other UI element is infrastructure.' The chrome disappears on hover. Controls ghost in from edges. Loading uses progressive blur-to-sharp reveal, NEVER a spinner. Show scene title fading in during load. The component MUST be shared between public and editor — do NOT duplicate it. Use backdrop-filter: blur(8px) with --surface tinted pill for controls."
     },
     {
