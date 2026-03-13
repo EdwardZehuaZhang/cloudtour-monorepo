@@ -104,7 +104,7 @@
         "Typecheck passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Sidebar bg is --text-primary (dark, inverted surface for wayfinding contrast). Sidebar text is oklch(85% 0.015 68) warm off-white. Plan badge is always visible as a subtle upgrade nudge without being aggressive. Use shadcn/ui components where possible. The org switcher should show current org name and allow switching (multi-org support later)."
     },
     {

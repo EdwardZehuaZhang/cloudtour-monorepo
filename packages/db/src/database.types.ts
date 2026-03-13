@@ -40,6 +40,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       organizations: {
         Row: {
@@ -72,6 +73,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       org_members: {
         Row: {
@@ -101,6 +103,7 @@ export interface Database {
           joined_at?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       tours: {
         Row: {
@@ -151,6 +154,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       scenes: {
         Row: {
@@ -192,6 +196,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       waypoints: {
         Row: {
@@ -224,6 +229,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       hotspots: {
         Row: {
@@ -262,6 +268,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       floor_plans: {
         Row: {
@@ -288,6 +295,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       billing_events: {
         Row: {
@@ -314,6 +322,7 @@ export interface Database {
           payload?: Json;
           created_at?: string;
         };
+        Relationships: [];
       };
       tour_views: {
         Row: {
@@ -334,6 +343,7 @@ export interface Database {
           viewer_ip_hash?: string;
           viewed_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

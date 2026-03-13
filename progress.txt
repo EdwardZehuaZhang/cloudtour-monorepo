@@ -6,6 +6,10 @@
 - Fonts: Cormorant Garamond (display via next/font/google) and Geist (UI via `geist` npm package)
 - ESLint requires `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` for no-explicit-any rule
 - `NODE_ENV=production` is set in the shell; use `NODE_ENV=` prefix when running `pnpm install` or `pnpm add` to ensure devDependencies install
+- Database types (`database.types.ts`) must include `Relationships: []` on every table for Supabase typed queries to work (without it, select results type as `never`)
+- Dashboard routes use `(dashboard)` route group with `export const dynamic = "force-dynamic"` to prevent static generation (requires auth/env vars)
+- Use Tailwind config token names (`duration-fast`) not arbitrary values (`duration-[var(--duration-fast)]`) to avoid ambiguous class warnings
+- Sidebar warm off-white text color: `oklch(85% 0.015 68)` — used as arbitrary Tailwind value `text-[oklch(85%_0.015_68)]`
 - packages/types is types-only (no runtime code); packages/db and packages/ui export from `src/index.ts`
 - `null` in PlanLimits means "unlimited"; plan limit constants belong in packages/db or apps/web, not packages/types
 - All Supabase timestamp fields are typed as `string` (ISO 8601), not Date
@@ -111,4 +115,24 @@
   - `signInWithOAuth` server action should throw on error (not return), otherwise form action type conflicts
   - Auth route group `(auth)` keeps auth pages with shared layout; actual `/auth/callback` route is outside the group
   - shadcn/ui CLI `npx shadcn add` fails with NODE_ENV=production; install Radix deps manually via pnpm
+---
+
+## 2026-03-14 - US-006
+- Implemented dashboard shell with sidebar layout and auth guard
+- Created Next.js middleware (`src/middleware.ts`) for auth guard — redirects unauthenticated users from /dashboard/* to /login
+- Created `(dashboard)` route group with server-side layout that fetches user orgs
+- Created sidebar component (200px fixed, dark bg with --text-primary, warm off-white text)
+- Sidebar contains: logo, nav items (Tours, Scenes, Members, Settings), org switcher, plan badge
+- Active nav item styled with left 3px brand-color bar + slightly lighter background
+- Mobile bottom tab bar replaces sidebar on small screens (md breakpoint)
+- Created `DashboardShell` client component wrapping sidebar + mobile tab bar + main content area
+- Fixed database types: added `Relationships: []` to all 10 tables in `database.types.ts`
+- Added `@supabase/ssr` as dependency of apps/web (needed for middleware)
+- Files changed: apps/web/src/middleware.ts, apps/web/src/app/(dashboard)/layout.tsx, apps/web/src/app/(dashboard)/dashboard-shell.tsx, apps/web/src/app/(dashboard)/dashboard/page.tsx, apps/web/src/components/dashboard/sidebar.tsx, packages/db/src/database.types.ts, apps/web/package.json
+- **Learnings for future iterations:**
+  - Database types file MUST include `Relationships: []` on every table definition; without it Supabase client returns `never` for typed queries
+  - Dashboard layout needs `export const dynamic = "force-dynamic"` because it calls `createServerClient()` which validates env vars — static generation fails without env vars
+  - Middleware uses `@supabase/ssr` `createServerClient` directly (not from `@cloudtour/db`) because middleware runs in Edge runtime
+  - Use Tailwind config duration tokens (`duration-fast`) not arbitrary CSS var values (`duration-[var(--duration-fast)]`) — latter triggers ambiguous class warnings
+  - Supabase `.select()` with column names works well for typed queries; avoid join syntax without proper Relationships config
 ---
