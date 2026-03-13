@@ -236,7 +236,7 @@
         "Typecheck passes"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "RLS on storage buckets should use the same org membership checks as the database tables. Published tour splat files should be accessible publicly."
     },
     {

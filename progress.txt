@@ -33,6 +33,7 @@
 - Slug generation for tours uses `slugify()` from `@/lib/api-utils` + sequential dedup loop against DB
 - Don't import `@supabase/supabase-js` directly in apps/web — use `Awaited<ReturnType<typeof createServerClient>>` for the client type
 - Nested resource routes (scenes under tours) must verify parent ownership (tour.org_id === orgId) before any operation
+- Storage bucket names and path conventions centralized in `apps/web/src/lib/storage.ts` — use STORAGE_BUCKETS and path helpers (splatFilePath, thumbnailPath, assetPath)
 
 ---
 
@@ -258,4 +259,20 @@
   - Thumbnail upload follows same presigned URL pattern as splat upload but without magic byte validation
   - PUT method works well for confirm/finalize operations (vs POST for initial creation)
   - No storage tracking needed for thumbnails (only splat files count toward org storage limits)
+---
+
+## 2026-03-14 - US-014
+- Created migration 012_storage_buckets.sql with three storage buckets and RLS policies
+- splat-files bucket: private, org members (viewer+) can read, editors+ upload/update, admins+ delete; published tours' splat files are publicly readable
+- thumbnails bucket: public CDN, anyone can read, editors+ upload/update, admins+ delete
+- assets bucket: private, org-scoped RLS — org members can read, editors+ upload/update, admins+ delete
+- Created `apps/web/src/lib/storage.ts` — centralized STORAGE_BUCKETS constants and path utilities (splatFilePath, thumbnailPath, assetPath)
+- Refactored upload and thumbnail routes to use centralized storage constants instead of hardcoded bucket names and path strings
+- Files changed: packages/db/migrations/012_storage_buckets.sql, apps/web/src/lib/storage.ts, upload/route.ts, upload/confirm/route.ts, thumbnail/route.ts
+- **Learnings for future iterations:**
+  - Supabase Storage RLS uses `storage.foldername(name)` to extract path segments — returns text array, index with `[1]`, `[2]`, etc.
+  - Path segment extraction requires `::uuid` cast when comparing to UUID columns
+  - Storage bucket INSERT policies use `WITH CHECK`, while SELECT/UPDATE/DELETE use `USING`
+  - Published tour check for storage RLS needs to join scenes → tours to verify tour.status = 'published'
+  - Centralizing bucket names and path conventions in a storage utility prevents drift between routes
 ---
