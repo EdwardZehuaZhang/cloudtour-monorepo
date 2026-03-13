@@ -2,7 +2,8 @@
 - pnpm workspaces with turbo for build orchestration; workspace packages use `workspace:*` protocol
 - Root tsconfig.json has `strict: true` and `noUncheckedIndexedAccess`; each package extends it
 - Tailwind CSS design tokens defined as CSS custom properties in `apps/web/src/app/globals.css` using oklch color space
-- shadcn/ui initialized in `apps/web` with components at `src/components/ui/`; use `cn()` from `@/lib/utils` for class merging
+- shadcn/ui components live in `packages/ui/src/`; `apps/web/src/components/ui/` re-exports from `@cloudtour/ui`
+- `packages/ui` has its own `cn()` in `src/utils.ts`; apps/web keeps `@/lib/utils` for app-specific utilities
 - Fonts: Cormorant Garamond (display via next/font/google) and Geist (UI via `geist` npm package)
 - ESLint requires `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` for no-explicit-any rule
 - `NODE_ENV=production` is set in the shell; use `NODE_ENV=` prefix when running `pnpm install` or `pnpm add` to ensure devDependencies install
@@ -135,4 +136,19 @@
   - Middleware uses `@supabase/ssr` `createServerClient` directly (not from `@cloudtour/db`) because middleware runs in Edge runtime
   - Use Tailwind config duration tokens (`duration-fast`) not arbitrary CSS var values (`duration-[var(--duration-fast)]`) — latter triggers ambiguous class warnings
   - Supabase `.select()` with column names works well for typed queries; avoid join syntax without proper Relationships config
+---
+
+## 2026-03-14 - US-007
+- Created shared UI component library in packages/ui with 10 shadcn/ui components
+- Components: Button (with default/accent/outline/ghost/destructive/link variants), Input, Label, Checkbox, Card, Dialog, DropdownMenu, Tooltip, Badge, Skeleton (with SkeletonCard and SkeletonList), Toast
+- All components use oklch CSS custom property tokens from the design spec
+- Added cn() utility to packages/ui/src/utils.ts
+- Updated apps/web/src/components/ui/ files to re-export from @cloudtour/ui (backward compatible)
+- Added Radix UI, CVA, clsx, tailwind-merge, lucide-react as dependencies of @cloudtour/ui
+- Files changed: packages/ui/src/*.tsx (12 files), packages/ui/package.json, apps/web/src/components/ui/button.tsx, input.tsx, label.tsx, checkbox.tsx
+- **Learnings for future iterations:**
+  - packages/ui components use `./utils` relative import for cn(); apps/web components re-export from `@cloudtour/ui`
+  - Tailwind config in apps/web already scans `../../packages/ui/src/**/*.{ts,tsx}` so shared component classes are included in the build
+  - `react-dom` is implicitly available via monorepo hoisting; no need to add as explicit dependency to packages/ui
+  - Re-exporting pattern (`export { X } from "@cloudtour/ui"`) keeps existing `@/components/ui/*` imports working without a mass refactor
 ---

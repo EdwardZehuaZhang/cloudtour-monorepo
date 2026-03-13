@@ -119,7 +119,7 @@
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "shadcn/ui first, Tailwind utilities only, no raw CSS unless absolutely unavoidable. Amber accent buttons (--accent) for CTAs feel energetic against cool indigo brand. Never use glassmorphism, bounce animations on cards, or elastic on dropdowns."
     },
     {
