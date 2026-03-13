@@ -291,7 +291,7 @@
         "Typecheck passes"
       ],
       "priority": 17,
-      "passes": false,
+      "passes": true,
       "notes": "Only visible on Safari/visionOS UA or as always-visible on tour pages. Do NOT use the generic VR goggle icon — use a custom visionOS-inspired glyph. No emoji in button copy."
     },
     {

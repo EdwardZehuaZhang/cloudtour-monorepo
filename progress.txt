@@ -322,3 +322,20 @@
   - Nearest-edge calculation for info card placement: compare distances to all four edges, slide in from the closest one
   - The overlay div must be `pointer-events-none` with individual markers set to `pointer-events-auto` to allow orbit controls to work through the overlay
 ---
+
+## 2026-03-14 - US-017
+- Implemented WebXR "View in Apple Vision Pro" button for the SplatViewer
+- Created `WebXRButton` component with custom visionOS-inspired glyph SVG (rounded visor with lens shapes, NOT generic VR goggles)
+- Button checks `navigator.xr.isSessionSupported("immersive-vr")` and gracefully hides when unavailable
+- Requests immersive-vr session with optional features: local-floor, bounded-floor, hand-tracking
+- Button positioned at bottom-right of the viewer, always visible when XR is supported (not gated by hover)
+- Button copy: "View in Apple Vision Pro" — no emoji, toggles to "Exit immersive view" when active
+- Styled with same backdrop-filter blur(8px) tinted pill as other viewer controls
+- Integrated into SplatViewer component; exported from viewer barrel
+- Files changed: apps/web/src/components/viewer/webxr-button.tsx (new), splat-viewer.tsx (modified), index.ts (modified)
+- **Learnings for future iterations:**
+  - TypeScript 5.9 includes WebXR types (XRSession, navigator.xr) in the DOM lib — no extra type declarations needed
+  - Avoid importing Three.js types directly in lightweight UI components; use inline type shapes for renderer interfaces
+  - WebXR button should be independent of hover state since it's a discovery/CTA element, unlike utility controls (fullscreen, share)
+  - `navigator.xr` may not exist on all browsers — always check with `"xr" in navigator` before accessing
+---
