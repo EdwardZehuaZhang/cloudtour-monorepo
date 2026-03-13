@@ -224,3 +224,23 @@
   - sort_order auto-increments by querying max sort_order + 1; PATCH allows explicit sort_order for reordering
   - Plan limit for scenes checks count per tour (not total across org)
 ---
+
+## 2026-03-14 - US-012
+- Implemented presigned upload flow for splat files with magic byte validation
+- POST /api/orgs/[orgId]/tours/[tourId]/scenes/[sceneId]/upload — returns presigned upload URL (15 min expiry) with format specification
+- POST /api/orgs/[orgId]/tours/[tourId]/scenes/[sceneId]/upload/confirm — validates uploaded file via magic bytes, detects format, updates scene and org storage
+- Magic byte detection: PLY starts with "ply\n" (0x70 0x6C 0x79 0x0A), SPZ starts with "SPZ" (0x53 0x50 0x5A), raw .splat is fallback
+- Storage plan limit enforcement: Free=1GB, Pro=50GB, Enterprise=500GB
+- Rate limiting: 10 uploads/hour/org (counts scenes with splat_url updated in last hour across all org tours)
+- File stored at {org_id}/{tour_id}/{scene_id}/scene.{ext} — if detected format differs from claimed, file is moved to correct path
+- Organization storage_used_bytes updated atomically (delta = new file - old file if replacing)
+- Uses service client for storage operations (presigned URLs, file download for validation)
+- Files changed: apps/web/src/app/api/orgs/[orgId]/tours/[tourId]/scenes/[sceneId]/upload/route.ts, apps/web/src/app/api/orgs/[orgId]/tours/[tourId]/scenes/[sceneId]/upload/confirm/route.ts
+- **Learnings for future iterations:**
+  - Supabase Storage `createSignedUploadUrl(path)` returns `{ signedUrl, token, path }` — client uploads directly to signedUrl
+  - Storage file metadata (size) available via `storage.from(bucket).list(folder, { search: filename })`
+  - Magic byte validation must download the file — use `storage.from(bucket).download(path)` then slice first bytes
+  - For file format correction (move), use `storage.copy()` + `storage.remove()` since Supabase has no rename API
+  - Rate limiting via DB query (counting recent uploads) is a pragmatic approach when no Redis/KV is available
+  - Service client is required for storage admin operations (presigned URLs, cross-bucket operations)
+---
