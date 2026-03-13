@@ -52,7 +52,7 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "RLS is non-negotiable — no row accessible without valid JWT. Design RLS policies to use auth.uid() and join through org_members for org-scoped access. Published tours should be publicly readable (no JWT needed). The RBAC hierarchy is owner > admin > editor > viewer. Include the Supabase trigger for auto-creating a personal org on signup in this migration."
     },
     {

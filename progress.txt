@@ -9,6 +9,11 @@
 - packages/types is types-only (no runtime code); packages/db and packages/ui export from `src/index.ts`
 - `null` in PlanLimits means "unlimited"; plan limit constants belong in packages/db or apps/web, not packages/types
 - All Supabase timestamp fields are typed as `string` (ISO 8601), not Date
+- Migration SQL files live in `packages/db/migrations/` numbered sequentially (001_, 002_, etc.)
+- RLS policies use `auth.uid()` and join through `org_members` for org-scoped access
+- Published tours/scenes/waypoints/hotspots are publicly readable (no JWT); all other access requires org membership
+- Slug deduplication uses sequential suffixes (-2, -3), never random — implemented in `generate_unique_slug()` DB function
+- `billing_events` and `tour_views` inserts use service role (no user INSERT policy); reads are scoped to org members/owners
 
 ---
 
@@ -42,4 +47,23 @@
   - `null` represents "unlimited" in PlanLimits (tours, scenes_per_tour, members)
   - All timestamp fields are `string` (ISO 8601 from Supabase), not Date objects
   - jsonb fields (position_3d, default_camera_position, scene_positions) have typed interfaces
+---
+
+## 2026-03-14 - US-003
+- Created 11 migration SQL files for all 10 database tables plus auto-create personal org trigger
+- All tables use UUID PKs with gen_random_uuid(), timestamptz defaults to now()
+- RLS enabled on every table with policies enforcing RBAC hierarchy
+- Published tours, scenes, waypoints, hotspots publicly readable; all others require org membership via auth.uid()
+- Check constraints on: plan, role, status, category, content_type, splat_file_format
+- Unique constraints on: profiles.username, organizations.slug, tours.slug, billing_events.stripe_event_id
+- Foreign keys match spec (auth.users, organizations, tours, scenes cascading deletes)
+- Auto-create personal org trigger with generate_unique_slug() function (sequential deduplication)
+- billing_events and tour_views have no user INSERT policies (server/service-role only)
+- Files changed: packages/db/migrations/001-011*.sql
+- **Learnings for future iterations:**
+  - RLS self-referencing policies (org_members checking org_members) need table aliases to avoid ambiguity
+  - billing_events and tour_views are write-only from the server perspective — no user INSERT RLS policies needed
+  - The `handle_new_user()` trigger is SECURITY DEFINER with `SET search_path = public` for safety
+  - profiles.id references auth.users(id) directly (no gen_random_uuid()) since it mirrors the auth user
+  - The org INSERT policy is permissive (`WITH CHECK (true)`) because the trigger runs as SECURITY DEFINER
 ---
