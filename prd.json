@@ -345,7 +345,7 @@
         "Typecheck passes"
       ],
       "priority": 20,
-      "passes": false,
+      "passes": true,
       "notes": "Do NOT use accordion for every section — show all scene properties flat. Only collapse advanced settings. Input labels above fields (easier to scan). No cards inside cards — flat inspector properties, no nesting."
     },
     {

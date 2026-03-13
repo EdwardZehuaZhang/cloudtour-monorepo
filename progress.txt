@@ -397,3 +397,21 @@
   - `useDebouncedCallback` helper stores callback in ref to avoid stale closures; timeout ref prevents duplicate calls
   - Editor overlay pointer-events: "auto" in placement mode, "none" in select mode so orbit controls work through the overlay
 ---
+
+## 2026-03-14 - US-020
+- Implemented context-sensitive properties inspector panel for the tour editor
+- Scene properties: title and description shown flat (editable), splat file info (read-only), camera defaults and SEO in collapsible advanced sections
+- Waypoint properties: label (text input), target scene (dropdown of tour scenes), icon, position (read-only xyz display), delete button
+- Hotspot properties: title, content_type (dropdown), content_markdown (textarea), media_url, icon, position (read-only xyz), delete button
+- All property edits use optimistic UI: state updates immediately, debounced PATCH sync (500ms) to API
+- Added delete handlers for waypoints and hotspots with optimistic UI (remove from state immediately, DELETE API in background)
+- Input labels above fields, not floating labels per spec
+- No accordion/cards wrapping — flat inspector layout, only Camera Defaults and SEO sections collapsible
+- Files changed: apps/web/src/components/editor/inspector-panel.tsx (rewritten), apps/web/src/components/editor/tour-editor.tsx (added handlers + new props)
+- **Learnings for future iterations:**
+  - InspectorPanel receives `scenes` array for waypoint target scene dropdown — must be kept in sync with TourEditor scene state
+  - Reusing `useDebouncedCallback` for property sync follows same pattern as position drag sync (500ms debounce)
+  - Delete operations use optimistic UI: remove from local state immediately, fire DELETE request in background
+  - Collapsible sections use local `useState` — no need for a global accordion state manager
+  - The `onSceneChange` handler updates local scenes array so inspector inputs stay in sync without refetching
+---

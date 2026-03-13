@@ -407,6 +407,142 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
     // Camera reset placeholder — SplatViewer manages its own camera
   }, []);
 
+  // ---- Scene property change (optimistic + debounced sync) ------------------
+
+  const syncSceneProperty = useDebouncedCallback(
+    (sceneId: string, field: string, value: unknown) => {
+      fetch(
+        `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${sceneId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [field]: value }),
+        },
+      ).catch((err) =>
+        console.error("[Editor] Failed to sync scene property:", err),
+      );
+    },
+    500,
+  );
+
+  const handleSceneChange = useCallback(
+    (sceneId: string, field: string, value: unknown) => {
+      setScenes((prev) =>
+        prev.map((s) =>
+          s.id === sceneId ? { ...s, [field]: value } : s,
+        ),
+      );
+      syncSceneProperty(sceneId, field, value);
+    },
+    [syncSceneProperty],
+  );
+
+  // ---- Waypoint property change (optimistic + debounced sync) ---------------
+
+  const syncWaypointProperty = useDebouncedCallback(
+    (waypointId: string, field: string, value: unknown) => {
+      if (!activeSceneId) return;
+      fetch(
+        `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${activeSceneId}/waypoints/${waypointId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [field]: value }),
+        },
+      ).catch((err) =>
+        console.error("[Editor] Failed to sync waypoint property:", err),
+      );
+    },
+    500,
+  );
+
+  const handleWaypointChange = useCallback(
+    (waypointId: string, field: string, value: unknown) => {
+      setWaypoints((prev) =>
+        prev.map((wp) =>
+          wp.id === waypointId ? { ...wp, [field]: value } : wp,
+        ),
+      );
+      syncWaypointProperty(waypointId, field, value);
+    },
+    [syncWaypointProperty],
+  );
+
+  // ---- Hotspot property change (optimistic + debounced sync) ----------------
+
+  const syncHotspotProperty = useDebouncedCallback(
+    (hotspotId: string, field: string, value: unknown) => {
+      if (!activeSceneId) return;
+      fetch(
+        `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${activeSceneId}/hotspots/${hotspotId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [field]: value }),
+        },
+      ).catch((err) =>
+        console.error("[Editor] Failed to sync hotspot property:", err),
+      );
+    },
+    500,
+  );
+
+  const handleHotspotChange = useCallback(
+    (hotspotId: string, field: string, value: unknown) => {
+      setHotspots((prev) =>
+        prev.map((hs) =>
+          hs.id === hotspotId ? { ...hs, [field]: value } : hs,
+        ),
+      );
+      syncHotspotProperty(hotspotId, field, value);
+    },
+    [syncHotspotProperty],
+  );
+
+  // ---- Delete waypoint ------------------------------------------------------
+
+  const handleDeleteWaypoint = useCallback(
+    async (waypointId: string) => {
+      if (!activeSceneId) return;
+
+      setWaypoints((prev) => prev.filter((wp) => wp.id !== waypointId));
+      if (selectedItemId === waypointId) {
+        setSelectedItemId(null);
+        setSelectedItemType(null);
+      }
+
+      fetch(
+        `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${activeSceneId}/waypoints/${waypointId}`,
+        { method: "DELETE" },
+      ).catch((err) =>
+        console.error("[Editor] Failed to delete waypoint:", err),
+      );
+    },
+    [activeSceneId, selectedItemId, tour.org_id, tour.id],
+  );
+
+  // ---- Delete hotspot -------------------------------------------------------
+
+  const handleDeleteHotspot = useCallback(
+    async (hotspotId: string) => {
+      if (!activeSceneId) return;
+
+      setHotspots((prev) => prev.filter((hs) => hs.id !== hotspotId));
+      if (selectedItemId === hotspotId) {
+        setSelectedItemId(null);
+        setSelectedItemType(null);
+      }
+
+      fetch(
+        `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${activeSceneId}/hotspots/${hotspotId}`,
+        { method: "DELETE" },
+      ).catch((err) =>
+        console.error("[Editor] Failed to delete hotspot:", err),
+      );
+    },
+    [activeSceneId, selectedItemId, tour.org_id, tour.id],
+  );
+
   // ---- Get selected waypoint/hotspot for inspector --------------------------
 
   const selectedWaypoint = selectedItemType === "waypoint"
@@ -481,10 +617,16 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
           {/* Right: Inspector panel (280px) */}
           <InspectorPanel
             scene={activeScene}
+            scenes={scenes}
             canEdit={canEdit}
             selectedWaypoint={selectedWaypoint}
             selectedHotspot={selectedHotspot}
             selectedItemType={selectedItemType}
+            onSceneChange={handleSceneChange}
+            onWaypointChange={handleWaypointChange}
+            onHotspotChange={handleHotspotChange}
+            onDeleteWaypoint={handleDeleteWaypoint}
+            onDeleteHotspot={handleDeleteHotspot}
           />
         </div>
       </div>
