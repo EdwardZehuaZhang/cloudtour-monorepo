@@ -87,7 +87,7 @@
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "Auth pages should use the warm alabaster background (--bg), Geist font for form UI, and Cormorant Garamond for the page heading. Keep forms clean and minimal. Consent checkbox required for PDPA compliance. The slug deduplication MUST use sequential suffixes (-2, -3, etc.), never random. Implement as a Supabase database function/trigger."
     },
     {

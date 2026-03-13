@@ -17,6 +17,11 @@
 - Supabase clients: `createBrowserClient()` (client), `createServerClient()` (server w/ cookies), `createServiceClient()` (admin, server-only)
 - Env validation uses Zod in `packages/db/src/env.ts`; public vars validated separately from server vars
 - `@supabase/ssr` handles cookie-based auth for Next.js App Router server components
+- React 18 uses `useFormState` from `react-dom` (not `useActionState` from `react` which is React 19+)
+- Use `useFormStatus` in a child `SubmitButton` component for pending state (must be inside `<form>`)
+- Auth pages use `(auth)` route group with shared layout; auth callback is at `app/auth/callback/route.ts` (not in route group)
+- Server actions with `redirect()` must not return a value after redirect — redirect throws internally
+- Zod v4 `z.literal(true, "error message")` syntax (not `{ errorMap }` object)
 
 ---
 
@@ -86,4 +91,24 @@
   - The service client disables `autoRefreshToken` and `persistSession` since it doesn't run in a user session context
   - packages/db needs `next` as a devDependency because server.ts imports `cookies` from `next/headers`
   - Database types file should be regenerated from `supabase gen types typescript` when schema changes
+---
+
+## 2026-03-14 - US-005
+- Created auth pages: /signup and /login with email/password and Google/Apple OAuth
+- /signup page with display_name, email, password fields and PDPA consent checkbox
+- /login page with email/password and OAuth buttons
+- Server actions with Zod validation for all form inputs
+- Auth callback route at /auth/callback handles OAuth redirect and code exchange
+- After login/signup, redirects to /dashboard
+- Created shadcn/ui components: Button (with brand/accent/outline/ghost/destructive variants), Input, Label, Checkbox
+- OAuth uses signInWithOAuth server action that redirects to Supabase OAuth flow
+- Slug generation already handled by existing generate_unique_slug() DB trigger from US-003
+- Files changed: apps/web/src/app/(auth)/actions.ts, apps/web/src/app/(auth)/layout.tsx, apps/web/src/app/(auth)/signup/page.tsx, apps/web/src/app/(auth)/login/page.tsx, apps/web/src/app/auth/callback/route.ts, apps/web/src/components/ui/button.tsx, apps/web/src/components/ui/input.tsx, apps/web/src/components/ui/label.tsx, apps/web/src/components/ui/checkbox.tsx, apps/web/package.json
+- **Learnings for future iterations:**
+  - React 18 does NOT have `useActionState` — use `useFormState` from `react-dom` instead
+  - `useFormStatus` must be used in a child component of `<form>` to get pending state
+  - Zod v4 uses `z.literal(value, "error message")` string param, not `{ errorMap }` object
+  - `signInWithOAuth` server action should throw on error (not return), otherwise form action type conflicts
+  - Auth route group `(auth)` keeps auth pages with shared layout; actual `/auth/callback` route is outside the group
+  - shadcn/ui CLI `npx shadcn add` fails with NODE_ENV=production; install Radix deps manually via pnpm
 ---
