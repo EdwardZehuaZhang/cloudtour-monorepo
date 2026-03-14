@@ -37,6 +37,18 @@ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tool
 export { Badge, badgeVariants, type BadgeProps } from "./badge";
 export { Skeleton, SkeletonCard, SkeletonList } from "./skeleton";
 export {
+  Sheet,
+  SheetPortal,
+  SheetOverlay,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+} from "./sheet";
+export {
   type ToastProps,
   type ToastActionElement,
   ToastProvider,

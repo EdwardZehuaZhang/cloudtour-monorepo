@@ -66,6 +66,7 @@ export interface OrgMember {
   org_id: string;
   user_id: string | null;
   invited_email: string | null;
+  invite_token: string | null;
   role: Role;
   joined_at: string | null;
   created_at: string;

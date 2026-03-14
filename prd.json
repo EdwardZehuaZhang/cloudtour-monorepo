@@ -498,7 +498,7 @@
         "Typecheck passes"
       ],
       "priority": 29,
-      "passes": false,
+      "passes": true,
       "notes": "Member invite MUST use a slide-over panel, NOT a modal (per design spec — modals are not acceptable for member invite). Plan enforcement on invite count is server-side. Send invite email via Resend."
     },
     {

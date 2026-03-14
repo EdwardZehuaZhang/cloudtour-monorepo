@@ -81,6 +81,7 @@ export interface Database {
           org_id: string;
           user_id: string | null;
           invited_email: string | null;
+          invite_token: string | null;
           role: "owner" | "admin" | "editor" | "viewer";
           joined_at: string | null;
           created_at: string;
@@ -90,6 +91,7 @@ export interface Database {
           org_id: string;
           user_id?: string | null;
           invited_email?: string | null;
+          invite_token?: string | null;
           role?: "owner" | "admin" | "editor" | "viewer";
           joined_at?: string | null;
           created_at?: string;
@@ -99,6 +101,7 @@ export interface Database {
           org_id?: string;
           user_id?: string | null;
           invited_email?: string | null;
+          invite_token?: string | null;
           role?: "owner" | "admin" | "editor" | "viewer";
           joined_at?: string | null;
           created_at?: string;

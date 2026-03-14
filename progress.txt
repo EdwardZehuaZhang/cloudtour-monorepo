@@ -53,6 +53,10 @@
 - `useSearchParams()` in Next.js 14 requires `<Suspense>` wrapper for pages that static-generate
 - Public tour viewer at `/tours/[slug]` uses SSR `generateMetadata` for SEO; client component handles 3D viewer + interactions
 - View count increment uses Supabase RPC (`increment_view_count`) for atomic updates; deduplication via hashed IP + tour_id
+- Sheet (slide-over) component in `packages/ui/src/sheet.tsx` — uses same `@radix-ui/react-dialog` as Dialog, no new dependency
+- Resend client must be lazily instantiated (not at module level) to avoid build failure when RESEND_API_KEY is missing
+- Zod v4 `z.enum()` uses string message parameter, not `{ required_error }` object syntax
+- Invite flow: org_members row created with `user_id: null`, `invited_email` set, `invite_token` auto-generated; on accept, `user_id` populated and `invite_token` nulled
 
 ---
 
@@ -629,4 +633,36 @@
   - Pricing page reuses same visual patterns as landing page pricing section — keep them in sync if either changes
   - Static page (○ in build output) since it has no dynamic data — no need for force-dynamic
   - Feature comparison table uses boolean | string union for cell values — string for limits, boolean for yes/no features
+---
+
+## 2026-03-14 - US-029
+- Implemented org members management and invite flow
+- Created Sheet (slide-over) UI component in packages/ui for invite panel (per design spec: NOT a modal)
+- API routes: GET/POST /api/orgs/[orgId]/members, DELETE /api/orgs/[orgId]/members/[memberId]
+- Invite accept flow: GET/POST /api/invite/[token] + /invite/[token] page
+- Dashboard members page at /dashboard/members with member list, role badges, remove confirmation
+- Resend email integration for sending invite emails
+- Plan limit enforcement: Free=1, Pro=10, Enterprise=unlimited members
+- RBAC enforced: admin+ can invite/remove, owner cannot be removed
+- Migration 014: added invite_token column to org_members
+- Files changed:
+  - New: packages/ui/src/sheet.tsx
+  - New: packages/db/migrations/014_org_members_invite_token.sql
+  - New: apps/web/src/app/api/orgs/[orgId]/members/route.ts
+  - New: apps/web/src/app/api/orgs/[orgId]/members/[memberId]/route.ts
+  - New: apps/web/src/app/api/invite/[token]/route.ts
+  - New: apps/web/src/app/invite/[token]/page.tsx
+  - New: apps/web/src/app/(dashboard)/dashboard/members/page.tsx
+  - New: apps/web/src/components/dashboard/members-panel.tsx
+  - New: apps/web/src/lib/email.ts
+  - Modified: packages/ui/src/index.ts (Sheet exports)
+  - Modified: packages/db/src/database.types.ts (invite_token field)
+  - Modified: packages/types/src/index.ts (invite_token field)
+  - Modified: prd.json (US-029 passes: true)
+- **Learnings for future iterations:**
+  - Sheet component reuses @radix-ui/react-dialog (same as Dialog) — no new Radix dependency needed
+  - Resend client MUST be lazily initialized, not at module level, or build fails without API key
+  - Zod v4 z.enum() uses `z.enum(values, "error message")` string syntax, not `{ required_error }` object
+  - Invite flow uses invite_token UUID column with DB-generated default; token is nulled on accept
+  - Design spec requires slide-over (Sheet) for member invite, not Dialog/modal
 ---
