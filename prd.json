@@ -413,7 +413,7 @@
         "Typecheck passes"
       ],
       "priority": 24,
-      "passes": false,
+      "passes": true,
       "notes": "The live SplatViewer in the hero is THE differentiator — no competing platform ships this. Do NOT replace it with a video or static image on desktop. Use Cormorant Garamond at display size (clamp(3.5rem, 2.5rem + 5vw, 7rem)) for the hero heading. The how-it-works section uses large translucent Cormorant numerals as background texture, NOT card-based step icons. Pricing Pro column uses scale transform for elevation, NOT a 'popular' badge. Mobile collapses hero to static thumbnail for performance."
     },
     {

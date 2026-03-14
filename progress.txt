@@ -491,3 +491,26 @@
   - next/image `fill` prop with `sizes` attribute handles responsive image optimization for grid cards
   - Empty state pattern: greyed demo card + CTA is more instructive than a simple "No tours yet" message
 ---
+
+## 2026-03-14 - US-024
+- Implemented landing page with live SplatViewer hero section
+- Hero: live SplatViewer (desktop) / static thumbnail (mobile), full-bleed 70vh min, bottom-left editorial typeset with Cormorant Garamond display-hero size
+- Nav: fixed top, logo left, links center, CTA right, mobile hamburger menu with backdrop blur
+- Featured tours: horizontal scroll section with 3/2 aspect ratio cards, title overlay, hover zoom effect, scroll-snap
+- How it works: editorial 3-column layout with large translucent Cormorant numerals (up to 160px, ~6% opacity) as background texture — NOT card-based step icons
+- Pricing: 3-column grid, Pro column elevated via `md:scale-105` + border-brand + shadow-xl (NOT a "popular" badge), amber accent CTA buttons
+- FAQ: collapsible accordion items with chevron rotation animation
+- Footer: minimal left-aligned 4-column link grid with brand, product, company, legal sections
+- Mobile: hero collapses to static thumbnail background for performance, CTA remains prominent, bottom tab bar from dashboard not shown
+- SplatViewer dynamically imported via next/dynamic to keep initial bundle small
+- Files changed:
+  - New: apps/web/src/components/landing/landing-page.tsx
+  - Modified: apps/web/src/app/page.tsx (uses LandingPage component)
+- **Learnings for future iterations:**
+  - Dynamic import of SplatViewer via `next/dynamic` with `ssr: false` keeps 3D libraries out of server bundle and initial client bundle
+  - Use `oklch(... / alpha)` inline styles for gradient overlays — Tailwind arbitrary values with oklch alpha syntax are unreliable
+  - Hero text readability over live 3D content requires a gradient overlay from dark at bottom to transparent at top
+  - Featured tours horizontal scroll uses `scroll-snap-type: x mandatory` + `scroll-snap-align: start` for native snap behavior
+  - Pricing Pro column uses CSS `scale-105` transform for visual elevation — simpler and more elegant than a "Popular" badge
+  - Landing page is a client component ("use client") because SplatViewer requires client-side rendering; the page.tsx wrapper remains a server component
+---
