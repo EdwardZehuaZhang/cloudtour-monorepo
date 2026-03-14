@@ -547,7 +547,7 @@
         "Typecheck passes"
       ],
       "priority": 32,
-      "passes": false,
+      "passes": true,
       "notes": "Use MDX with Next.js App Router. Blog posts should use Cormorant Garamond for titles and Geist for body text."
     },
     {

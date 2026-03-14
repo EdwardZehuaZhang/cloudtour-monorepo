@@ -59,6 +59,9 @@
 - Resend client must be lazily instantiated (not at module level) to avoid build failure when RESEND_API_KEY is missing
 - Zod v4 `z.enum()` uses string message parameter, not `{ required_error }` object syntax
 - Invite flow: org_members row created with `user_id: null`, `invited_email` set, `invite_token` auto-generated; on accept, `user_id` populated and `invite_token` nulled
+- Blog content lives in `apps/web/content/blog/*.mdx`; utility in `apps/web/src/lib/blog.ts` reads/parses them with `gray-matter`
+- MDX rendering uses `next-mdx-remote/rsc` for server-side rendering (zero client JS); `@tailwindcss/typography` for prose styles
+- RSS feed at `/feed.xml` via route handler; blog posts statically generated via `generateStaticParams`
 
 ---
 
@@ -706,4 +709,24 @@
   - In-memory rate limiter works for single-instance; for multi-instance use Vercel KV
   - Upload endpoints are identified by pathname containing `/upload` (excluding `/upload/confirm`)
   - Rate limit headers: X-RateLimit-Limit, X-RateLimit-Remaining, Retry-After
+---
+
+## 2026-03-14 - US-032
+- Implemented blog with MDX content and RSS feed
+- Created 3 sample blog posts in `apps/web/content/blog/` with frontmatter (title, description, date, category, author, image)
+- Blog utility library at `apps/web/src/lib/blog.ts` — reads MDX files from `content/blog/`, parses frontmatter with gray-matter, sorts by date
+- `/blog` listing page with category filter pills, editorial card layout (first post is hero/featured), Cormorant Garamond headings
+- `/blog/[slug]` individual post page with `next-mdx-remote/rsc` for server-side MDX rendering, Tailwind typography prose styles
+- RSS feed at `/feed.xml` using `rss` package, served as XML response from route handler
+- Updated `sitemap.ts` to dynamically include blog post URLs
+- Added `@tailwindcss/typography` plugin for prose styling of MDX content
+- Files created: `apps/web/content/blog/*.mdx`, `apps/web/src/lib/blog.ts`, `apps/web/src/app/blog/page.tsx`, `apps/web/src/app/blog/[slug]/page.tsx`, `apps/web/src/app/feed.xml/route.ts`
+- Files modified: `apps/web/tailwind.config.ts`, `apps/web/src/app/sitemap.ts`, `apps/web/package.json`, `pnpm-lock.yaml`
+- **Learnings for future iterations:**
+  - Blog posts live in `apps/web/content/blog/` as `.mdx` files with gray-matter frontmatter
+  - `next-mdx-remote/rsc` allows server-side MDX rendering without client JS — import from `next-mdx-remote/rsc` not `next-mdx-remote`
+  - `rss` package needs `@types/rss` for TypeScript support
+  - `@tailwindcss/typography` plugin required for `prose` classes in Tailwind
+  - RSS feed served as route handler at `/feed.xml/route.ts` (folder-based routing)
+  - `generateStaticParams` in blog/[slug] enables static generation of all blog posts at build time
 ---
