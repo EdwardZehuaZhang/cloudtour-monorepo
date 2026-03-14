@@ -429,7 +429,7 @@
         "Typecheck passes"
       ],
       "priority": 25,
-      "passes": false,
+      "passes": true,
       "notes": "This is a public page — no auth required. Use editorial card presentation consistent with the dashboard tour grid. Rate limiting via Vercel Edge Middleware."
     },
     {

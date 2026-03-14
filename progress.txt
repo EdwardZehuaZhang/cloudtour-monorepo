@@ -514,3 +514,39 @@
   - Pricing Pro column uses CSS `scale-105` transform for visual elevation — simpler and more elegant than a "Popular" badge
   - Landing page is a client component ("use client") because SplatViewer requires client-side rendering; the page.tsx wrapper remains a server component
 ---
+
+## 2026-03-14 - US-025
+- Implemented explore page with filters and search for published tours
+- Created public GET /api/tours endpoint (no auth required) with:
+  - Pagination (page/limit with offset calculation)
+  - Category filter (real_estate, tourism, museum, education, other)
+  - Location filter (case-insensitive partial match via ilike)
+  - Tags filter (overlaps query for array matching)
+  - Full-text search on title and description (ilike OR)
+  - Sort: newest (created_at DESC), popular (view_count DESC), alphabetical (title ASC)
+  - Scene counts and first thumbnail joined per tour
+- Created /explore page with:
+  - Sticky nav header with CloudTour branding and nav links
+  - Search bar with 300ms debounce
+  - Desktop filter bar: category dropdown, location input, sort dropdown, clear button
+  - Mobile filter panel (collapsible)
+  - Editorial asymmetric masonry grid (3-column, first card hero/2-col span) matching dashboard pattern
+  - ExploreTourCard links to /tours/[slug] (public viewer)
+  - Loading skeleton matching layout shape
+  - Empty state with context-aware message (filtered vs. no tours)
+  - Pagination with Previous/Next buttons and page indicator
+  - URL search params sync (filters preserved in URL for shareability)
+- Files changed:
+  - New: apps/web/src/app/api/tours/route.ts
+  - New: apps/web/src/app/explore/page.tsx
+  - New: apps/web/src/components/explore/explore-page.tsx
+  - Modified: prd.json (US-025 passes: true)
+- **Learnings for future iterations:**
+  - Public API endpoints don't use `requireOrgRole()` — just call `createServerClient()` directly
+  - Supabase `.eq()` on enum columns needs explicit type assertion when the filter value comes from a string variable
+  - Supabase `.overlaps("tags", tagList)` works for array-contains-any queries on jsonb/text[] columns
+  - Supabase `.ilike()` for case-insensitive partial matching; `.or()` for combining multiple ilike conditions
+  - `scenesMap` pattern (iterating scenes once to build count + first thumbnail) is efficient for joining scene data client-side
+  - URL search params sync via `useSearchParams()` + `router.replace()` makes filter state shareable and bookmarkable
+  - Rate limiting for unauthenticated endpoints deferred to US-031 (Vercel Edge Middleware)
+---
