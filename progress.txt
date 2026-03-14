@@ -746,3 +746,21 @@
   - Legal pages (privacy/terms) use max-w-3xl for better readability; marketing pages (about) use max-w-5xl
   - Zod v4 string validation uses simple string messages: z.string().min(1, "error message")
 ---
+
+## 2026-03-14 - US-034
+- Implemented all four Resend email templates: welcome, tour published, member invite (refactored), password reset
+- Refactored email.ts with shared `emailWrapper()` and `ctaButton()` helpers for consistent brand styling (warm alabaster #f8f6f3, brand indigo #2b2d7a)
+- Hooked welcome email into signup action (fire-and-forget, non-blocking)
+- Hooked tour published notification into publish API route (fire-and-forget)
+- Created forgot-password page with Supabase admin `generateLink` + Resend email delivery
+- Created reset-password page using `supabase.auth.updateUser` for password change
+- Added "Forgot password?" link to login page
+- All emails use Resend API, RESEND_API_KEY remains server-only
+- Files changed: apps/web/src/lib/email.ts, apps/web/src/app/(auth)/actions.ts, apps/web/src/app/(auth)/login/page.tsx, apps/web/src/app/(auth)/forgot-password/page.tsx, apps/web/src/app/(auth)/reset-password/page.tsx, apps/web/src/app/api/orgs/[orgId]/tours/[tourId]/publish/route.ts
+- **Learnings for future iterations:**
+  - Resend client must be lazily instantiated (not at module level) to avoid build failure when RESEND_API_KEY is missing — already in codebase patterns
+  - Password reset flow uses `createServiceClient().auth.admin.generateLink({ type: "recovery" })` to get a reset URL, then sends via Resend instead of relying on Supabase's built-in email
+  - Always return success on forgot-password regardless of whether email exists to prevent email enumeration attacks
+  - Fire-and-forget emails use `.catch(() => {})` to prevent email failures from blocking the main flow
+  - Auth callback route already handles `?next=` param, so password reset redirects to `/auth/callback?next=/reset-password`
+---
