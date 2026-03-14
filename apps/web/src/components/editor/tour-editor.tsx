@@ -10,6 +10,7 @@ import { EditorViewport } from "./editor-viewport";
 import { MobileEditorNotice } from "./mobile-editor-notice";
 import { ViewportToolbar, type EditorMode } from "./viewport-toolbar";
 import type { EditorWaypoint, EditorHotspot } from "./editor-markers-overlay";
+import { TourSettingsModal, type TourSettingsData } from "./tour-settings-modal";
 
 // ---- Types ------------------------------------------------------------------
 
@@ -67,7 +68,14 @@ function useDebouncedCallback<T extends (...args: never[]) => void>(
 
 export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditorProps) {
   const [tourTitle, setTourTitle] = useState(tour.title);
+  const [tourSlug, setTourSlug] = useState(tour.slug);
+  const [tourDescription, setTourDescription] = useState(tour.description);
+  const [tourCategory, setTourCategory] = useState(tour.category);
+  const [tourTags, setTourTags] = useState(tour.tags);
+  const [tourLocation, setTourLocation] = useState(tour.location);
+  const [tourCoverImageUrl, setTourCoverImageUrl] = useState(tour.cover_image_url);
   const [tourStatus, setTourStatus] = useState(tour.status);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [scenes, setScenes] = useState<EditorScene[]>(initialScenes);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(
     initialScenes[0]?.id ?? null
@@ -245,6 +253,31 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
       setTourStatus("published");
     }
   }, [tour.org_id, tour.id]);
+
+  // ---- Settings save (optimistic + API sync) --------------------------------
+
+  const handleSettingsSave = useCallback(
+    (updates: Partial<TourSettingsData>) => {
+      // Optimistic local state update
+      if (updates.title !== undefined) setTourTitle(updates.title);
+      if (updates.slug !== undefined) setTourSlug(updates.slug);
+      if (updates.description !== undefined) setTourDescription(updates.description ?? null);
+      if (updates.category !== undefined) setTourCategory(updates.category);
+      if (updates.tags !== undefined) setTourTags(updates.tags);
+      if (updates.location !== undefined) setTourLocation(updates.location ?? null);
+      if (updates.cover_image_url !== undefined) setTourCoverImageUrl(updates.cover_image_url ?? null);
+
+      // API sync
+      fetch(`/api/orgs/${tour.org_id}/tours/${tour.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      }).catch((err) =>
+        console.error("[Editor] Failed to save tour settings:", err),
+      );
+    },
+    [tour.org_id, tour.id],
+  );
 
   // ---- Place waypoint -------------------------------------------------------
 
@@ -578,6 +611,26 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
 
   return (
     <>
+      {/* Tour settings modal */}
+      <TourSettingsModal
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        tour={{
+          id: tour.id,
+          org_id: tour.org_id,
+          title: tourTitle,
+          slug: tourSlug,
+          description: tourDescription,
+          category: tourCategory,
+          tags: tourTags,
+          location: tourLocation,
+          cover_image_url: tourCoverImageUrl,
+        }}
+        canEdit={canEdit}
+        appUrl={typeof window !== "undefined" ? window.location.origin : ""}
+        onSave={handleSettingsSave}
+      />
+
       {/* Mobile: view-only notice */}
       <MobileEditorNotice />
 
@@ -587,10 +640,11 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
         <EditorHeader
           title={tourTitle}
           status={tourStatus}
-          slug={tour.slug}
+          slug={tourSlug}
           canEdit={canEdit}
           onTitleChange={handleTitleChange}
           onPublish={handlePublish}
+          onSettingsClick={() => setIsSettingsOpen(true)}
         />
 
         {/* Main editor area */}

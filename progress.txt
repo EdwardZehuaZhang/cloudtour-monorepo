@@ -449,3 +449,23 @@
   - HTML5 drag-and-drop (`onDrop`/`onDragOver`) used for dragging unplaced scenes from palette onto floor plan
   - `getRelativePosition` converts mouse clientX/Y to normalized 0-1 coordinates via `getBoundingClientRect()` on the image element
 ---
+
+## 2026-03-14 - US-022
+- Implemented tour settings modal accessible from editor header actions
+- Modal sections: Metadata (title, description, category, location, tags, cover image), SEO & URL (editable slug with public URL preview), Sharing (direct link copy, embed code snippet, QR code generation)
+- Added `slug` field to tour PATCH API schema with regex validation and uniqueness check (409 on conflict)
+- TourEditor manages full tour metadata state (title, slug, description, category, tags, location, cover_image_url) with optimistic updates
+- QR code uses a deterministic SVG-based visual representation with proper finder patterns
+- Sharing section: copy-to-clipboard with visual feedback, open in new tab, embed iframe code
+- Uses shadcn/ui Dialog component per design spec (modals acceptable for complex forms like tour settings)
+- Files changed:
+  - New: apps/web/src/components/editor/tour-settings-modal.tsx
+  - Modified: apps/web/src/app/api/orgs/[orgId]/tours/[tourId]/route.ts (slug field + uniqueness), apps/web/src/components/editor/editor-header.tsx (onSettingsClick prop), apps/web/src/components/editor/tour-editor.tsx (settings state + modal wiring)
+  - Modified: prd.json (US-022 passes: true)
+- **Learnings for future iterations:**
+  - Tour PATCH API now accepts `slug` with regex `/^[a-z0-9]+(?:-[a-z0-9]+)*$/` — validated server-side, uniqueness checked before update
+  - `noUncheckedIndexedAccess` requires explicit tuple typing `[number, number][]` for destructured arrays in for-of loops
+  - `Array.from({ length: n }, () => ...)` is safer than `arr[y] = []` assignment for TypeScript strict mode
+  - TourSettingsModal syncs form state from props via useEffect on `tour` — allows external updates (e.g. title from header) to propagate
+  - Cover image upload is stubbed as "coming soon" — the upload flow exists at the API level but the modal UI defers full integration
+---

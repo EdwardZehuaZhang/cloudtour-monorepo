@@ -12,6 +12,7 @@ interface EditorHeaderProps {
   canEdit: boolean;
   onTitleChange: (newTitle: string) => void;
   onPublish: () => void;
+  onSettingsClick: () => void;
 }
 
 const statusStyles: Record<TourStatus, string> = {
@@ -27,6 +28,7 @@ export function EditorHeader({
   canEdit,
   onTitleChange,
   onPublish,
+  onSettingsClick,
 }: EditorHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(title);
@@ -115,9 +117,10 @@ export function EditorHeader({
           Preview
         </Link>
 
-        {/* Settings button (placeholder for US-022) */}
+        {/* Settings button */}
         <button
           type="button"
+          onClick={onSettingsClick}
           className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-secondary)] transition-colors duration-fast hover:bg-[var(--surface-alt)] hover:text-[var(--text-primary)]"
           aria-label="Tour settings"
         >

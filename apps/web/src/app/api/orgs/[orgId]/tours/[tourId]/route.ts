@@ -47,6 +47,12 @@ const updateTourSchema = z
       .min(1, "Title is required")
       .max(200, "Title must be at most 200 characters")
       .optional(),
+    slug: z
+      .string()
+      .min(1, "Slug is required")
+      .max(200, "Slug must be at most 200 characters")
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase alphanumeric with hyphens")
+      .optional(),
     description: z
       .string()
       .max(2000, "Description must be at most 2000 characters")
@@ -104,6 +110,23 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   const { supabase } = auth;
+
+  // If slug is being updated, check for uniqueness
+  if (updates.slug) {
+    const { data: existing } = await supabase
+      .from("tours")
+      .select("id")
+      .eq("slug", updates.slug)
+      .neq("id", tourId)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "Slug already in use", field: "slug" },
+        { status: 409 }
+      );
+    }
+  }
 
   const { data: tour, error } = await supabase
     .from("tours")

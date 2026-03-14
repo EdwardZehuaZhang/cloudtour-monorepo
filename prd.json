@@ -377,7 +377,7 @@
         "Typecheck passes"
       ],
       "priority": 22,
-      "passes": false,
+      "passes": true,
       "notes": "Modals are acceptable for complex forms like tour settings. Use shadcn/ui Dialog component."
     },
     {
