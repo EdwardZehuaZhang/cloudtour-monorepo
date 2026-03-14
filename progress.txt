@@ -469,3 +469,25 @@
   - TourSettingsModal syncs form state from props via useEffect on `tour` — allows external updates (e.g. title from header) to propagate
   - Cover image upload is stubbed as "coming soon" — the upload flow exists at the API level but the modal UI defers full integration
 ---
+
+## 2026-03-14 - US-023
+- Implemented dashboard tour grid with editorial asymmetric masonry layout
+- Created TourGrid client component with 3-column grid, first card spanning 2 columns (hero/featured)
+- TourCard component with thumbnail display, status badge, hover actions menu (edit/view/delete), view count overlay
+- Mini SplatViewer preview lazy-loaded on hover after 300ms debounce — dynamically imports gaussian-splats-3d
+- Empty state: greyed demo tour card (left) explaining what tours are + branded CTA card (right) with "Create your first tour" button
+- Create tour button triggers POST /api/orgs/[orgId]/tours then redirects to editor
+- Staggered fade-up entrance animation: 40px translateY, 30ms delay between items, uses dashboard-fade-up keyframes
+- Dashboard page is a server component that fetches tours with scene counts and first scene thumbnails
+- Uses Next.js Image component for optimized thumbnail loading
+- Files changed:
+  - New: apps/web/src/components/dashboard/tour-grid.tsx
+  - Modified: apps/web/src/app/(dashboard)/dashboard/page.tsx (rewritten as server component with tour fetching)
+  - Modified: apps/web/src/app/globals.css (added dashboard-fade-up keyframe)
+- **Learnings for future iterations:**
+  - Dashboard page can independently fetch user/org data (same pattern as layout) since both are server components with access to createServerClient
+  - Tour grid queries scenes separately and joins client-side for first_scene_thumbnail — avoids complex Supabase join syntax
+  - Mini SplatViewer preview uses same @mkkellogg/gaussian-splats-3d library but with useBuiltInControls: false for non-interactive preview
+  - next/image `fill` prop with `sizes` attribute handles responsive image optimization for grid cards
+  - Empty state pattern: greyed demo card + CTA is more instructive than a simple "No tours yet" message
+---

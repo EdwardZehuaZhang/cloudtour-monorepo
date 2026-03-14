@@ -393,7 +393,7 @@
         "Typecheck passes"
       ],
       "priority": 23,
-      "passes": false,
+      "passes": true,
       "notes": "The tour grid is NOT a uniform card grid — use asymmetric masonry with editorial presentation. The first card should be larger (hero/featured). On hover, load a mini SplatViewer preview lazily after 300ms debounce. Empty states should teach — explain what tours are, don't just say 'No tours yet'."
     },
     {
