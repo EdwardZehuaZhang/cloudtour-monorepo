@@ -46,6 +46,8 @@
 - Editor marker placement uses `useDebouncedCallback` (500ms) for position sync — CSS transform immediately, API updates debounced
 - Screen-to-3D unprojection: NDC → unproject near/far → direction → place at fixed depth; reuse Vector3 instances to avoid GC in rAF loops
 - EditorMarkersOverlay component manages 3D→2D projection + click-to-place + drag-to-reposition; lives inside SplatViewer as child (uses ViewerContext)
+- Floor plan API: one floor plan per tour; GET uses `.maybeSingle()`, scene_positions are normalized 0-1 coords [{scene_id, x, y}]
+- Private assets bucket images need long-lived signed URLs (e.g., 10 years) since there's no public CDN for the assets bucket
 
 ---
 
@@ -414,4 +416,36 @@
   - Delete operations use optimistic UI: remove from local state immediately, fire DELETE request in background
   - Collapsible sections use local `useState` — no need for a global accordion state manager
   - The `onSceneChange` handler updates local scenes array so inspector inputs stay in sync without refetching
+---
+
+## 2026-03-14 - US-021
+- Implemented floor plan panel for the tour editor
+- Created floor plan API routes:
+  - GET /api/orgs/[orgId]/tours/[tourId]/floor-plan — fetch floor plan (viewer+)
+  - PATCH /api/orgs/[orgId]/tours/[tourId]/floor-plan — update scene_positions (editor+)
+  - DELETE /api/orgs/[orgId]/tours/[tourId]/floor-plan — delete floor plan (admin+)
+  - POST /api/orgs/[orgId]/tours/[tourId]/floor-plan/upload — presigned URL for image upload (editor+)
+  - PUT /api/orgs/[orgId]/tours/[tourId]/floor-plan/upload — confirm upload, create/update floor_plans record (editor+)
+- Enhanced FloorPlanDrawer component:
+  - Upload floor plan image via presigned URL to assets bucket
+  - Display uploaded floor plan image with draggable scene markers
+  - Markers show scene number, active scene highlighted with --brand color
+  - Drag-to-reposition markers with optimistic UI + API sync
+  - Unplaced scenes palette on the right (drag onto floor plan to place)
+  - Drop support for dragging scenes from palette onto floor plan image
+  - Delete/replace floor plan buttons
+  - Scene positions stored as floor_plans.scene_positions jsonb [{scene_id, x, y}]
+  - Clicking a marker selects that scene in the editor
+- Wired floor plan state into TourEditor: fetch on mount, pass to FloorPlanDrawer
+- Drawer transitions use --duration-base and --ease-out per design spec
+- Files changed:
+  - New: floor-plan/route.ts, floor-plan/upload/route.ts
+  - Modified: floor-plan-drawer.tsx (rewritten), tour-editor.tsx (added floor plan state + props)
+- **Learnings for future iterations:**
+  - Floor plan positions use normalized coordinates (0-1) relative to the image, not pixel values — makes positions resolution-independent
+  - Floor plan image stored in private assets bucket; long-lived signed URL (10 years) used as image_url in floor_plans table
+  - One floor plan per tour — use `.maybeSingle()` instead of `.single()` for GET to handle the no-floor-plan case without error
+  - Drag-to-place on floor plan uses mousedown/mousemove/mouseup on window (same pattern as 3D marker drag) for reliable drag outside bounds
+  - HTML5 drag-and-drop (`onDrop`/`onDragOver`) used for dragging unplaced scenes from palette onto floor plan
+  - `getRelativePosition` converts mouse clientX/Y to normalized 0-1 coordinates via `getBoundingClientRect()` on the image element
 ---

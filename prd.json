@@ -361,7 +361,7 @@
         "Typecheck passes"
       ],
       "priority": 21,
-      "passes": false,
+      "passes": true,
       "notes": "The floor plan drawer uses transition with --duration-base and --ease-out. Scene markers should match the scene list items for visual consistency."
     },
     {

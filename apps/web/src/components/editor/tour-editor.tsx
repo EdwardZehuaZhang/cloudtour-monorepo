@@ -5,7 +5,7 @@ import type { TourStatus, TourCategory, Role, SplatFileFormat, CameraPosition, P
 import { EditorHeader } from "./editor-header";
 import { SceneList } from "./scene-list";
 import { InspectorPanel } from "./inspector-panel";
-import { FloorPlanDrawer } from "./floor-plan-drawer";
+import { FloorPlanDrawer, type FloorPlanData } from "./floor-plan-drawer";
 import { EditorViewport } from "./editor-viewport";
 import { MobileEditorNotice } from "./mobile-editor-notice";
 import { ViewportToolbar, type EditorMode } from "./viewport-toolbar";
@@ -73,6 +73,7 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
     initialScenes[0]?.id ?? null
   );
   const [isFloorPlanOpen, setIsFloorPlanOpen] = useState(false);
+  const [floorPlan, setFloorPlan] = useState<FloorPlanData | null>(null);
 
   // Editor mode & marker state
   const [editorMode, setEditorMode] = useState<EditorMode>("select");
@@ -136,6 +137,29 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
       cancelled = true;
     };
   }, [activeSceneId, tour.org_id, tour.id]);
+
+  // ---- Fetch floor plan on mount ----------------------------------------------
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchFloorPlan() {
+      const res = await fetch(
+        `/api/orgs/${tour.org_id}/tours/${tour.id}/floor-plan`,
+      );
+      if (cancelled || !res.ok) return;
+      const body = await res.json();
+      setFloorPlan(body.data ?? null);
+    }
+
+    fetchFloorPlan().catch((err) =>
+      console.error("[Editor] Failed to fetch floor plan:", err),
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tour.org_id, tour.id]);
 
   // Reset editor mode and selection when scene changes
   useEffect(() => {
@@ -611,6 +635,14 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
             <FloorPlanDrawer
               isOpen={isFloorPlanOpen}
               onToggle={() => setIsFloorPlanOpen((prev) => !prev)}
+              tourId={tour.id}
+              orgId={tour.org_id}
+              scenes={scenes}
+              activeSceneId={activeSceneId}
+              canEdit={canEdit}
+              floorPlan={floorPlan}
+              onFloorPlanChange={setFloorPlan}
+              onSelectScene={setActiveSceneId}
             />
           </div>
 
