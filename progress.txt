@@ -781,3 +781,42 @@
   - DashboardShell renders the OnboardingWizard conditionally based on showOnboarding prop
   - Wizard completion calls PATCH /api/me with { onboarding_completed: true } then router.refresh() to re-fetch server data
 ---
+
+## 2026-03-14 - US-036
+- Implemented empty states, loading skeletons, and error boundaries across the app
+- Empty tour list already had greyed demo card + CTA (from US-023)
+- Updated scene list empty state to inline drop zone with Upload icon and format support text (.ply .splat .spz)
+- Created loading.tsx skeletons for:
+  - /dashboard (tour grid with hero card + regular cards, staggered fade-up 30ms delay)
+  - /dashboard/members (member list with avatar + name + role badge skeletons)
+  - /dashboard/settings (settings sections with form field skeletons)
+  - /editor/[tourId] (full four-panel editor layout: scene list, viewport, inspector)
+  - /explore (filter bar + 6-card grid with staggered fade-up)
+  - /blog (post list with thumbnail + text skeletons)
+- All loading skeletons use dashboard-fade-up animation (40px translateY, 30ms staggered delay)
+- Created error.tsx error boundaries for:
+  - /dashboard (try again button)
+  - /editor/[tourId] (back to dashboard + try again)
+  - /explore (try again)
+  - /tours/[slug] (back to explore + try again)
+  - /blog (try again)
+- All error boundaries use friendly copy, destructive-colored icon, and brand-colored action buttons
+- Files changed:
+  - apps/web/src/components/editor/scene-list.tsx (modified - updated empty state)
+  - apps/web/src/app/(dashboard)/dashboard/loading.tsx (new)
+  - apps/web/src/app/(dashboard)/dashboard/error.tsx (new)
+  - apps/web/src/app/(dashboard)/dashboard/members/loading.tsx (new)
+  - apps/web/src/app/(dashboard)/dashboard/settings/loading.tsx (new)
+  - apps/web/src/app/(editor)/editor/[tourId]/loading.tsx (new)
+  - apps/web/src/app/(editor)/editor/[tourId]/error.tsx (new)
+  - apps/web/src/app/explore/loading.tsx (new)
+  - apps/web/src/app/explore/error.tsx (new)
+  - apps/web/src/app/tours/[slug]/error.tsx (new)
+  - apps/web/src/app/blog/loading.tsx (new)
+  - apps/web/src/app/blog/error.tsx (new)
+- **Learnings for future iterations:**
+  - Next.js App Router loading.tsx files are server components by default — no "use client" needed for skeletons using @cloudtour/ui Skeleton
+  - Error.tsx files MUST be client components ("use client") — they receive error and reset props
+  - Loading skeletons should match the exact layout shape of actual content (same grid structure, aspect ratios, spacing)
+  - The dashboard-fade-up keyframe animation is already defined in globals.css — reuse it in loading skeletons for consistency
+---

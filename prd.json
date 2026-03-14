@@ -610,7 +610,7 @@
         "Typecheck passes"
       ],
       "priority": 36,
-      "passes": false,
+      "passes": true,
       "notes": "Empty states that teach — not just 'Nothing here'. Dashboard page entrance uses staggered fade-up animation: 40px transform, 30ms delay between items. Loading skeletons should match the layout shape of actual content."
     }
   ]
