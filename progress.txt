@@ -730,3 +730,19 @@
   - RSS feed served as route handler at `/feed.xml/route.ts` (folder-based routing)
   - `generateStaticParams` in blog/[slug] enables static generation of all blog posts at build time
 ---
+
+## 2026-03-14 - US-033
+- Implemented four static pages: /about, /contact, /privacy, /terms
+- /about: company info, mission, technology, use cases, CTA
+- /contact: Zod-validated form with server action, success state, alternative contact info
+- /privacy: PDPA-compliant policy with 12 sections covering consent, data collection, 30-day deletion, user rights
+- /terms: 14 sections covering acceptable use, content ownership, billing, termination
+- All pages follow existing nav/footer/metadata patterns from blog and pricing pages
+- Sitemap already included these pages from US-027
+- Files changed: apps/web/src/app/about/page.tsx, apps/web/src/app/contact/actions.ts, apps/web/src/app/contact/page.tsx, apps/web/src/app/privacy/page.tsx, apps/web/src/app/terms/page.tsx
+- **Learnings for future iterations:**
+  - Static pages follow a consistent pattern: nav header, max-w-5xl/3xl container, footer — copy from blog page for cleanest template
+  - Contact form uses server action pattern from auth pages: useFormState + useFormStatus in child SubmitButton component
+  - Legal pages (privacy/terms) use max-w-3xl for better readability; marketing pages (about) use max-w-5xl
+  - Zod v4 string validation uses simple string messages: z.string().min(1, "error message")
+---
