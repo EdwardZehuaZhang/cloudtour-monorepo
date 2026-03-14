@@ -1,0 +1,49 @@
+---
+title: "Gaussian Splatting Explained: The Technology Behind CloudTour"
+description: "A beginner-friendly explanation of Gaussian splatting — the 3D reconstruction technique that powers CloudTour's immersive virtual tours."
+date: "2026-03-07"
+category: "technology"
+author: "CloudTour Team"
+image: "/blog/gaussian-splatting.jpg"
+---
+
+If you've seen a CloudTour experience and wondered how it looks so lifelike, the answer is Gaussian splatting. Let's break down what it is and why it matters.
+
+## What Is Gaussian Splatting?
+
+At its core, Gaussian splatting (formally "3D Gaussian Splatting for Real-Time Radiance Field Rendering") is a technique for reconstructing 3D scenes from photographs. It was introduced in 2023 and quickly became one of the most exciting developments in computer graphics.
+
+Instead of traditional polygon meshes, the scene is represented as millions of tiny 3D Gaussians — think of them as soft, colored blobs in space. Each Gaussian has:
+
+- A **position** in 3D space
+- A **color** (with view-dependent effects)
+- An **opacity** value
+- A **covariance matrix** defining its shape and orientation
+
+## Why Not NeRF?
+
+Neural Radiance Fields (NeRF) pioneered photorealistic novel view synthesis, but they come with drawbacks:
+
+- **Slow rendering** — NeRFs require expensive ray marching
+- **Long training times** — hours to days per scene
+- **Hard to edit** — the scene is locked inside a neural network
+
+Gaussian splatting solves all three:
+
+- **Real-time rendering** at 30+ FPS using rasterization
+- **Training in minutes** on a consumer GPU
+- **Explicit representation** — you can edit, merge, and manipulate individual Gaussians
+
+## File Formats We Support
+
+CloudTour supports the three most common Gaussian splat formats:
+
+- **PLY** — the original format from the research paper
+- **SPLAT** — a compact binary format optimized for web delivery
+- **SPZ** — a compressed format for even smaller file sizes
+
+## The Future
+
+Gaussian splatting is evolving rapidly. Dynamic scenes, relightable splatting, and higher compression ratios are all active areas of research. CloudTour is built to support these advances as they mature.
+
+Want to try it yourself? [Create a free account](/signup) and upload your first splat file.
