@@ -692,3 +692,18 @@
   - Webhook idempotency: insert billing_event first, check for 23505 (unique constraint), skip processing if duplicate
   - Service role client needed for webhook handler to bypass RLS on billing_events table
 ---
+
+## 2026-03-14 - US-031
+- What was implemented: Rate limiting via Next.js Edge Middleware with in-memory sliding window
+- Files created:
+  - apps/web/src/lib/rate-limit.ts (sliding window rate limiter with periodic cleanup)
+- Files modified:
+  - apps/web/src/middleware.ts (added rate limiting for API routes, expanded matcher to include /api/:path*)
+  - prd.json (US-031 passes: true)
+- **Learnings for future iterations:**
+  - Middleware matcher must include `/api/:path*` for rate limiting to apply to API routes
+  - Webhook endpoints should be excluded from rate limiting (Stripe manages its own retry logic)
+  - In-memory rate limiter works for single-instance; for multi-instance use Vercel KV
+  - Upload endpoints are identified by pathname containing `/upload` (excluding `/upload/confirm`)
+  - Rate limit headers: X-RateLimit-Limit, X-RateLimit-Remaining, Retry-After
+---
