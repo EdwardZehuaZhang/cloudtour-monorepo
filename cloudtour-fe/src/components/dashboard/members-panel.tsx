@@ -69,7 +69,7 @@ export function MembersPanel({ orgId, currentUserRole }: MembersPanelProps) {
         setMembers(data.data);
       }
     } catch {
-      // Silently fail â€?member list will remain empty
+      // Silently fail éˆ¥?member list will remain empty
     } finally {
       setLoading(false);
     }
@@ -276,9 +276,9 @@ export function MembersPanel({ orgId, currentUserRole }: MembersPanelProps) {
                 onChange={(e) => setInviteRole(e.target.value as "admin" | "editor" | "viewer")}
                 className="flex h-10 w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm ring-offset-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
               >
-                <option value="viewer">Viewer â€?Can view tours</option>
-                <option value="editor">Editor â€?Can create and edit tours</option>
-                <option value="admin">Admin â€?Can manage members and settings</option>
+                <option value="viewer">Viewer éˆ¥?Can view tours</option>
+                <option value="editor">Editor éˆ¥?Can create and edit tours</option>
+                <option value="admin">Admin éˆ¥?Can manage members and settings</option>
               </select>
             </div>
 
@@ -301,4 +301,3 @@ export function MembersPanel({ orgId, currentUserRole }: MembersPanelProps) {
     </>
   );
 }
-

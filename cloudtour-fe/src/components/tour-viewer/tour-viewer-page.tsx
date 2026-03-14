@@ -78,7 +78,7 @@ export function TourViewerPage({ tour, slug }: TourViewerPageProps) {
   // Record view on mount
   useEffect(() => {
     fetch((process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + `/api/tours/${slug}/view`, { method: "POST" }).catch(() => {
-      // Non-critical â€?silently fail
+      // Non-critical éˆ¥?silently fail
     });
   }, [slug]);
 
@@ -188,7 +188,7 @@ export function TourViewerPage({ tour, slug }: TourViewerPageProps) {
             )}
           </div>
 
-          {/* Sidebar â€?Tour info + scene thumbnails */}
+          {/* Sidebar éˆ¥?Tour info + scene thumbnails */}
           <aside className="flex flex-col gap-5">
             {/* Tour metadata */}
             <div className="flex flex-col gap-3">
@@ -352,4 +352,3 @@ export function TourViewerPage({ tour, slug }: TourViewerPageProps) {
     </div>
   );
 }
-
