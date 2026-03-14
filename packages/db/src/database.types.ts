@@ -352,6 +352,10 @@ export interface Database {
         Args: { base_slug: string; table_name: string };
         Returns: string;
       };
+      increment_view_count: {
+        Args: { tour_id_input: string };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
   };

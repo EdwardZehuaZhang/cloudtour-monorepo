@@ -48,6 +48,11 @@
 - EditorMarkersOverlay component manages 3D→2D projection + click-to-place + drag-to-reposition; lives inside SplatViewer as child (uses ViewerContext)
 - Floor plan API: one floor plan per tour; GET uses `.maybeSingle()`, scene_positions are normalized 0-1 coords [{scene_id, x, y}]
 - Private assets bucket images need long-lived signed URLs (e.g., 10 years) since there's no public CDN for the assets bucket
+- Supabase jsonb columns return `Json` type — cast via `as unknown as TypedInterface` for typed usage in app code
+- `Promise.resolve({ data: [] })` infers `never[]` — use explicit typed variables + conditional fetching instead
+- `useSearchParams()` in Next.js 14 requires `<Suspense>` wrapper for pages that static-generate
+- Public tour viewer at `/tours/[slug]` uses SSR `generateMetadata` for SEO; client component handles 3D viewer + interactions
+- View count increment uses Supabase RPC (`increment_view_count`) for atomic updates; deduplication via hashed IP + tour_id
 
 ---
 
@@ -549,4 +554,39 @@
   - `scenesMap` pattern (iterating scenes once to build count + first thumbnail) is efficient for joining scene data client-side
   - URL search params sync via `useSearchParams()` + `router.replace()` makes filter state shareable and bookmarkable
   - Rate limiting for unauthenticated endpoints deferred to US-031 (Vercel Edge Middleware)
+---
+
+## 2026-03-14 - US-026
+- Implemented public tour page with SSR and SEO at /tours/[slug]
+- Created GET /api/tours/[slug] endpoint returning tour detail + scenes + waypoints + hotspots + organization
+- Created POST /api/tours/[slug]/view endpoint with IP-hash deduplication (1hr window) using service client
+- Created migration 013 for `increment_view_count` Supabase RPC function (atomic view count increment)
+- Updated database.types.ts with increment_view_count function signature
+- SSR page uses generateMetadata for dynamic OG + Twitter Card meta tags
+- JSON-LD VirtualLocation schema markup rendered via script tag
+- TourViewerPage client component with:
+  - Embedded SplatViewer with scene switching
+  - ViewerOverlay with waypoints/hotspots
+  - Scene thumbnails grid in sidebar
+  - Tour metadata display (title, description, location, views, date, tags)
+  - Apple Vision Pro CTA
+  - Share functionality via Web Share API with clipboard fallback
+  - View count recorded on mount
+- Fixed pre-existing /explore page build error (useSearchParams needs Suspense boundary)
+- Files changed:
+  - apps/web/src/app/api/tours/[slug]/route.ts (new)
+  - apps/web/src/app/api/tours/[slug]/view/route.ts (new)
+  - apps/web/src/app/tours/[slug]/page.tsx (new)
+  - apps/web/src/components/tour-viewer/tour-viewer-page.tsx (new)
+  - apps/web/src/app/explore/page.tsx (Suspense fix)
+  - packages/db/migrations/013_increment_view_count.sql (new)
+  - packages/db/src/database.types.ts (added RPC type)
+  - prd.json (US-026 passes: true)
+- **Learnings for future iterations:**
+  - Supabase returns `Json` type for jsonb columns — cast via `as unknown as TypedInterface` for typed usage
+  - `Promise.resolve({ data: [] })` infers `never[]` — use explicit typed variables instead of ternary with Promise.resolve
+  - tour_views insert and tours.view_count update both need service role — use `createServiceClient()` for both
+  - IP deduplication: hash IP + tour_id together so same IP can view different tours
+  - `useSearchParams()` in Next.js 14 requires wrapping in `<Suspense>` for static generation to work
+  - Public API endpoints (no auth) just call `createServerClient()` directly, no `requireOrgRole()`
 ---

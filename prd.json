@@ -447,7 +447,7 @@
         "Typecheck passes"
       ],
       "priority": 26,
-      "passes": false,
+      "passes": true,
       "notes": "SSR for SEO — use Next.js generateMetadata. The SplatViewer on this page is the same shared component. View counter should use viewer_ip_hash for basic deduplication."
     },
     {
