@@ -19,6 +19,8 @@
 - Published tours/scenes/waypoints/hotspots are publicly readable (no JWT); all other access requires org membership
 - Slug deduplication uses sequential suffixes (-2, -3), never random — implemented in `generate_unique_slug()` DB function
 - `billing_events` and `tour_views` inserts use service role (no user INSERT policy); reads are scoped to org members/owners
+- Stripe client uses lazy init pattern in `apps/web/src/lib/stripe.ts` (same pattern as Resend in `email.ts`)
+- Stripe webhook handler verifies `stripe-signature` before processing; idempotency via `billing_events.stripe_event_id` unique constraint
 - Supabase clients: `createBrowserClient()` (client), `createServerClient()` (server w/ cookies), `createServiceClient()` (admin, server-only)
 - Env validation uses Zod in `packages/db/src/env.ts`; public vars validated separately from server vars
 - `@supabase/ssr` handles cookie-based auth for Next.js App Router server components
@@ -665,4 +667,28 @@
   - Zod v4 z.enum() uses `z.enum(values, "error message")` string syntax, not `{ required_error }` object
   - Invite flow uses invite_token UUID column with DB-generated default; token is nulled on accept
   - Design spec requires slide-over (Sheet) for member invite, not Dialog/modal
+---
+
+## 2026-03-14 - US-030
+- What was implemented: Stripe billing integration — checkout sessions, webhook handler, billing portal, and settings page
+- Files created:
+  - apps/web/src/lib/stripe.ts (Stripe client with lazy initialization)
+  - apps/web/src/app/api/orgs/[orgId]/billing/route.ts (POST creates checkout, GET opens billing portal)
+  - apps/web/src/app/api/webhooks/stripe/route.ts (webhook handler with signature verification)
+  - apps/web/src/app/(dashboard)/dashboard/settings/page.tsx (settings page)
+  - apps/web/src/components/dashboard/billing-settings.tsx (billing UI component)
+  - packages/db/migrations/015_organizations_stripe_columns.sql (stripe_customer_id, stripe_subscription_id columns)
+- Files modified:
+  - packages/db/src/database.types.ts (added stripe columns to organizations)
+  - apps/web/package.json (added stripe dependency)
+  - pnpm-lock.yaml
+  - prd.json (US-030 passes: true)
+- **Learnings for future iterations:**
+  - Stripe SDK v20.x uses API version `2026-02-25.clover`; don't hardcode apiVersion — let the SDK default
+  - Stripe types for `customer` field can be `string | Stripe.Customer | Stripe.DeletedCustomer`; always use typeof check
+  - Use `JSON.parse(JSON.stringify(event.data.object)) as Json` to convert Stripe objects to Json type (avoids type mismatch)
+  - Cast `event.data.object` via `unknown` first: `as unknown as Record<string, unknown>` to avoid TS2352 overlap error
+  - Stripe.Checkout.SessionCreateParams is the correct type for checkout session creation params (not Parameters<> extraction)
+  - Webhook idempotency: insert billing_event first, check for 23505 (unique constraint), skip processing if duplicate
+  - Service role client needed for webhook handler to bypass RLS on billing_events table
 ---
