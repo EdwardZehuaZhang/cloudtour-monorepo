@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { GripVertical, Plus, ImageIcon } from "lucide-react";
+import { GripVertical, Plus, Upload, ImageIcon } from "lucide-react";
 import type { EditorScene } from "./tour-editor";
 
 interface SceneListProps {
@@ -102,14 +102,25 @@ export function SceneList({
       {/* Scene items */}
       <div className="flex-1 overflow-y-auto p-2">
         {scenes.length === 0 && (
-          <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
-            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--surface-alt)]">
-              <ImageIcon size={18} className="text-[var(--text-secondary)]" />
+          <button
+            type="button"
+            onClick={canEdit ? onAddScene : undefined}
+            className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--border)] px-4 py-8 text-center transition-colors duration-base ${
+              canEdit
+                ? "cursor-pointer hover:border-[var(--brand)] hover:bg-[var(--brand)]/5"
+                : "cursor-default"
+            }`}
+          >
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--surface-alt)]">
+              <Upload size={18} className="text-[var(--text-secondary)]" />
             </div>
-            <p className="text-xs text-[var(--text-secondary)]">
-              No scenes yet. Add your first scene to get started.
+            <p className="text-xs font-medium text-[var(--text-primary)]">
+              {canEdit ? "Add your first scene" : "No scenes yet"}
             </p>
-          </div>
+            <p className="mt-1 text-[10px] text-[var(--text-secondary)]">
+              Supports .ply .splat .spz
+            </p>
+          </button>
         )}
 
         {scenes.map((scene, index) => {
