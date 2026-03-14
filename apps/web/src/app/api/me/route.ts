@@ -20,7 +20,7 @@ export async function GET() {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("username, display_name, avatar_url, bio")
+    .select("username, display_name, avatar_url, bio, onboarding_completed")
     .eq("id", user.id)
     .single();
 
@@ -56,6 +56,7 @@ const updateProfileSchema = z
       .max(500, "Bio must be at most 500 characters")
       .nullable()
       .optional(),
+    onboarding_completed: z.boolean().optional(),
   })
   .strict();
 
@@ -106,7 +107,7 @@ export async function PATCH(request: Request) {
     .from("profiles")
     .update(updates)
     .eq("id", user.id)
-    .select("username, display_name, avatar_url, bio")
+    .select("username, display_name, avatar_url, bio, onboarding_completed")
     .single();
 
   if (updateError) {

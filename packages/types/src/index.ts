@@ -46,6 +46,7 @@ export interface Profile {
   display_name: string;
   avatar_url: string | null;
   bio: string | null;
+  onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
 }

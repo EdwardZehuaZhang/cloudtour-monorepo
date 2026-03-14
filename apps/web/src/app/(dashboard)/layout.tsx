@@ -56,8 +56,23 @@ export default async function DashboardLayout({
     role: "owner" as const,
   };
 
+  // Check onboarding status
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, onboarding_completed")
+    .eq("id", user.id)
+    .single();
+
+  const showOnboarding = profile ? !profile.onboarding_completed : false;
+
   return (
-    <DashboardShell orgName={currentOrg.name} plan={currentOrg.plan}>
+    <DashboardShell
+      orgName={currentOrg.name}
+      plan={currentOrg.plan}
+      showOnboarding={showOnboarding}
+      displayName={profile?.display_name ?? ""}
+      orgId={currentOrg.id}
+    >
       {children}
     </DashboardShell>
   );
