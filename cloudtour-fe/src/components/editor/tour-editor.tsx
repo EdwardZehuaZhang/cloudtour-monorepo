@@ -180,7 +180,7 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
       // Optimistic UI update
       setScenes(reordered);
 
-      // Background sync â€?update sort_order for each scene
+      // Background sync éˆ¥?update sort_order for each scene
       reordered.forEach((scene, index) => {
         if (scene.sort_order !== index) {
           fetch((process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + `/api/orgs/${tour.org_id}/tours/${tour.id}/scenes/${scene.id}`,
@@ -451,7 +451,7 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
   // ---- Camera reset placeholder ---------------------------------------------
 
   const handleCameraReset = useCallback(() => {
-    // Camera reset placeholder â€?SplatViewer manages its own camera
+    // Camera reset placeholder éˆ¥?SplatViewer manages its own camera
   }, []);
 
   // ---- Scene property change (optimistic + debounced sync) ------------------
@@ -704,5 +704,4 @@ export function TourEditor({ tour, scenes: initialScenes, userRole }: TourEditor
     </>
   );
 }
-
 

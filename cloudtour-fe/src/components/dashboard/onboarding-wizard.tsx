@@ -68,7 +68,7 @@ export function OnboardingWizard({
     if (step < TOTAL_STEPS - 1) {
       setStep(step + 1);
     } else {
-      // Final step â€?complete onboarding
+      // Final step éˆ¥?complete onboarding
       await completeOnboarding();
       setIsOpen(false);
       router.refresh();
@@ -241,4 +241,3 @@ export function OnboardingWizard({
     </Dialog>
   );
 }
-
