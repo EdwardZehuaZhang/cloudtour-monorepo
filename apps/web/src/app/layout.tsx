@@ -10,10 +10,30 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://cloudtour.app";
+
 export const metadata: Metadata = {
-  title: "CloudTour — Spatial tours for the places worth remembering",
+  metadataBase: new URL(appUrl),
+  title: {
+    default: "CloudTour — Spatial tours for the places worth remembering",
+    template: "%s — CloudTour",
+  },
   description:
     "Create and share immersive Gaussian splatting virtual tours with CloudTour.",
+  openGraph: {
+    type: "website",
+    siteName: "CloudTour",
+    title: "CloudTour — Spatial tours for the places worth remembering",
+    description:
+      "Create and share immersive Gaussian splatting virtual tours with CloudTour.",
+    url: appUrl,
+  },
+  twitter: {
+    card: "summary",
+    title: "CloudTour — Spatial tours for the places worth remembering",
+    description:
+      "Create and share immersive Gaussian splatting virtual tours with CloudTour.",
+  },
 };
 
 export default function RootLayout({
