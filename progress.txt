@@ -590,3 +590,43 @@
   - `useSearchParams()` in Next.js 14 requires wrapping in `<Suspense>` for static generation to work
   - Public API endpoints (no auth) just call `createServerClient()` directly, no `requireOrgRole()`
 ---
+
+## 2026-03-14 - US-027
+- Implemented SEO infrastructure: dynamic sitemap.xml, robots.txt, and OG/Twitter Card meta tags
+- robots.ts: blocks /dashboard/, /api/, /editor/, /auth/ paths; points to sitemap
+- sitemap.ts: includes all static pages (home, explore, pricing, blog, about, contact, privacy, terms) + dynamically fetches all published tours from DB
+- Updated root layout.tsx with metadataBase, title template, and default OG + Twitter Card meta
+- Updated explore/page.tsx with OG + Twitter Card meta
+- Tour pages already had full OG + Twitter Card + JSON-LD from US-026
+- Files changed:
+  - apps/web/src/app/robots.ts (new)
+  - apps/web/src/app/sitemap.ts (new)
+  - apps/web/src/app/layout.tsx (updated metadata)
+  - apps/web/src/app/explore/page.tsx (added OG/Twitter meta)
+  - prd.json (US-027 passes: true)
+- **Learnings for future iterations:**
+  - Next.js `MetadataRoute.Robots` and `MetadataRoute.Sitemap` types handle robots.txt and sitemap.xml generation natively — just export default functions from `robots.ts` and `sitemap.ts` in the app directory
+  - `metadataBase` in root layout enables relative URLs in OG meta across all pages
+  - Title template `"%s — CloudTour"` in root layout means child pages only need to set the unique part (e.g., `title: "Explore Tours"`)
+  - Use `createServiceClient()` for sitemap DB queries since there's no user session context
+---
+
+## 2026-03-14 - US-028
+- Implemented dedicated /pricing page with 3-column plan comparison
+- Page structure: nav header, hero heading, plan cards, detailed feature comparison table, footer
+- Plan cards: Free ($0/forever), Pro ($29/month), Enterprise ($199/month)
+- Pro column visually elevated via scale-105 + border-brand + shadow-xl (NOT a "popular" badge) — consistent with landing page
+- Amber accent CTA buttons on highlighted Pro plan, surface-alt buttons on Free/Enterprise
+- Detailed comparison table with 11 feature rows: tours, scenes, storage, members, custom branding, analytics, priority support, SSO, SLA, custom integrations, dedicated support
+- Check marks (brand color) for included features, dash (muted) for excluded
+- CTA row repeated below comparison table for easy conversion
+- Full SEO metadata (OG + Twitter Card)
+- Consistent styling with landing page pricing section (same PLANS data, same card styling)
+- Files changed:
+  - New: apps/web/src/app/pricing/page.tsx
+  - Modified: prd.json (US-028 passes: true)
+- **Learnings for future iterations:**
+  - Pricing page reuses same visual patterns as landing page pricing section — keep them in sync if either changes
+  - Static page (○ in build output) since it has no dynamic data — no need for force-dynamic
+  - Feature comparison table uses boolean | string union for cell values — string for limits, boolean for yes/no features
+---
