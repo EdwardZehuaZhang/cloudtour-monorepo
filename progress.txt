@@ -764,3 +764,20 @@
   - Fire-and-forget emails use `.catch(() => {})` to prevent email failures from blocking the main flow
   - Auth callback route already handles `?next=` param, so password reset redirects to `/auth/callback?next=/reset-password`
 ---
+
+## 2026-03-14 - US-035
+- Implemented onboarding wizard for first-time users
+- Added `onboarding_completed` boolean column to profiles table (migration 016)
+- Updated Profile type in packages/types and database.types.ts in packages/db
+- Updated PATCH /api/me to accept `onboarding_completed` field
+- Created OnboardingWizard component with 3 steps: profile setup, tour creation guide, scene upload guide
+- Integrated wizard into dashboard layout — server component fetches onboarding status, passes to DashboardShell
+- Wizard uses Dialog from @cloudtour/ui, progress dots (not numbered steps), skip/dismiss functionality
+- Step 2 "Create your first tour" calls POST /api/orgs/[orgId]/tours and redirects to editor
+- Files changed: packages/db/migrations/016_profiles_onboarding.sql, packages/types/src/index.ts, packages/db/src/database.types.ts, apps/web/src/app/api/me/route.ts, apps/web/src/components/dashboard/onboarding-wizard.tsx, apps/web/src/app/(dashboard)/layout.tsx, apps/web/src/app/(dashboard)/dashboard-shell.tsx
+- **Learnings for future iterations:**
+  - Onboarding flag lives on profiles table as `onboarding_completed` boolean (default false)
+  - Dashboard layout server component fetches profile to check onboarding status, passes props down to DashboardShell client component
+  - DashboardShell renders the OnboardingWizard conditionally based on showOnboarding prop
+  - Wizard completion calls PATCH /api/me with { onboarding_completed: true } then router.refresh() to re-fetch server data
+---

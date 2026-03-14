@@ -595,7 +595,7 @@
         "Typecheck passes"
       ],
       "priority": 35,
-      "passes": false,
+      "passes": true,
       "notes": "Progressive disclosure — 3 steps max per screen. Use progress dots, not numbered steps. Keep it brief and helpful."
     },
     {
