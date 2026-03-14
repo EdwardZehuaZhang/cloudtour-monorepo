@@ -68,7 +68,7 @@ function detectSplatFormat(header: Uint8Array): SplatFileFormat {
   return "splat";
 }
 
-const app = new Hono();
+export const app = new Hono();
 app.use("*", cors({ origin: FRONTEND_URL, allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"], allowHeaders: ["Content-Type", "Authorization"] }));
 
 // Public: GET /api/tours
