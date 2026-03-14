@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Color palette — oklch */
+    --bg: oklch(97.5% 0.006 68);
+    --surface: oklch(99% 0.003 68);
+    --surface-alt: oklch(95% 0.008 68);
+    --text-primary: oklch(22% 0.02 68);
+    --text-secondary: oklch(45% 0.015 68);
+    --brand: oklch(38% 0.16 268);
+    --brand-light: oklch(50% 0.12 268);
+    --accent: oklch(72% 0.165 62);
+    --accent-light: oklch(80% 0.12 62);
+    --destructive: oklch(55% 0.2 25);
+    --border: oklch(88% 0.01 68);
+    --input: oklch(88% 0.01 68);
+    --ring: oklch(38% 0.16 268);
+
+    /* Motion */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --duration-fast: 120ms;
+    --duration-base: 200ms;
+    --duration-slow: 400ms;
+
+    /* Radius */
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-geist), Geist, system-ui, sans-serif;
+  }
+}
+
+/* Editor animations */
+@keyframes editor-pulse-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes editor-marker-appear {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Dashboard staggered fade-up entrance */
+@keyframes dashboard-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
