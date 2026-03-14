@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOrgRole } from "@/lib/api-utils";
+import { sendTourPublishedEmail } from "@/lib/email";
 
 /**
  * POST /api/orgs/[orgId]/tours/[tourId]/publish — Publishes a tour.
@@ -27,6 +28,18 @@ export async function POST(
 
   if (error || !tour) {
     return NextResponse.json({ error: "Tour not found" }, { status: 404 });
+  }
+
+  // Fire-and-forget tour published notification to the user who published
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user?.email) {
+    sendTourPublishedEmail({
+      to: user.email,
+      tourTitle: tour.title as string,
+      tourSlug: tour.slug as string,
+    }).catch(() => {
+      // Email failure should not block publish
+    });
   }
 
   return NextResponse.json(tour);

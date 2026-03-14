@@ -66,6 +66,15 @@ export default function LoginPage() {
           )}
         </div>
 
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-sm text-[var(--brand)] hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
         <SubmitButton pendingText="Logging in…">Log in</SubmitButton>
       </form>
 
