@@ -10,6 +10,8 @@
 - Database types (`database.types.ts`) must include `Relationships: []` on every table for Supabase typed queries to work (without it, select results type as `never`)
 - Dashboard routes use `(dashboard)` route group with `export const dynamic = "force-dynamic"` to prevent static generation (requires auth/env vars)
 - Use Tailwind config token names (`duration-fast`) not arbitrary values (`duration-[var(--duration-fast)]`) to avoid ambiguous class warnings
+- Swift models used as NavigationLink values need Hashable conformance — add it when the model will be used in navigation
+- Pre-existing TS typecheck error in cloudtour-fe (getSafeThumbnailUrl) — does not block Swift-only changes
 - Sidebar warm off-white text color: `oklch(85% 0.015 68)` — used as arbitrary Tailwind value `text-[oklch(85%_0.015_68)]`
 - packages/types is types-only (no runtime code); packages/db and packages/ui export from `src/index.ts`
 - `null` in PlanLimits means "unlimited"; plan limit constants belong in packages/db or apps/web, not packages/types
@@ -819,4 +821,21 @@
   - Error.tsx files MUST be client components ("use client") — they receive error and reset props
   - Loading skeletons should match the exact layout shape of actual content (same grid structure, aspect ratios, spacing)
   - The dashboard-fade-up keyframe animation is already defined in globals.css — reuse it in loading skeletons for consistency
+---
+
+## 2026-03-27 - US-007
+- Implemented TourDirectoryView with TourDirectoryViewModel, featured card + 2-column grid, search, pull-to-refresh, shimmer skeleton, staggered opacity animation, and navigation to TourDetailView
+- Added Hashable conformance to Tour model for NavigationLink(value:) support
+- Created TourDetailView placeholder (implemented in US-008)
+- Files modified: cloudtour-avp/CloudTourVision/Views/TourDirectoryView.swift, cloudtour-avp/CloudTourVision/Models/Tour.swift
+- Files created: cloudtour-avp/CloudTourVision/Views/TourDetailView.swift
+- **Learnings for future iterations:**
+  - Tour needs Hashable conformance for NavigationLink(value:) — all stored properties auto-synthesize Hashable
+  - TourDirectoryViewModel is @MainActor ObservableObject — view subscribes via @StateObject
+  - Featured card is a separate view above LazyVGrid for asymmetric layout
+  - Stagger-once uses @State hasAppeared flag set in .onAppear — animation only triggers on first appearance
+  - .hoverEffect(.lift) on cards for visionOS hover — no scale transforms
+  - Pre-existing TS typecheck error in cloudtour-fe (getSafeThumbnailUrl) — not caused by Swift changes
+  - BackButton is a reusable struct with chevron.left icon only
+  - Manual browser verification needed — no visionOS simulator available
 ---
