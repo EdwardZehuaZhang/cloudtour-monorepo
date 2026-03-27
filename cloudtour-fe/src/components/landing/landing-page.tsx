@@ -318,7 +318,7 @@ export function LandingPage() {
         {/* Live SplatViewer — full bleed, interactive on all devices */}
         <div className="absolute inset-0">
           <SplatViewer
-            src="https://siwkrxtdijvutuerunzv.supabase.co/storage/v1/object/public/splat-files/demo/room-tour.splat"
+            src="https://s3-eu-west-1.amazonaws.com/splats.playcanvas.com/a8a02929/v1/scene.voxel.bin"
             sceneTitle="Explore in 3D"
             initialCameraPosition={[0, 0, 3]}
             initialCameraLookAt={[0, 0, 0]}
@@ -632,3 +632,4 @@ export function LandingPage() {
     </div>
   );
 }
+
