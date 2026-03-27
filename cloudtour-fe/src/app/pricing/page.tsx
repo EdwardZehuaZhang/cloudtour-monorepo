@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PublicNavbar } from "@/components/public-site/public-navbar";
 import { Check, Minus } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -140,36 +141,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-bg">
       {/* Nav */}
-      <nav className="border-b border-border bg-surface/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link
-            href="/"
-            className="font-display text-xl font-light tracking-tight text-text-primary"
-          >
-            CLOUDTOUR
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/explore"
-              className="text-sm text-text-secondary transition-colors duration-fast hover:text-text-primary"
-            >
-              Explore
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm text-text-secondary transition-colors duration-fast hover:text-text-primary"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-text-primary transition-colors duration-fast hover:bg-accent-light"
-            >
-              Get started
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <PublicNavbar offset />
 
       {/* Header */}
       <section className="py-20 md:py-28">

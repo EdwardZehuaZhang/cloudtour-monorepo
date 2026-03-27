@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { ArrowRight, Check, ChevronDown, Menu, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown } from "lucide-react";
+import { PublicNavbar } from "@/components/public-site/public-navbar";
 
 // Lazy-load SplatViewer to keep landing page initial bundle small
 const SplatViewer = dynamic(
@@ -162,13 +163,6 @@ const FAQ_ITEMS = [
   },
 ];
 
-const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Explore", href: "/explore" },
-  { label: "FAQ", href: "#faq" },
-];
-
 // ---- Components -------------------------------------------------------------
 
 function FAQItem({
@@ -205,7 +199,6 @@ function FAQItem({
 // ---- Main Landing Page ------------------------------------------------------
 
 export function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [heroVisible, setHeroVisible] = useState(false);
   const featuredScrollRef = useRef<HTMLDivElement>(null);
 
@@ -218,100 +211,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-bg">
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <nav className="fixed left-0 right-0 top-0 z-50">
-        <div
-          className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4"
-          style={{
-            backgroundColor: "oklch(97.5% 0.006 68 / 0.85)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-          }}
-        >
-          {/* Logo */}
-          <Link href="/" className="font-display text-xl font-semibold tracking-tight text-text-primary">
-            CLOUDTOUR
-          </Link>
-
-          {/* Center links — desktop */}
-          <div className="hidden items-center gap-8 md:flex">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-sm text-text-secondary transition-colors duration-fast hover:text-text-primary"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* CTA — desktop */}
-          <div className="hidden items-center gap-4 md:flex">
-            <Link
-              href="/login"
-              className="text-sm text-text-secondary transition-colors duration-fast hover:text-text-primary"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-colors duration-fast hover:bg-brand-light"
-            >
-              Start for free
-            </Link>
-          </div>
-
-          {/* Mobile menu toggle */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? (
-              <X className="h-6 w-6 text-text-primary" />
-            ) : (
-              <Menu className="h-6 w-6 text-text-primary" />
-            )}
-          </button>
-        </div>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div
-            className="border-b border-border px-6 pb-6 pt-2 md:hidden"
-            style={{
-              backgroundColor: "oklch(97.5% 0.006 68 / 0.95)",
-              backdropFilter: "blur(12px)",
-            }}
-          >
-            <div className="flex flex-col gap-4">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-base text-text-secondary transition-colors duration-fast hover:text-text-primary"
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <hr className="border-border" />
-              <Link
-                href="/login"
-                className="text-base text-text-secondary"
-              >
-                Log in
-              </Link>
-              <Link
-                href="/signup"
-                className="rounded-lg bg-brand px-4 py-2.5 text-center text-sm font-medium text-white"
-              >
-                Start for free
-              </Link>
-            </div>
-          </div>
-        )}
-      </nav>
+      <PublicNavbar />
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative h-screen w-full overflow-hidden">

@@ -13,6 +13,7 @@ import { SplatViewer } from "@/components/viewer/splat-viewer";
 import { ViewerOverlay } from "@/components/viewer/viewer-overlay";
 import { MapPin, Eye, Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { PublicNavbar } from "@/components/public-site/public-navbar";
 
 // ---- Types ------------------------------------------------------------------
 
@@ -116,7 +117,10 @@ export function TourViewerPage({ tour, slug }: TourViewerPageProps) {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b border-[oklch(22%_0.02_68_/_0.08)]" style={{ backgroundColor: "var(--surface)" }}>
+
+      <PublicNavbar offset />
+
+      <section className="border-b border-[oklch(22%_0.02_68_/_0.08)]" style={{ backgroundColor: "var(--surface)" }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between">
             <div className="flex items-center gap-4">
@@ -141,16 +145,14 @@ export function TourViewerPage({ tour, slug }: TourViewerPageProps) {
               </h1>
             </div>
             {tour.organization && (
-              <span
-                className="hidden sm:block text-sm"
-                style={{ color: "var(--text-primary)", opacity: 0.5 }}
-              >
+              <span className="hidden sm:block text-sm" style={{ color: "var(--text-primary)", opacity: 0.5 }}>
                 by {tour.organization.name}
               </span>
             )}
           </div>
         </div>
-      </nav>
+      </section>
+
 
       {/* Main content */}
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">

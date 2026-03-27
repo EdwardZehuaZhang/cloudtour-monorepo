@@ -1,7 +1,9 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { createBrowserClient } from "@cloudtour/db";
+import { PublicNavbar } from "@/components/public-site/public-navbar";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -15,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 
-// 鈹€鈹€鈹€ Types 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// 閳光偓閳光偓閳光偓 Types 閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓
 
 interface ExploreTour {
   id: string;
@@ -55,10 +57,28 @@ const CATEGORIES = [
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
   { value: "popular", label: "Most Popular" },
-  { value: "alphabetical", label: "A 鈥?Z" },
+  { value: "alphabetical", label: "A 閳?Z" },
 ] as const;
 
-// 鈹€鈹€鈹€ Tour Card 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+const VALID_CATEGORIES = ["real_estate", "tourism", "museum", "education", "other"] as const;
+
+
+// 閳光偓閳光偓閳光偓 Tour Card 閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓
+
+function getSafeExploreThumbnail(tour: ExploreTour) {
+  const preferred = tour.first_scene_thumbnail_url ?? tour.cover_image_url ?? null;
+  if (!preferred) return null;
+  if (!preferred.includes("localhost:3000")) return preferred;
+
+  const demoFallbacks: Record<string, string> = {
+    "grand-palace": "/images/demo-tour-1.jpg",
+    "modern-art-gallery": "/images/demo-tour-2.jpg",
+    "luxury-penthouse": "/images/demo-tour-3.jpg",
+    "university-campus": "/images/demo-tour-4.jpg",
+  };
+
+  return demoFallbacks[tour.slug] ?? preferred.replace("http://localhost:3000", "");
+}
 
 function ExploreTourCard({
   tour,
@@ -86,9 +106,9 @@ function ExploreTourCard({
       <div
         className={`relative overflow-hidden bg-[var(--surface-alt)] ${isHero ? "aspect-[16/9]" : "aspect-[3/2]"}`}
       >
-        {tour.first_scene_thumbnail_url || tour.cover_image_url ? (
+        {getSafeExploreThumbnail(tour) ? (
           <Image
-            src={tour.first_scene_thumbnail_url ?? tour.cover_image_url ?? ""}
+            src={getSafeExploreThumbnail(tour) ?? ""}
             alt={tour.title}
             fill
             className="object-cover transition-transform duration-slow"
@@ -169,7 +189,7 @@ function ExploreTourCard({
   );
 }
 
-// 鈹€鈹€鈹€ Empty State 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// 閳光偓閳光偓閳光偓 Empty State 閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓
 
 function ExploreEmptyState({ hasFilters }: { hasFilters: boolean }) {
   return (
@@ -195,7 +215,7 @@ function ExploreEmptyState({ hasFilters }: { hasFilters: boolean }) {
   );
 }
 
-// 鈹€鈹€鈹€ Explore Page 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+// 閳光偓閳光偓閳光偓 Explore Page 閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓閳光偓
 
 export function ExplorePage() {
   const router = useRouter();
@@ -222,6 +242,7 @@ export function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  const supabase = useMemo(() => createBrowserClient(), []);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -252,25 +273,82 @@ export function ExplorePage() {
   const fetchTours = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (search) params.set("search", search);
-      if (category) params.set("category", category);
-      if (location) params.set("location", location);
-      if (sort) params.set("sort", sort);
-      params.set("page", String(page));
-      params.set("limit", "20");
+      const limit = 20;
+      const offset = (page - 1) * limit;
+      let countQ = supabase
+        .from("tours")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "published");
+      let dataQ = supabase
+        .from("tours")
+        .select(
+          "id, title, slug, description, status, category, tags, location, cover_image_url, view_count, created_at"
+        )
+        .eq("status", "published");
 
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001") + `/api/tours?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data: ApiResponse = await res.json();
-      setTours(data.data);
-      setPagination(data.pagination);
+      if (category && VALID_CATEGORIES.includes(category as (typeof VALID_CATEGORIES)[number])) {
+        countQ = countQ.eq("category", category as (typeof VALID_CATEGORIES)[number]);
+        dataQ = dataQ.eq("category", category as (typeof VALID_CATEGORIES)[number]);
+      }
+      if (location) {
+        countQ = countQ.ilike("location", `%${location}%`);
+        dataQ = dataQ.ilike("location", `%${location}%`);
+      }
+      if (search) {
+        const filter = `title.ilike.%${search}%,description.ilike.%${search}%`;
+        countQ = countQ.or(filter);
+        dataQ = dataQ.or(filter);
+      }
+      if (sort === "popular") dataQ = dataQ.order("view_count", { ascending: false });
+      else if (sort === "alphabetical") dataQ = dataQ.order("title", { ascending: true });
+      else dataQ = dataQ.order("created_at", { ascending: false });
+
+      const [{ count }, { data, error }] = await Promise.all([
+        countQ,
+        dataQ.range(offset, offset + limit - 1),
+      ]);
+      if (error) throw error;
+
+      const toursData = data ?? [];
+      const tourIds = toursData.map((tour) => tour.id);
+      const scenesMap: Record<string, { count: number; thumbnail_url: string | null }> = {};
+
+      if (tourIds.length > 0) {
+        const { data: scenes } = await supabase
+          .from("scenes")
+          .select("tour_id, thumbnail_url, sort_order")
+          .in("tour_id", tourIds)
+          .order("sort_order", { ascending: true });
+
+        for (const scene of scenes ?? []) {
+          if (!scenesMap[scene.tour_id]) {
+            scenesMap[scene.tour_id] = { count: 1, thumbnail_url: scene.thumbnail_url };
+          } else {
+            scenesMap[scene.tour_id]!.count += 1;
+          }
+        }
+      }
+
+      const mapped = toursData.map((tour) => ({
+        ...tour,
+        scene_count: scenesMap[tour.id]?.count ?? 0,
+        first_scene_thumbnail_url: scenesMap[tour.id]?.thumbnail_url ?? null,
+      }));
+
+      setTours(mapped as ExploreTour[]);
+      setPagination({
+        page,
+        limit,
+        total: count ?? 0,
+        total_pages: Math.ceil((count ?? 0) / limit),
+      });
     } catch {
       setTours([]);
+      setPagination({ page: 1, limit: 20, total: 0, total_pages: 0 });
     } finally {
       setLoading(false);
     }
-  }, [search, category, location, sort, page]);
+  }, [category, location, page, search, sort, supabase]);
 
   // Update URL when filters change
   useEffect(() => {
@@ -320,39 +398,7 @@ export function ExplorePage() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Nav */}
-      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="font-display text-lg font-semibold text-[var(--text-primary)]">
-            CloudTour
-          </Link>
-          <nav className="hidden items-center gap-6 text-sm md:flex">
-            <Link
-              href="/explore"
-              className="font-medium text-[var(--brand)]"
-            >
-              Explore
-            </Link>
-            <Link
-              href="/pricing"
-              className="text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/login"
-              className="text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-md bg-[var(--brand)] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[var(--brand-light)]"
-            >
-              Sign up
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <PublicNavbar offset />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Page Header */}
@@ -581,3 +627,4 @@ export function ExplorePage() {
     </div>
   );
 }
+

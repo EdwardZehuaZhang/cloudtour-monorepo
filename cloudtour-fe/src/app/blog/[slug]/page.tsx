@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PublicNavbar } from "@/components/public-site/public-navbar";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { getBlogPost, getBlogPosts } from "@/lib/blog";
@@ -57,33 +58,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   return (
     <div className="min-h-screen bg-bg">
       {/* Nav */}
-      <header className="border-b border-border/40">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link
-            href="/"
-            className="font-display text-xl font-semibold text-text-primary"
-          >
-            CloudTour
-          </Link>
-          <nav className="flex items-center gap-6 text-sm text-text-secondary">
-            <Link href="/explore" className="hover:text-text-primary transition-colors duration-fast">
-              Explore
-            </Link>
-            <Link href="/pricing" className="hover:text-text-primary transition-colors duration-fast">
-              Pricing
-            </Link>
-            <Link href="/blog" className="text-text-primary font-medium">
-              Blog
-            </Link>
-            <Link
-              href="/login"
-              className="hover:text-text-primary transition-colors duration-fast"
-            >
-              Log in
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <PublicNavbar offset />
 
       <main className="mx-auto max-w-3xl px-6 py-16">
         {/* Back link */}

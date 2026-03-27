@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PublicNavbar } from "@/components/public-site/public-navbar";
 
 export const metadata: Metadata = {
   title: "About",
@@ -23,42 +24,7 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-bg">
       {/* Nav */}
-      <header className="border-b border-border/40">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link
-            href="/"
-            className="font-display text-xl font-semibold text-text-primary"
-          >
-            CloudTour
-          </Link>
-          <nav className="flex items-center gap-6 text-sm text-text-secondary">
-            <Link
-              href="/explore"
-              className="transition-colors duration-fast hover:text-text-primary"
-            >
-              Explore
-            </Link>
-            <Link
-              href="/pricing"
-              className="transition-colors duration-fast hover:text-text-primary"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/blog"
-              className="transition-colors duration-fast hover:text-text-primary"
-            >
-              Blog
-            </Link>
-            <Link
-              href="/login"
-              className="transition-colors duration-fast hover:text-text-primary"
-            >
-              Log in
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <PublicNavbar offset />
 
       <main className="mx-auto max-w-5xl px-6 py-16 md:py-24">
         {/* Hero */}
