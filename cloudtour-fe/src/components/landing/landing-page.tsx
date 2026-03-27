@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -318,7 +318,7 @@ export function LandingPage() {
         {/* Live SplatViewer — full bleed, interactive on all devices */}
         <div className="absolute inset-0">
           <SplatViewer
-            src="/demo/featured-tour.splat"
+            src="https://siwkrxtdijvutuerunzv.supabase.co/storage/v1/object/public/splat-files/demo/room-tour.splat"
             sceneTitle="Explore in 3D"
             initialCameraPosition={[0, -3, 8]}
             initialCameraLookAt={[0, 0, 0]}
