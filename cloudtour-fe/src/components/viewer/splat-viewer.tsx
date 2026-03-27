@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useRef,
@@ -74,6 +74,7 @@ export function SplatViewer({
     let disposed = false;
 
     async function init() {
+      console.log('[SplatViewer] init() called, src=', src, 'disposed=', disposed);
       setLoadingState("loading");
       setBlurLevel(1);
 
@@ -114,6 +115,7 @@ export function SplatViewer({
           });
         }, 80);
 
+        console.log('[SplatViewer] calling addSplatScene, src=', src);
         await viewer.addSplatScene(src, {
           showLoadingUI: false,
           progressiveLoad: true,
@@ -124,6 +126,9 @@ export function SplatViewer({
           viewer.dispose();
           return;
         }
+
+        // Start the render loop (required even in selfDrivenMode)
+        viewer.start();
 
         // Clear any remaining blur
         clearInterval(blurInterval);
