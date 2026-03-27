@@ -28,6 +28,22 @@ interface TourGridProps {
   orgId: string;
 }
 
+function getSafeThumbnailUrl(tour: TourWithSceneCount) {
+  const preferred = tour.first_scene_thumbnail_url ?? tour.cover_image_url ?? null;
+  if (!preferred) return null;
+
+  if (!preferred.includes("localhost:3000")) return preferred;
+
+  const demoFallbacks: Record<string, string> = {
+    "grand-palace": "/images/demo-tour-1.jpg",
+    "modern-art-gallery": "/images/demo-tour-2.jpg",
+    "luxury-penthouse": "/images/demo-tour-3.jpg",
+    "university-campus": "/images/demo-tour-4.jpg",
+  };
+
+  return demoFallbacks[tour.slug] ?? preferred.replace("http://localhost:3000", "");
+}
+
 // ─── Mini SplatViewer Preview (lazy on hover) ───────────────────────────────
 
 function MiniSplatPreview({ src }: { src: string }) {
@@ -158,7 +174,7 @@ function TourCard({
         {/* Thumbnail image */}
         {tour.first_scene_thumbnail_url || tour.cover_image_url ? (
           <Image
-            src={tour.first_scene_thumbnail_url ?? tour.cover_image_url ?? ""}
+            src={getSafeThumbnailUrl(tour) ?? ""}
             alt={tour.title}
             fill
             className="object-cover"
