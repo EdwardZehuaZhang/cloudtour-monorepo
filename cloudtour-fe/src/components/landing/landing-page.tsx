@@ -320,7 +320,7 @@ export function LandingPage() {
           <SplatViewer
             src="https://siwkrxtdijvutuerunzv.supabase.co/storage/v1/object/public/splat-files/demo/room-tour.splat"
             sceneTitle="Explore in 3D"
-            initialCameraPosition={[0, -3, 8]}
+            initialCameraPosition={[0, 0, 3]}
             initialCameraLookAt={[0, 0, 0]}
             className="h-full w-full"
           />

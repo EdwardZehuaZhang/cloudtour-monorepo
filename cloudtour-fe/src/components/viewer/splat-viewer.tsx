@@ -92,7 +92,7 @@ export function SplatViewer({
           useBuiltInControls: true,
           initialCameraPosition,
           initialCameraLookAt,
-          cameraUp: [0, 1, 0],
+          cameraUp: [0, -1, 0],
           sceneRevealMode: GaussianSplats3D.SceneRevealMode.Gradual,
           logLevel: GaussianSplats3D.LogLevel.None,
           sharedMemoryForWorkers: false,
