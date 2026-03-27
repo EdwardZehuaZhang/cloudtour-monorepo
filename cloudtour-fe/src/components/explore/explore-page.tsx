@@ -1,8 +1,7 @@
 ﻿"use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createBrowserClient } from "@cloudtour/db";
 import { PublicNavbar } from "@/components/public-site/public-navbar";
 import Image from "next/image";
 import Link from "next/link";
@@ -33,16 +32,6 @@ interface ExploreTour {
   created_at: string;
   scene_count: number;
   first_scene_thumbnail_url: string | null;
-}
-
-interface ApiResponse {
-  data: ExploreTour[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    total_pages: number;
-  };
 }
 
 const CATEGORIES = [
@@ -242,7 +231,6 @@ export function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const supabase = useMemo(() => createBrowserClient(), []);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -275,52 +263,60 @@ export function ExplorePage() {
     try {
       const limit = 20;
       const offset = (page - 1) * limit;
-      let countQ = supabase
-        .from("tours")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "published");
-      let dataQ = supabase
-        .from("tours")
-        .select(
-          "id, title, slug, description, status, category, tags, location, cover_image_url, view_count, created_at"
-        )
-        .eq("status", "published");
+      const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+      const headers: HeadersInit = {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+      };
+
+      const query = new URLSearchParams({
+        select:
+          "id,title,slug,description,status,category,tags,location,cover_image_url,view_count,created_at",
+        status: "eq.published",
+      });
 
       if (category && VALID_CATEGORIES.includes(category as (typeof VALID_CATEGORIES)[number])) {
-        countQ = countQ.eq("category", category as (typeof VALID_CATEGORIES)[number]);
-        dataQ = dataQ.eq("category", category as (typeof VALID_CATEGORIES)[number]);
+        query.set("category", `eq.${category}`);
       }
       if (location) {
-        countQ = countQ.ilike("location", `%${location}%`);
-        dataQ = dataQ.ilike("location", `%${location}%`);
+        query.set("location", `ilike.*${location}*`);
       }
       if (search) {
-        const filter = `title.ilike.%${search}%,description.ilike.%${search}%`;
-        countQ = countQ.or(filter);
-        dataQ = dataQ.or(filter);
+        query.set("or", `(title.ilike.*${search}*,description.ilike.*${search}*)`);
       }
-      if (sort === "popular") dataQ = dataQ.order("view_count", { ascending: false });
-      else if (sort === "alphabetical") dataQ = dataQ.order("title", { ascending: true });
-      else dataQ = dataQ.order("created_at", { ascending: false });
+      if (sort === "popular") query.set("order", "view_count.desc");
+      else if (sort === "alphabetical") query.set("order", "title.asc");
+      else query.set("order", "created_at.desc");
 
-      const [{ count }, { data, error }] = await Promise.all([
-        countQ,
-        dataQ.range(offset, offset + limit - 1),
-      ]);
-      if (error) throw error;
+      const toursRes = await fetch(`${baseUrl}/rest/v1/tours?${query.toString()}`, {
+        headers: {
+          ...headers,
+          Prefer: "count=exact",
+          Range: `${offset}-${offset + limit - 1}`,
+          "Range-Unit": "items",
+        },
+      });
+      if (!toursRes.ok) throw new Error("Failed to fetch tours");
 
-      const toursData = data ?? [];
+      const toursData = (await toursRes.json()) as Array<Omit<ExploreTour, "scene_count" | "first_scene_thumbnail_url">>;
+      const contentRange = toursRes.headers.get("content-range");
+      const total = contentRange ? parseInt(contentRange.split("/")[1] ?? "0", 10) : toursData.length;
+
       const tourIds = toursData.map((tour) => tour.id);
       const scenesMap: Record<string, { count: number; thumbnail_url: string | null }> = {};
 
       if (tourIds.length > 0) {
-        const { data: scenes } = await supabase
-          .from("scenes")
-          .select("tour_id, thumbnail_url, sort_order")
-          .in("tour_id", tourIds)
-          .order("sort_order", { ascending: true });
+        const scenesQuery = new URLSearchParams({
+          select: "tour_id,thumbnail_url,sort_order",
+          tour_id: `in.(${tourIds.join(",")})`,
+          order: "sort_order.asc",
+        });
+        const scenesRes = await fetch(`${baseUrl}/rest/v1/scenes?${scenesQuery.toString()}`, { headers });
+        if (!scenesRes.ok) throw new Error("Failed to fetch scenes");
+        const scenes = (await scenesRes.json()) as Array<{ tour_id: string; thumbnail_url: string | null; sort_order: number }>;
 
-        for (const scene of scenes ?? []) {
+        for (const scene of scenes) {
           if (!scenesMap[scene.tour_id]) {
             scenesMap[scene.tour_id] = { count: 1, thumbnail_url: scene.thumbnail_url };
           } else {
@@ -329,18 +325,18 @@ export function ExplorePage() {
         }
       }
 
-      const mapped = toursData.map((tour) => ({
+      const mapped: ExploreTour[] = toursData.map((tour) => ({
         ...tour,
         scene_count: scenesMap[tour.id]?.count ?? 0,
         first_scene_thumbnail_url: scenesMap[tour.id]?.thumbnail_url ?? null,
       }));
 
-      setTours(mapped as ExploreTour[]);
+      setTours(mapped);
       setPagination({
         page,
         limit,
-        total: count ?? 0,
-        total_pages: Math.ceil((count ?? 0) / limit),
+        total,
+        total_pages: Math.ceil(total / limit),
       });
     } catch {
       setTours([]);
@@ -348,7 +344,7 @@ export function ExplorePage() {
     } finally {
       setLoading(false);
     }
-  }, [category, location, page, search, sort, supabase]);
+  }, [category, location, page, search, sort]);
 
   // Update URL when filters change
   useEffect(() => {
