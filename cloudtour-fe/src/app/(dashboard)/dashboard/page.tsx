@@ -1,7 +1,9 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { createServerClient } from "@cloudtour/db";
 import { TourGrid } from "@/components/dashboard/tour-grid";
 import type { TourWithSceneCount } from "@/components/dashboard/tour-grid";
+
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   const supabase = await createServerClient();
