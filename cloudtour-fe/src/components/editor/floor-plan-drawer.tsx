@@ -253,7 +253,7 @@ export function FloorPlanDrawer({
       {isOpen && (
         <div className="flex h-[calc(100%-36px)] gap-3 overflow-hidden px-4 pb-3">
           {!floorPlan ? (
-            /* No floor plan â€?upload prompt */
+            /* No floor plan ?upload prompt */
             <div className="flex flex-1 items-center justify-center">
               {canEdit ? (
                 <button
@@ -284,7 +284,7 @@ export function FloorPlanDrawer({
               />
             </div>
           ) : (
-            /* Floor plan exists â€?show image with markers + unplaced scenes */
+            /* Floor plan exists ?show image with markers + unplaced scenes */
             <>
               {/* Floor plan image with draggable markers */}
               <div
