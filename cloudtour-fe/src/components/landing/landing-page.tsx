@@ -314,57 +314,41 @@ export function LandingPage() {
       </nav>
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[70vh] w-full overflow-hidden">
-        {/* Live SplatViewer — desktop only */}
-        <div className="absolute inset-0 hidden md:block">
+      <section className="relative h-screen w-full overflow-hidden">
+        {/* Live SplatViewer — full bleed, interactive on all devices */}
+        <div className="absolute inset-0">
           <SplatViewer
             src="/demo/featured-tour.splat"
-            sceneTitle="CloudTour"
+            sceneTitle="Explore in 3D"
+            initialCameraPosition={[0, -3, 8]}
+            initialCameraLookAt={[0, 0, 0]}
             className="h-full w-full"
           />
-          {/* Gradient overlay for text readability */}
+          {/* Bottom gradient so text stays readable without killing the splat */}
           <div
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "linear-gradient(to top, oklch(22% 0.02 68 / 0.7) 0%, oklch(22% 0.02 68 / 0.3) 40%, transparent 70%)",
+                "linear-gradient(to top, oklch(15% 0.015 68 / 0.85) 0%, oklch(15% 0.015 68 / 0.35) 35%, transparent 60%)",
             }}
           />
         </div>
 
-        {/* Static thumbnail — mobile */}
+        {/* Hero content — bottom-left, pointer-events-none so orbit still works */}
         <div
-          className="absolute inset-0 bg-text-primary md:hidden"
-          style={{
-            backgroundImage: "url(/images/hero-mobile.jpg)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to top, oklch(22% 0.02 68 / 0.8) 0%, oklch(22% 0.02 68 / 0.4) 50%, transparent 80%)",
-            }}
-          />
-        </div>
-
-        {/* Hero content — bottom-left editorial typeset */}
-        <div
-          className={`relative z-10 flex min-h-[70vh] items-end transition-all duration-700 ${heroVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}
+          className={`pointer-events-none relative z-10 flex h-screen items-end transition-all duration-700 ${heroVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}
           style={{ transitionTimingFunction: "var(--ease-out)" }}
         >
-          <div className="mx-auto w-full max-w-7xl px-6 pb-16 pt-32 md:pb-20">
-            <p className="mb-3 font-sans text-xs font-medium uppercase tracking-[0.2em] text-white/60">
-              CLOUDTOUR
+          <div className="mx-auto w-full max-w-7xl px-6 pb-20 pt-32">
+            <p className="mb-3 font-sans text-xs font-medium uppercase tracking-[0.2em] text-white/50">
+              CLOUDTOUR · Drag to explore
             </p>
             <h1 className="font-display text-display-hero font-light text-white">
               Spatial tours for the
               <br className="hidden sm:block" />
               places worth remembering.
             </h1>
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="pointer-events-auto mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
               <Link
                 href="/signup"
                 className="group inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-base font-medium text-text-primary transition-all duration-base hover:bg-accent-light"
