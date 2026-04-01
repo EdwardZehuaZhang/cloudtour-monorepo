@@ -11,3 +11,4 @@ dist/
 cloudtour-avp/Config.xcconfig
 cloudtour-avp/.build/
 cloudtour-avp/DerivedData/
+cloudtour-avp/build/
