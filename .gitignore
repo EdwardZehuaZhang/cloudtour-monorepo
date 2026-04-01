@@ -6,3 +6,8 @@ dist/
 .env.local
 .env.*.local
 *.tsbuildinfo
+
+# visionOS app
+cloudtour-avp/Config.xcconfig
+cloudtour-avp/.build/
+cloudtour-avp/DerivedData/
