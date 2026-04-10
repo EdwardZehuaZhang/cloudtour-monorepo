@@ -1,0 +1,62 @@
+name: CloudTourVision
+options:
+  bundleIdPrefix: com.cloudtour
+  deploymentTarget:
+    visionOS: "26.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+schemes:
+  CloudTourVision:
+    build:
+      targets:
+        CloudTourVision: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    INFOPLIST_FILE: CloudTourVision/Info.plist
+
+configs:
+  Debug: debug
+  Release: release
+
+configFiles:
+  Debug: Config.xcconfig
+  Release: Config.xcconfig
+
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: "2.0.0"
+  MetalSplatter:
+    url: https://github.com/scier/MetalSplatter
+    from: "1.0.0"
+
+targets:
+  CloudTourVision:
+    type: application
+    platform: visionOS
+    sources:
+      - path: CloudTourVision
+        excludes:
+          - Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cloudtour.vision
+        INFOPLIST_FILE: CloudTourVision/Info.plist
+        GENERATE_INFOPLIST_FILE: false
+        SWIFT_VERSION: "6.0"
+        SUPPORTED_PLATFORMS: "xros xrsimulator"
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: false
+        ENABLE_TESTING_SEARCH_PATHS: "NO"
+    dependencies:
+      - package: Supabase
+        product: Supabase
+      - package: MetalSplatter
+        product: MetalSplatter

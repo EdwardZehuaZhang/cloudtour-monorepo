@@ -1,0 +1,79 @@
+{
+  "" : {
+    "diagnostics" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/spz-primary.dia",
+    "emit-module-dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/spz-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/spz-primary-emit-module.dia",
+    "pch" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/spz-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/spz-primary.swiftdeps"
+  },
+  "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/Sources/spz/CoordinateSystem.swift" : {
+    "const-values" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/CoordinateSystem.swiftconstvalues",
+    "dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/CoordinateSystem.d",
+    "diagnostics" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/CoordinateSystem.dia",
+    "index-unit-output-path" : "/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/CoordinateSystem.o",
+    "llvm-bc" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/CoordinateSystem.bc",
+    "object" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/CoordinateSystem.o",
+    "swift-dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/CoordinateSystem.swiftdeps",
+    "swiftmodule" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/CoordinateSystem~partial.swiftmodule"
+  },
+  "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/Sources/spz/GaussianCloud.swift" : {
+    "const-values" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GaussianCloud.swiftconstvalues",
+    "dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GaussianCloud.d",
+    "diagnostics" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GaussianCloud.dia",
+    "index-unit-output-path" : "/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GaussianCloud.o",
+    "llvm-bc" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GaussianCloud.bc",
+    "object" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GaussianCloud.o",
+    "swift-dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GaussianCloud.swiftdeps",
+    "swiftmodule" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GaussianCloud~partial.swiftmodule"
+  },
+  "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/Sources/spz/GzipCompression.swift" : {
+    "const-values" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GzipCompression.swiftconstvalues",
+    "dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GzipCompression.d",
+    "diagnostics" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GzipCompression.dia",
+    "index-unit-output-path" : "/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GzipCompression.o",
+    "llvm-bc" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GzipCompression.bc",
+    "object" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GzipCompression.o",
+    "swift-dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GzipCompression.swiftdeps",
+    "swiftmodule" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/GzipCompression~partial.swiftmodule"
+  },
+  "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/Sources/spz/MathHelpers.swift" : {
+    "const-values" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/MathHelpers.swiftconstvalues",
+    "dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/MathHelpers.d",
+    "diagnostics" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/MathHelpers.dia",
+    "index-unit-output-path" : "/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/MathHelpers.o",
+    "llvm-bc" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/MathHelpers.bc",
+    "object" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/MathHelpers.o",
+    "swift-dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/MathHelpers.swiftdeps",
+    "swiftmodule" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/MathHelpers~partial.swiftmodule"
+  },
+  "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/Sources/spz/PackedGaussians.swift" : {
+    "const-values" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/PackedGaussians.swiftconstvalues",
+    "dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/PackedGaussians.d",
+    "diagnostics" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/PackedGaussians.dia",
+    "index-unit-output-path" : "/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/PackedGaussians.o",
+    "llvm-bc" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/PackedGaussians.bc",
+    "object" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/PackedGaussians.o",
+    "swift-dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/PackedGaussians.swiftdeps",
+    "swiftmodule" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/PackedGaussians~partial.swiftmodule"
+  },
+  "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/Sources/spz/SPZLoader.swift" : {
+    "const-values" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZLoader.swiftconstvalues",
+    "dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZLoader.d",
+    "diagnostics" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZLoader.dia",
+    "index-unit-output-path" : "/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZLoader.o",
+    "llvm-bc" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZLoader.bc",
+    "object" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZLoader.o",
+    "swift-dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZLoader.swiftdeps",
+    "swiftmodule" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZLoader~partial.swiftmodule"
+  },
+  "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/Sources/spz/SPZSaver.swift" : {
+    "const-values" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZSaver.swiftconstvalues",
+    "dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZSaver.d",
+    "diagnostics" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZSaver.dia",
+    "index-unit-output-path" : "/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZSaver.o",
+    "llvm-bc" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZSaver.bc",
+    "object" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZSaver.o",
+    "swift-dependencies" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZSaver.swiftdeps",
+    "swiftmodule" : "/Users/edward/Library/Developer/Xcode/DerivedData/CloudTourVision-cvadgfxvszokpueccvdwinybahof/SourcePackages/checkouts/spz-swift/build/spz-swift.build/Debug-xrsimulator/spz.build/Objects-normal/arm64/SPZSaver~partial.swiftmodule"
+  }
+}

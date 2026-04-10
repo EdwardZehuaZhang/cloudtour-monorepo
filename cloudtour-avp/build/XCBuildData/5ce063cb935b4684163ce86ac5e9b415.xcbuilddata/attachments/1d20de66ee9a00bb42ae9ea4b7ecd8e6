@@ -1,0 +1,289 @@
+{
+  "" : {
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVision-primary.dia",
+    "emit-module-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVision-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVision-primary-emit-module.dia",
+    "pch" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVision-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVision-primary.swiftdeps"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Auth/AuthViewModel.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AuthViewModel.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AuthViewModel.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AuthViewModel.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AuthViewModel.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AuthViewModel.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AuthViewModel.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AuthViewModel.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AuthViewModel~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Auth/ForgotPasswordView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ForgotPasswordView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ForgotPasswordView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ForgotPasswordView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ForgotPasswordView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ForgotPasswordView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ForgotPasswordView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ForgotPasswordView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ForgotPasswordView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Auth/SignInView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignInView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignInView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignInView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignInView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignInView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignInView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignInView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignInView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Auth/SignUpView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignUpView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignUpView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignUpView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignUpView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignUpView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignUpView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignUpView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SignUpView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Auth/SupabaseClient.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SupabaseClient.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SupabaseClient.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SupabaseClient.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SupabaseClient.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SupabaseClient.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SupabaseClient.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SupabaseClient.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SupabaseClient~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/CloudTourVisionApp.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVisionApp.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVisionApp.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVisionApp.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVisionApp.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVisionApp.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVisionApp.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVisionApp.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/CloudTourVisionApp~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Dashboard/DashboardView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Dashboard/TourEditorView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourEditorView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourEditorView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourEditorView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourEditorView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourEditorView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourEditorView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourEditorView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourEditorView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Explore/TourDetailView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Explore/TourDirectoryView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Invite/InviteView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/InviteView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/InviteView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/InviteView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/InviteView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/InviteView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/InviteView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/InviteView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/InviteView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Members/MembersView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Models/OrgMember.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/OrgMember.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/OrgMember.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/OrgMember.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/OrgMember.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/OrgMember.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/OrgMember.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/OrgMember.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/OrgMember~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Models/Organization.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Organization.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Organization.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Organization.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Organization.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Organization.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Organization.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Organization.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Organization~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Models/Scene.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Scene.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Scene.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Scene.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Scene.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Scene.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Scene.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Scene.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Scene~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Models/Tour.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Tour.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Tour.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Tour.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Tour.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Tour.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Tour.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Tour.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Tour~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Models/Waypoint.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Waypoint.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Waypoint.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Waypoint.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Waypoint.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Waypoint.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Waypoint.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Waypoint.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Waypoint~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Settings/SettingsView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SettingsView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SettingsView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SettingsView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SettingsView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SettingsView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SettingsView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SettingsView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SettingsView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Shell/AppShell.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AppShell.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AppShell.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AppShell.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AppShell.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AppShell.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AppShell.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AppShell.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/AppShell~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Shell/Sidebar.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Sidebar.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Sidebar.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Sidebar.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Sidebar.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Sidebar.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Sidebar.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Sidebar.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/Sidebar~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/ViewModels/DashboardViewModel.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardViewModel.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardViewModel.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardViewModel.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardViewModel.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardViewModel.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardViewModel.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardViewModel.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/DashboardViewModel~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/ViewModels/MembersViewModel.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersViewModel.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersViewModel.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersViewModel.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersViewModel.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersViewModel.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersViewModel.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersViewModel.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/MembersViewModel~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/ViewModels/TourDetailViewModel.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailViewModel.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailViewModel.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailViewModel.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailViewModel.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailViewModel.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailViewModel.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailViewModel.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDetailViewModel~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/ViewModels/TourDirectoryViewModel.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryViewModel.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryViewModel.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryViewModel.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryViewModel.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryViewModel.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryViewModel.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryViewModel.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/TourDirectoryViewModel~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Viewer/ImmersiveView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ImmersiveView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ImmersiveView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ImmersiveView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ImmersiveView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ImmersiveView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ImmersiveView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ImmersiveView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/ImmersiveView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Viewer/SplatCache.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatCache.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatCache.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatCache.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatCache.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatCache.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatCache.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatCache.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatCache~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Viewer/SplatViewerView.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatViewerView.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatViewerView.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatViewerView.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatViewerView.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatViewerView.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatViewerView.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatViewerView.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/SplatViewerView~partial.swiftmodule"
+  },
+  "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/CloudTourVision/Viewer/WaypointOverlay.swift" : {
+    "const-values" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/WaypointOverlay.swiftconstvalues",
+    "dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/WaypointOverlay.d",
+    "diagnostics" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/WaypointOverlay.dia",
+    "index-unit-output-path" : "/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/WaypointOverlay.o",
+    "llvm-bc" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/WaypointOverlay.bc",
+    "object" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/WaypointOverlay.o",
+    "swift-dependencies" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/WaypointOverlay.swiftdeps",
+    "swiftmodule" : "/Users/edward/Projects/cloudtour-monorepo/cloudtour-avp/build/CloudTourVision.build/Debug-xrsimulator/CloudTourVision.build/Objects-normal/arm64/WaypointOverlay~partial.swiftmodule"
+  }
+}
