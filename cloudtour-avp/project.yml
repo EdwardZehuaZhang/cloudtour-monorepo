@@ -54,6 +54,7 @@ targets:
         SWIFT_VERSION: "6.0"
         SUPPORTED_PLATFORMS: "xros xrsimulator"
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: false
+        ENABLE_TESTING_SEARCH_PATHS: "NO"
     dependencies:
       - package: Supabase
         product: Supabase
