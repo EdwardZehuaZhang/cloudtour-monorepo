@@ -9,8 +9,9 @@ Each milestone is a numbered file. Tasks inside use the format `M<n>.<task>` wit
 | M1 | `M1.md` | _todo: backfill from progress.txt_ |
 | M2 | `M2.md` | _todo: backfill from progress.txt_ |
 | M3 | `M3.md` | _todo: backfill from progress.txt_ |
-| M4 | `M4.md` | active — AVP splat editor (calibrate / waypoint / brush / box / lasso) |
-| M5 | `M5.md` | active — editor polish + parity (M5.1–M5.22) |
+| M4 | `M4.md` | active — AVP splat editor (M4.16 fork-execute open) |
+| M5 | `M5.md` | shipped — 11 tasks done; remaining 11 reflowed to M6 |
+| M6 | `M6.md` | planned — Metal/fork-heavy + collaboration (M6.1–M6.17) |
 
 ## Task entry format
 
