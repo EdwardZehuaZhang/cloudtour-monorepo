@@ -9,67 +9,110 @@
 /* Begin PBXBuildFile section */
 		03800DA29CE1AEE75731969D /* OrgMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60F1D8661A3A87D7FBFB8222 /* OrgMember.swift */; };
 		0495B288C2FB05A9F3F968A4 /* Sidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 044035287F40930BC514909A /* Sidebar.swift */; };
+		14A2B894C951BAE69239593B /* StreetViewSearchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 739E7128CEC8AB661A5F5862 /* StreetViewSearchModel.swift */; };
 		17DE1F73AF8C670237382730 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FA5BEF31A606E92F9F9C3E0 /* ForgotPasswordView.swift */; };
 		224AD5148081B7AC968153B3 /* Scene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 303EAC6B87B732CE38D7BD51 /* Scene.swift */; };
 		26CABF0FED7532575CB4ECB2 /* Waypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA8C7C34AC39478A537E98C8 /* Waypoint.swift */; };
 		2771DC4D1F0FEB02B3D98026 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B6FD14A34F7C372C542513A /* DashboardViewModel.swift */; };
 		28406DC42E10D6A26E6AEC93 /* Tour.swift in Sources */ = {isa = PBXBuildFile; fileRef = 128FCF6342B7DD75F554B965 /* Tour.swift */; };
+		3556E52AFA10E251764FA71A /* PanoramaLoadState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F129DEB52AB2A8A7130E2BF /* PanoramaLoadState.swift */; };
 		35E8A765ADFBE3BB7EFD9740 /* TourDirectoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA553687897243102245E66 /* TourDirectoryView.swift */; };
 		37CCBEDFFD0D5AC7F95B5C71 /* MembersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0756D9840310322385729600 /* MembersView.swift */; };
+		3B57FBA14339CDE3B457316F /* PanoramaController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24938018EDE2EC7FB4A66302 /* PanoramaController.swift */; };
 		43950016FBC1856A7CF0B914 /* InviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 198AFD53853B5D6CBFD44727 /* InviteView.swift */; };
 		43EE005F0E72E8432F0E0943 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 7BE23DE0693C2E1A370C1D2B /* Supabase */; };
+		4AB13AFEF22C538EED2A57C1 /* StreetViewMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9E67D9EBF1F9507900F92E9 /* StreetViewMapView.swift */; };
 		4EF5B188B461F2493DD23058 /* CloudTourVisionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B921BA82036EC81E0844B02B /* CloudTourVisionApp.swift */; };
+		53B1D6618D9E9B6FC5C83775 /* NUSWaypoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D140238D92905F36100126C /* NUSWaypoints.swift */; };
 		56C8080005A046B4C34D005F /* SplatCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06662361FA04E8BA36A82336 /* SplatCache.swift */; };
+		57F7B76F02CCB69E3EF3473C /* EditTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C7BFE80AEE9CA46B6581B8E /* EditTool.swift */; };
 		5C1A76780A22488236B138D7 /* TourDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D138D088396CFCD51CC24541 /* TourDetailViewModel.swift */; };
+		5CE52466027080B50FF1FA8E /* SplatLoadState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C217E92F987363F8B46A4D22 /* SplatLoadState.swift */; };
+		60AAE0BC1ED31CCE873BBE31 /* EditorDraftStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B38C5395EC9AE98105E9DA0 /* EditorDraftStore.swift */; };
 		629841DCA1CC70D817C16FE6 /* MetalSplatter in Frameworks */ = {isa = PBXBuildFile; productRef = 7F7C76A96F294A1F82BEFF99 /* MetalSplatter */; };
+		674AF132578FDE0149AC7564 /* AppShell.swift.bak in Resources */ = {isa = PBXBuildFile; fileRef = 96B3B78739EB442046935EAA /* AppShell.swift.bak */; };
+		70A928E5BDC3D2B5C3CCE1A4 /* Inject in Frameworks */ = {isa = PBXBuildFile; productRef = 743405DD3A201817F7598055 /* Inject */; };
+		75D436CFF39A4876D570BCF5 /* SceneEdits.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0336DF9B0A9A372F6FA24027 /* SceneEdits.swift */; };
+		782060FA637849B02EE269A0 /* WaypointSelectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9044E66E98A9C1BDBF193182 /* WaypointSelectionState.swift */; };
 		7D129E134A21F75BBCBADC50 /* Organization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FE0A2ED90E5314EB7619381 /* Organization.swift */; };
 		7F209B0BC0F578E766891DD1 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C117BF48B2F73660402091 /* DashboardView.swift */; };
 		802247F2A15D6B8B53316BE9 /* TourDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115F6C0CE24139EB13699524 /* TourDetailView.swift */; };
+		826A938CD93A68AD014C13F2 /* FAQView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E9AF5A6B23356AF2242D72B /* FAQView.swift */; };
 		84A1EBD3AE48CFC72BF4F7CE /* SignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B64E0E415D6DBE5A570E1202 /* SignUpView.swift */; };
 		90E56439A8C4B73CA2087CC4 /* WaypointOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CF097DA546EF8DB8C45314 /* WaypointOverlay.swift */; };
 		9CE909A6E5311F24000E4BF9 /* TourDirectoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C3C7565DACF618D993E4B9 /* TourDirectoryViewModel.swift */; };
+		A2F2FB37C894F31F97F86E28 /* WaypointGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DB025586FC943E4DA0446C /* WaypointGraphView.swift */; };
+		A74CC96B66B4B074860DDA82 /* SplatImmersiveRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F41F062C30A0071CC6B2F59C /* SplatImmersiveRenderer.swift */; };
 		A8877FB3BC631AF7F33D5DD5 /* AppShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06494B30EF5E7633513B4DD0 /* AppShell.swift */; };
 		B109191F0008869872C30D3A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6982D46DAB7D453CE6B216B6 /* SettingsView.swift */; };
+		B362E9E36ABEB404B65C4EE5 /* WaypointEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91CEC5149BBF70509D7DD5B8 /* WaypointEditorView.swift */; };
+		CB41D3567FE28D8647590ABE /* StreetViewClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342E3698FD93EE0BE8D14198 /* StreetViewClient.swift */; };
 		CC9D4BE8D2B60436818EDF49 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E174922DC5DD1B9CEFD38A10 /* AuthViewModel.swift */; };
 		CEC163E57CE0D5144A0E9595 /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1136953D44EC78BD3210041A /* ImmersiveView.swift */; };
+		D08AAFDC290A453AD1287E66 /* StreetViewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC8D4CE6024255ACAE36653 /* StreetViewViewModel.swift */; };
+		D1BC89D18BB6F66DC3BD8EB7 /* PanoramaImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C3363DC1FBD28AD95EFB1B /* PanoramaImmersiveView.swift */; };
 		D7DF0BD2403F4E3A2B43F7B1 /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568AB4231BBC7FFF84D6716 /* SupabaseClient.swift */; };
+		DB1E00FED892B79D8419D2B2 /* PanoramaSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22781C0DCDAF4B62CC899E9 /* PanoramaSession.swift */; };
 		E4E896EEC0F2FC1F60500462 /* SignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8623F672FC7815B0248A80 /* SignInView.swift */; };
 		E69CA8F6C652010D2A0EA4AF /* MembersViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BB9454E1E24925DA78410E /* MembersViewModel.swift */; };
+		E7321DD4E5367D2CE3F9C67C /* ReticleRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 913BEAC47718D835D2649D3B /* ReticleRenderer.swift */; };
+		F70916792848666517BDD7B2 /* StreetViewTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3891FDA6CDFC8BC7209742B /* StreetViewTabView.swift */; };
 		F9A9DAFC31135AC7F1DC668D /* SplatViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D153849A08FB278C8FB2838 /* SplatViewerView.swift */; };
 		FC1C03D7F7854BAEF47BC552 /* TourEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76CF2C97FE30B87747B644F2 /* TourEditorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0336DF9B0A9A372F6FA24027 /* SceneEdits.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneEdits.swift; sourceTree = "<group>"; };
 		044035287F40930BC514909A /* Sidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar.swift; sourceTree = "<group>"; };
 		06494B30EF5E7633513B4DD0 /* AppShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShell.swift; sourceTree = "<group>"; };
 		06662361FA04E8BA36A82336 /* SplatCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatCache.swift; sourceTree = "<group>"; };
 		0756D9840310322385729600 /* MembersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersView.swift; sourceTree = "<group>"; };
 		0DA553687897243102245E66 /* TourDirectoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourDirectoryView.swift; sourceTree = "<group>"; };
+		0E9AF5A6B23356AF2242D72B /* FAQView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FAQView.swift; sourceTree = "<group>"; };
 		1136953D44EC78BD3210041A /* ImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveView.swift; sourceTree = "<group>"; };
 		115F6C0CE24139EB13699524 /* TourDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourDetailView.swift; sourceTree = "<group>"; };
 		128FCF6342B7DD75F554B965 /* Tour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tour.swift; sourceTree = "<group>"; };
+		13DB025586FC943E4DA0446C /* WaypointGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaypointGraphView.swift; sourceTree = "<group>"; };
 		198AFD53853B5D6CBFD44727 /* InviteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteView.swift; sourceTree = "<group>"; };
+		24938018EDE2EC7FB4A66302 /* PanoramaController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanoramaController.swift; sourceTree = "<group>"; };
+		29C3363DC1FBD28AD95EFB1B /* PanoramaImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanoramaImmersiveView.swift; sourceTree = "<group>"; };
+		2C7BFE80AEE9CA46B6581B8E /* EditTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTool.swift; sourceTree = "<group>"; };
+		2D140238D92905F36100126C /* NUSWaypoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NUSWaypoints.swift; sourceTree = "<group>"; };
 		303EAC6B87B732CE38D7BD51 /* Scene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scene.swift; sourceTree = "<group>"; };
+		342E3698FD93EE0BE8D14198 /* StreetViewClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewClient.swift; sourceTree = "<group>"; };
+		3B38C5395EC9AE98105E9DA0 /* EditorDraftStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorDraftStore.swift; sourceTree = "<group>"; };
 		3D153849A08FB278C8FB2838 /* SplatViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatViewerView.swift; sourceTree = "<group>"; };
 		3E8623F672FC7815B0248A80 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		60F1D8661A3A87D7FBFB8222 /* OrgMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrgMember.swift; sourceTree = "<group>"; };
 		6982D46DAB7D453CE6B216B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		739E7128CEC8AB661A5F5862 /* StreetViewSearchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewSearchModel.swift; sourceTree = "<group>"; };
 		76CF2C97FE30B87747B644F2 /* TourEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourEditorView.swift; sourceTree = "<group>"; };
+		7F129DEB52AB2A8A7130E2BF /* PanoramaLoadState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanoramaLoadState.swift; sourceTree = "<group>"; };
 		7FA5BEF31A606E92F9F9C3E0 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
 		8B6FD14A34F7C372C542513A /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		9044E66E98A9C1BDBF193182 /* WaypointSelectionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaypointSelectionState.swift; sourceTree = "<group>"; };
+		913BEAC47718D835D2649D3B /* ReticleRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReticleRenderer.swift; sourceTree = "<group>"; };
+		91CEC5149BBF70509D7DD5B8 /* WaypointEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaypointEditorView.swift; sourceTree = "<group>"; };
+		96B3B78739EB442046935EAA /* AppShell.swift.bak */ = {isa = PBXFileReference; path = AppShell.swift.bak; sourceTree = "<group>"; };
 		9FE0A2ED90E5314EB7619381 /* Organization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Organization.swift; sourceTree = "<group>"; };
 		B3C117BF48B2F73660402091 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		B568AB4231BBC7FFF84D6716 /* SupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClient.swift; sourceTree = "<group>"; };
 		B64E0E415D6DBE5A570E1202 /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
 		B921BA82036EC81E0844B02B /* CloudTourVisionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudTourVisionApp.swift; sourceTree = "<group>"; };
 		C0CF097DA546EF8DB8C45314 /* WaypointOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaypointOverlay.swift; sourceTree = "<group>"; };
+		C217E92F987363F8B46A4D22 /* SplatLoadState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatLoadState.swift; sourceTree = "<group>"; };
+		C3891FDA6CDFC8BC7209742B /* StreetViewTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewTabView.swift; sourceTree = "<group>"; };
 		CA8C7C34AC39478A537E98C8 /* Waypoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Waypoint.swift; sourceTree = "<group>"; };
 		D138D088396CFCD51CC24541 /* TourDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourDetailViewModel.swift; sourceTree = "<group>"; };
+		D22781C0DCDAF4B62CC899E9 /* PanoramaSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanoramaSession.swift; sourceTree = "<group>"; };
 		D8C3C7565DACF618D993E4B9 /* TourDirectoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourDirectoryViewModel.swift; sourceTree = "<group>"; };
 		DF0DFC9B593F26CD039DF58A /* CloudTourVision.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CloudTourVision.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFC8D4CE6024255ACAE36653 /* StreetViewViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewViewModel.swift; sourceTree = "<group>"; };
 		E174922DC5DD1B9CEFD38A10 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		F41F062C30A0071CC6B2F59C /* SplatImmersiveRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatImmersiveRenderer.swift; sourceTree = "<group>"; };
 		F8BB9454E1E24925DA78410E /* MembersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersViewModel.swift; sourceTree = "<group>"; };
-		"TEMP_FC1BF4E8-E80B-4169-963E-46DBCC6A3891" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		F9E67D9EBF1F9507900F92E9 /* StreetViewMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewMapView.swift; sourceTree = "<group>"; };
+		"TEMP_DA4420FF-0A07-4473-9CC7-6D70B38101BE" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +122,7 @@
 			files = (
 				43EE005F0E72E8432F0E0943 /* Supabase in Frameworks */,
 				629841DCA1CC70D817C16FE6 /* MetalSplatter in Frameworks */,
+				70A928E5BDC3D2B5C3CCE1A4 /* Inject in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -116,10 +160,16 @@
 		4250AB6068CB82501AC6C938 /* Viewer */ = {
 			isa = PBXGroup;
 			children = (
+				3B38C5395EC9AE98105E9DA0 /* EditorDraftStore.swift */,
 				1136953D44EC78BD3210041A /* ImmersiveView.swift */,
+				913BEAC47718D835D2649D3B /* ReticleRenderer.swift */,
 				06662361FA04E8BA36A82336 /* SplatCache.swift */,
+				F41F062C30A0071CC6B2F59C /* SplatImmersiveRenderer.swift */,
+				C217E92F987363F8B46A4D22 /* SplatLoadState.swift */,
 				3D153849A08FB278C8FB2838 /* SplatViewerView.swift */,
 				C0CF097DA546EF8DB8C45314 /* WaypointOverlay.swift */,
+				9044E66E98A9C1BDBF193182 /* WaypointSelectionState.swift */,
+				72E7BB6D25DBBD929E50FBCE /* Tools */,
 			);
 			path = Viewer;
 			sourceTree = "<group>";
@@ -152,12 +202,38 @@
 			path = Invite;
 			sourceTree = "<group>";
 		};
+		62338E6CE04F91627E0FA290 /* StreetView */ = {
+			isa = PBXGroup;
+			children = (
+				2D140238D92905F36100126C /* NUSWaypoints.swift */,
+				24938018EDE2EC7FB4A66302 /* PanoramaController.swift */,
+				29C3363DC1FBD28AD95EFB1B /* PanoramaImmersiveView.swift */,
+				7F129DEB52AB2A8A7130E2BF /* PanoramaLoadState.swift */,
+				D22781C0DCDAF4B62CC899E9 /* PanoramaSession.swift */,
+				342E3698FD93EE0BE8D14198 /* StreetViewClient.swift */,
+				F9E67D9EBF1F9507900F92E9 /* StreetViewMapView.swift */,
+				739E7128CEC8AB661A5F5862 /* StreetViewSearchModel.swift */,
+				C3891FDA6CDFC8BC7209742B /* StreetViewTabView.swift */,
+				DFC8D4CE6024255ACAE36653 /* StreetViewViewModel.swift */,
+			);
+			path = StreetView;
+			sourceTree = "<group>";
+		};
+		72E7BB6D25DBBD929E50FBCE /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				2C7BFE80AEE9CA46B6581B8E /* EditTool.swift */,
+			);
+			path = Tools;
+			sourceTree = "<group>";
+		};
 		8674FD6A010B85C67920EB7C /* Models */ = {
 			isa = PBXGroup;
 			children = (
 				9FE0A2ED90E5314EB7619381 /* Organization.swift */,
 				60F1D8661A3A87D7FBFB8222 /* OrgMember.swift */,
 				303EAC6B87B732CE38D7BD51 /* Scene.swift */,
+				0336DF9B0A9A372F6FA24027 /* SceneEdits.swift */,
 				128FCF6342B7DD75F554B965 /* Tour.swift */,
 				CA8C7C34AC39478A537E98C8 /* Waypoint.swift */,
 			);
@@ -179,11 +255,13 @@
 				46E4B3F687E18EA93B0563BC /* Auth */,
 				CB5A6813A3327CA48A3817AF /* Dashboard */,
 				3425637CF4349E3D5F5A6E48 /* Explore */,
+				D904625DE4EC38EEDD1C0A9D /* FAQ */,
 				5BE1D213891CDBFFECEE33EB /* Invite */,
 				461D3B64C338686A66030B2E /* Members */,
 				8674FD6A010B85C67920EB7C /* Models */,
 				2CE3792A732252F70B31B7F7 /* Settings */,
 				BF5FA43FE2677488B53F94B7 /* Shell */,
+				62338E6CE04F91627E0FA290 /* StreetView */,
 				4250AB6068CB82501AC6C938 /* Viewer */,
 				2EB5AB4683BFAE1F6DB501BD /* ViewModels */,
 			);
@@ -202,6 +280,7 @@
 			isa = PBXGroup;
 			children = (
 				06494B30EF5E7633513B4DD0 /* AppShell.swift */,
+				96B3B78739EB442046935EAA /* AppShell.swift.bak */,
 				044035287F40930BC514909A /* Sidebar.swift */,
 			);
 			path = Shell;
@@ -212,14 +291,24 @@
 			children = (
 				B3C117BF48B2F73660402091 /* DashboardView.swift */,
 				76CF2C97FE30B87747B644F2 /* TourEditorView.swift */,
+				91CEC5149BBF70509D7DD5B8 /* WaypointEditorView.swift */,
+				13DB025586FC943E4DA0446C /* WaypointGraphView.swift */,
 			);
 			path = Dashboard;
 			sourceTree = "<group>";
 		};
-		"TEMP_E83492A0-AA65-4F4E-BEF1-FC00FD4E1005" /* cloudtour-avp */ = {
+		D904625DE4EC38EEDD1C0A9D /* FAQ */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_FC1BF4E8-E80B-4169-963E-46DBCC6A3891" /* Config.xcconfig */,
+				0E9AF5A6B23356AF2242D72B /* FAQView.swift */,
+			);
+			path = FAQ;
+			sourceTree = "<group>";
+		};
+		"TEMP_570B8A1B-3917-44BB-B112-4B5F1B5BF91B" /* cloudtour-avp */ = {
+			isa = PBXGroup;
+			children = (
+				"TEMP_DA4420FF-0A07-4473-9CC7-6D70B38101BE" /* Config.xcconfig */,
 			);
 			path = "cloudtour-avp";
 			sourceTree = "<group>";
@@ -232,6 +321,7 @@
 			buildConfigurationList = 760BBD2AFCA189A4F46E3E9C /* Build configuration list for PBXNativeTarget "CloudTourVision" */;
 			buildPhases = (
 				218B3CB8513AF3E7329A0627 /* Sources */,
+				446168D2EBA059F66245510A /* Resources */,
 				FE6BBE1F096BB6DE4735723D /* Frameworks */,
 			);
 			buildRules = (
@@ -242,6 +332,7 @@
 			packageProductDependencies = (
 				7BE23DE0693C2E1A370C1D2B /* Supabase */,
 				7F7C76A96F294A1F82BEFF99 /* MetalSplatter */,
+				743405DD3A201817F7598055 /* Inject */,
 			);
 			productName = CloudTourVision;
 			productReference = DF0DFC9B593F26CD039DF58A /* CloudTourVision.app */;
@@ -268,6 +359,7 @@
 			mainGroup = 873D9C2C0DB12206F7338637;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				B45BF3CF1015CF37F593DF2A /* XCRemoteSwiftPackageReference "Inject" */,
 				83B0F38BBF2350898DB21EA7 /* XCRemoteSwiftPackageReference "MetalSplatter" */,
 				67E16C3D0FEF74F48B3818AB /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
@@ -281,6 +373,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		446168D2EBA059F66245510A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				674AF132578FDE0149AC7564 /* AppShell.swift.bak in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		218B3CB8513AF3E7329A0627 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -291,20 +394,37 @@
 				4EF5B188B461F2493DD23058 /* CloudTourVisionApp.swift in Sources */,
 				7F209B0BC0F578E766891DD1 /* DashboardView.swift in Sources */,
 				2771DC4D1F0FEB02B3D98026 /* DashboardViewModel.swift in Sources */,
+				57F7B76F02CCB69E3EF3473C /* EditTool.swift in Sources */,
+				60AAE0BC1ED31CCE873BBE31 /* EditorDraftStore.swift in Sources */,
+				826A938CD93A68AD014C13F2 /* FAQView.swift in Sources */,
 				17DE1F73AF8C670237382730 /* ForgotPasswordView.swift in Sources */,
 				CEC163E57CE0D5144A0E9595 /* ImmersiveView.swift in Sources */,
 				43950016FBC1856A7CF0B914 /* InviteView.swift in Sources */,
 				37CCBEDFFD0D5AC7F95B5C71 /* MembersView.swift in Sources */,
 				E69CA8F6C652010D2A0EA4AF /* MembersViewModel.swift in Sources */,
+				53B1D6618D9E9B6FC5C83775 /* NUSWaypoints.swift in Sources */,
 				03800DA29CE1AEE75731969D /* OrgMember.swift in Sources */,
 				7D129E134A21F75BBCBADC50 /* Organization.swift in Sources */,
+				3B57FBA14339CDE3B457316F /* PanoramaController.swift in Sources */,
+				D1BC89D18BB6F66DC3BD8EB7 /* PanoramaImmersiveView.swift in Sources */,
+				3556E52AFA10E251764FA71A /* PanoramaLoadState.swift in Sources */,
+				DB1E00FED892B79D8419D2B2 /* PanoramaSession.swift in Sources */,
+				E7321DD4E5367D2CE3F9C67C /* ReticleRenderer.swift in Sources */,
 				224AD5148081B7AC968153B3 /* Scene.swift in Sources */,
+				75D436CFF39A4876D570BCF5 /* SceneEdits.swift in Sources */,
 				B109191F0008869872C30D3A /* SettingsView.swift in Sources */,
 				0495B288C2FB05A9F3F968A4 /* Sidebar.swift in Sources */,
 				E4E896EEC0F2FC1F60500462 /* SignInView.swift in Sources */,
 				84A1EBD3AE48CFC72BF4F7CE /* SignUpView.swift in Sources */,
 				56C8080005A046B4C34D005F /* SplatCache.swift in Sources */,
+				A74CC96B66B4B074860DDA82 /* SplatImmersiveRenderer.swift in Sources */,
+				5CE52466027080B50FF1FA8E /* SplatLoadState.swift in Sources */,
 				F9A9DAFC31135AC7F1DC668D /* SplatViewerView.swift in Sources */,
+				CB41D3567FE28D8647590ABE /* StreetViewClient.swift in Sources */,
+				4AB13AFEF22C538EED2A57C1 /* StreetViewMapView.swift in Sources */,
+				14A2B894C951BAE69239593B /* StreetViewSearchModel.swift in Sources */,
+				F70916792848666517BDD7B2 /* StreetViewTabView.swift in Sources */,
+				D08AAFDC290A453AD1287E66 /* StreetViewViewModel.swift in Sources */,
 				D7DF0BD2403F4E3A2B43F7B1 /* SupabaseClient.swift in Sources */,
 				28406DC42E10D6A26E6AEC93 /* Tour.swift in Sources */,
 				802247F2A15D6B8B53316BE9 /* TourDetailView.swift in Sources */,
@@ -313,7 +433,10 @@
 				9CE909A6E5311F24000E4BF9 /* TourDirectoryViewModel.swift in Sources */,
 				FC1C03D7F7854BAEF47BC552 /* TourEditorView.swift in Sources */,
 				26CABF0FED7532575CB4ECB2 /* Waypoint.swift in Sources */,
+				B362E9E36ABEB404B65C4EE5 /* WaypointEditorView.swift in Sources */,
+				A2F2FB37C894F31F97F86E28 /* WaypointGraphView.swift in Sources */,
 				90E56439A8C4B73CA2087CC4 /* WaypointOverlay.swift in Sources */,
+				782060FA637849B02EE269A0 /* WaypointSelectionState.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -324,6 +447,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ENABLE_TESTING_SEARCH_PATHS = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CloudTourVision/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -343,12 +467,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ENABLE_TESTING_SEARCH_PATHS = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CloudTourVision/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OTHER_LDFLAGS = "-Xlinker -interposable";
 				PRODUCT_BUNDLE_IDENTIFIER = com.cloudtour.vision;
 				SDKROOT = xros;
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
@@ -360,7 +486,7 @@
 		};
 		791F49A1A75E631F71936C78 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_FC1BF4E8-E80B-4169-963E-46DBCC6A3891" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_DA4420FF-0A07-4473-9CC7-6D70B38101BE" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -425,7 +551,7 @@
 		};
 		8C265FB73CDBD82CE541319B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_FC1BF4E8-E80B-4169-963E-46DBCC6A3891" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_DA4420FF-0A07-4473-9CC7-6D70B38101BE" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -521,9 +647,22 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		B45BF3CF1015CF37F593DF2A /* XCRemoteSwiftPackageReference "Inject" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzysztofzablocki/Inject";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		743405DD3A201817F7598055 /* Inject */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B45BF3CF1015CF37F593DF2A /* XCRemoteSwiftPackageReference "Inject" */;
+			productName = Inject;
+		};
 		7BE23DE0693C2E1A370C1D2B /* Supabase */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 67E16C3D0FEF74F48B3818AB /* XCRemoteSwiftPackageReference "supabase-swift" */;

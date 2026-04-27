@@ -33,23 +33,37 @@ struct TourEditorView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(scenes) { scene in
-                        HStack {
-                            Image(systemName: "cube.transparent")
-                                .foregroundStyle(.tint)
-                            VStack(alignment: .leading) {
-                                Text(scene.name)
-                                    .font(.headline)
-                                if let desc = scene.description {
-                                    Text(desc)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                        NavigationLink {
+                            WaypointEditorView(scene: scene, allScenes: scenes)
+                        } label: {
+                            HStack {
+                                Image(systemName: "cube.transparent")
+                                    .foregroundStyle(.tint)
+                                VStack(alignment: .leading) {
+                                    Text(scene.title)
+                                        .font(.headline)
+                                    if let desc = scene.description {
+                                        Text(desc)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
+                                Spacer()
+                                Text("Order: \(scene.sortOrder)")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
                             }
-                            Spacer()
-                            Text("Order: \(scene.order)")
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
                         }
+                    }
+                }
+            }
+
+            if !scenes.isEmpty {
+                Section("Connections") {
+                    NavigationLink {
+                        WaypointGraphView(scenes: scenes) { _ in }
+                    } label: {
+                        Label("Scene graph", systemImage: "point.3.connected.trianglepath.dotted")
                     }
                 }
             }
@@ -73,7 +87,7 @@ struct TourEditorView: View {
                 .from("scenes")
                 .select()
                 .eq("tour_id", value: tour.id.uuidString)
-                .order("order")
+                .order("sort_order")
                 .execute()
                 .value
             isLoadingScenes = false

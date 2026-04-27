@@ -19,6 +19,43 @@ struct SplatViewerView: View {
     @State private var saveError: String?
     @State private var isSaving = false
     @State private var pendingAutoReenter = false
+    /// Set by "Set starting view" button while in `.view` mode. Flushed to
+    /// `scenes.default_camera_position` by `saveAll()` and cleared after
+    /// successful PATCH.
+    @State private var pendingStartingView: CameraPosition? = nil
+    // M5.11 — display HUD toggles. Per-session only; not persisted.
+    @State private var hudExpanded: Bool = false
+    @State private var hideWaypoints: Bool = false
+    @State private var hidePendingDeletions: Bool = false
+    @State private var hideSilhouette: Bool = false
+    // M5.6 — numeric calibrate panel state. Lazily synced from the renderer
+    // when the user expands the panel; deltas push back via setTransform.
+    @State private var numericExpanded: Bool = false
+    @State private var numericTx: Double = 0
+    @State private var numericTy: Double = 0
+    @State private var numericTz: Double = 0
+    @State private var numericScale: Double = 100  // percent
+    @State private var numericYaw: Double = 0      // degrees
+    // M5.1 undo/redo depth surfaces. Re-read on every commit via
+    // `refreshHistoryDepth()` so disabled-state on the buttons is correct.
+    @State private var undoDepth: Int = 0
+    @State private var redoDepth: Int = 0
+    // M5.2 — periodically-refreshed snapshots of the pending edits, used
+    // by the per-item delete panel. Cheap because the panel is small.
+    @State private var pendingPanelExpanded: Bool = false
+    @State private var panelWaypoints: [SplatImmersiveRenderer.PendingWaypoint] = []
+    @State private var panelSpheres: [DeletionSphere] = []
+    @State private var panelBoxes: [DeletionBox] = []
+    @State private var panelLassos: [DeletionLasso] = []
+    @State private var panelYawUpdates: [(UUID, Float)] = []
+    // M5.3 — autosave + resume-draft state
+    @State private var pendingResumeDraft: EditorDraft? = nil
+    @State private var showResumePrompt: Bool = false
+    @State private var showCancelConfirm: Bool = false
+    // M5.20 — first-run onboarding overlay. Persisted via UserDefaults so
+    // it shows once per user and never returns unless they reset state.
+    @AppStorage("splatEditor.onboardingShown_v1") private var onboardingShown: Bool = false
+    @State private var showOnboarding: Bool = false
     private let loadState = SplatLoadState.shared
     private let waypointSelection = WaypointSelectionState.shared
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
@@ -147,6 +184,15 @@ struct SplatViewerView: View {
         // state on first frame.
         if isEditingMode {
             activeTool = .calibrate
+            // M5.20 — show onboarding overlay first time the user enters the editor.
+            if !onboardingShown {
+                showOnboarding = true
+            }
+            // M5.3 — surface any local autosaved draft for this scene.
+            if let draft = EditorDraftStore.load(sceneId: currentScene.id) {
+                pendingResumeDraft = draft
+                showResumePrompt = true
+            }
         }
         // Default target scene = first OTHER scene in the tour, or self if
         // there's only one (same-scene bookmark).
@@ -190,7 +236,8 @@ struct SplatViewerView: View {
             return
         }
         let didCalibrate = renderer.hasUserAdjustedTransform()
-        if currentScene.sceneEdits == nil, !didCalibrate {
+        let startingViewToPersist = pendingStartingView
+        if currentScene.sceneEdits == nil, !didCalibrate, startingViewToPersist == nil {
             saveError = "Calibrate the splat against the silhouette before saving."
             return
         }
@@ -282,8 +329,25 @@ struct SplatViewerView: View {
                         .execute()
                 }
 
+                if let starting = startingViewToPersist {
+                    struct StartingViewUpdate: Encodable { let default_camera_position: CameraPosition }
+                    let updated: Scene = try await AppSupabase.client
+                        .from("scenes")
+                        .update(StartingViewUpdate(default_camera_position: starting))
+                        .eq("id", value: currentScene.id.uuidString)
+                        .select()
+                        .single()
+                        .execute()
+                        .value
+                    await MainActor.run {
+                        currentScene = updated
+                        pendingStartingView = nil
+                    }
+                }
+
                 renderer.clearWaypointEdits()
                 renderer.clearPendingDeletions()
+                EditorDraftStore.discard(sceneId: currentScene.id)
                 await loadWaypoints()
                 await MainActor.run {
                     isSaving = false
@@ -305,6 +369,109 @@ struct SplatViewerView: View {
         SplatImmersiveRenderer.currentRenderer?.resetTransform(to: .identity)
         SplatImmersiveRenderer.currentRenderer?.setActiveTool(.calibrate)
         activeTool = .calibrate
+    }
+
+    /// M5.5 — capture current head pose in splat-local coords, queued for
+    /// the next Save which persists `scenes.default_camera_position`.
+    private func performUndo() {
+        SplatImmersiveRenderer.currentRenderer?.undo()
+        refreshHistoryDepth()
+    }
+
+    private func performRedo() {
+        SplatImmersiveRenderer.currentRenderer?.redo()
+        refreshHistoryDepth()
+    }
+
+    private func autosaveDraft() {
+        guard let r = SplatImmersiveRenderer.currentRenderer else { return }
+        let draft = r.snapshotDraft(sceneId: currentScene.id, startingView: pendingStartingView)
+        EditorDraftStore.save(draft)
+    }
+
+    private func resumeFromDraft() {
+        guard let draft = pendingResumeDraft else { return }
+        SplatImmersiveRenderer.currentRenderer?.applyDraft(draft)
+        if let starting = draft.startingView { pendingStartingView = starting }
+        pendingResumeDraft = nil
+        showResumePrompt = false
+    }
+
+    private func discardDraft() {
+        EditorDraftStore.discard(sceneId: currentScene.id)
+        pendingResumeDraft = nil
+        showResumePrompt = false
+    }
+
+    private func cancelEditWithGuard() {
+        // If anything pending — drafts on disk OR in-memory state — confirm.
+        let hasPending = EditorDraftStore.hasDraft(sceneId: currentScene.id)
+            || (panelWaypoints.count + panelSpheres.count + panelBoxes.count
+                + panelLassos.count + panelYawUpdates.count) > 0
+        if hasPending {
+            showCancelConfirm = true
+        } else {
+            exitImmersive()
+        }
+    }
+
+    private func refreshPanelSnapshots() {
+        guard let r = SplatImmersiveRenderer.currentRenderer else {
+            panelWaypoints = []; panelSpheres = []; panelBoxes = []; panelLassos = []; panelYawUpdates = []
+            return
+        }
+        let edits = r.snapshotWaypointEdits()
+        panelWaypoints = edits.pending
+        panelYawUpdates = edits.yawUpdates.map { ($0.key, $0.value) }
+        panelSpheres = r.snapshotPendingDeletions()
+        panelBoxes = r.snapshotPendingBoxes()
+        panelLassos = r.snapshotPendingLassos()
+    }
+
+    private func refreshHistoryDepth() {
+        let depth = SplatImmersiveRenderer.currentRenderer?.historyDepth() ?? (undo: 0, redo: 0)
+        undoDepth = depth.undo
+        redoDepth = depth.redo
+    }
+
+    private func syncNumericFromRenderer() {
+        guard let t = SplatImmersiveRenderer.currentRenderer?.snapshotTransform() else { return }
+        numericTx = t.translation.x * 100
+        numericTy = t.translation.y * 100
+        numericTz = t.translation.z * 100
+        numericScale = t.scale * 100
+        // Extract yaw (rotation around Y) from quaternion
+        let y = t.rotation.y, w = t.rotation.w
+        numericYaw = Double(atan2(2 * y * w, 1 - 2 * y * y) * 180.0 / .pi)
+    }
+
+    private func pushNumericTransform() {
+        let yawRad = numericYaw * .pi / 180.0
+        let halfYaw = yawRad / 2.0
+        let q = Quaternion(x: 0, y: sin(halfYaw), z: 0, w: cos(halfYaw))
+        let t = SceneTransform(
+            scale: max(0.01, numericScale / 100.0),
+            rotation: q,
+            translation: Position3D(x: numericTx / 100.0, y: numericTy / 100.0, z: numericTz / 100.0)
+        )
+        SplatImmersiveRenderer.currentRenderer?.applyTransform(t)
+    }
+
+    private func pushDisplayFlags() {
+        SplatImmersiveRenderer.currentRenderer?.setDisplayFlags(
+            hideWaypoints: hideWaypoints,
+            hidePendingDeletions: hidePendingDeletions,
+            hideSilhouette: hideSilhouette
+        )
+    }
+
+    private func captureStartingView() {
+        guard let pose = SplatImmersiveRenderer.currentRenderer?.snapshotHeadPoseInSplatLocal() else {
+            saveError = "No frame yet — wait for the splat to render once."
+            return
+        }
+        saveError = nil
+        pendingStartingView = pose
     }
 
     private func selectTool(_ tool: ToolMode) {
@@ -360,6 +527,20 @@ struct SplatViewerView: View {
             if isEditingMode {
                 editingInstructions
                 editingControls
+                    .task(id: isEditingMode) {
+                        // Poll history depth at 4 Hz so the undo/redo button
+                        // disabled-state reflects gesture commits made on the
+                        // render thread.
+                        var ticks = 0
+                        while !Task.isCancelled, isEditingMode {
+                            refreshHistoryDepth()
+                            if pendingPanelExpanded { refreshPanelSnapshots() }
+                            // Autosave every 20 ticks (~5 s).
+                            if ticks % 20 == 0 { autosaveDraft() }
+                            ticks += 1
+                            try? await Task.sleep(nanoseconds: 250_000_000)
+                        }
+                    }
             } else {
                 if !waypoints.isEmpty {
                     Text("Aim at a waypoint and pinch to teleport")
@@ -395,6 +576,8 @@ struct SplatViewerView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.regular)
+                .keyboardShortcut(.space, modifiers: [])
+                .accessibilityHint("Triggers a synthetic pinch in the simulator")
             }
             .padding(.top, 16)
             #endif
@@ -449,8 +632,214 @@ struct SplatViewerView: View {
     }
 
     @ViewBuilder
+    private var numericCalibratePanel: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button {
+                if !numericExpanded { syncNumericFromRenderer() }
+                withAnimation(.easeOut(duration: 0.2)) { numericExpanded.toggle() }
+            } label: {
+                Label(numericExpanded ? "Hide numeric calibrate" : "Numeric calibrate",
+                      systemImage: numericExpanded ? "chevron.up" : "ruler.fill")
+                    .font(.caption)
+            }
+            .buttonStyle(.borderless)
+            if numericExpanded {
+                Group {
+                    numericRow(label: "X (cm)", value: $numericTx, range: -500...500, step: 1)
+                    numericRow(label: "Y (cm)", value: $numericTy, range: -500...500, step: 1)
+                    numericRow(label: "Z (cm)", value: $numericTz, range: -500...500, step: 1)
+                    numericRow(label: "Scale (%)", value: $numericScale, range: 1...500, step: 1)
+                    numericRow(label: "Yaw (°)", value: $numericYaw, range: -180...180, step: 1)
+                }
+            }
+        }
+        .frame(maxWidth: 360, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func numericRow(label: String, value: Binding<Double>, range: ClosedRange<Double>, step: Double) -> some View {
+        HStack(spacing: 8) {
+            Text(label)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .frame(width: 80, alignment: .leading)
+            Stepper(value: value, in: range, step: step) {
+                Text(String(format: "%.0f", value.wrappedValue))
+                    .monospacedDigit()
+            }
+            .onChange(of: value.wrappedValue) { _, _ in pushNumericTransform() }
+        }
+    }
+
+    @ViewBuilder
+    private var onboardingSheet: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Splat editor — first run")
+                .font(.title2)
+                .fontWeight(.bold)
+                .accessibilityAddTraits(.isHeader)
+            VStack(alignment: .leading, spacing: 10) {
+                onboardingRow(icon: "ruler", title: "Calibrate",
+                              detail: "Match the human silhouette: two-hand pinch+spread to scale, two-hand twist to rotate, one-hand pinch+drag to move.")
+                onboardingRow(icon: "mappin.and.ellipse", title: "Waypoint",
+                              detail: "Aim and pinch to drop a waypoint. Pinch a placed one to set arrival yaw.")
+                onboardingRow(icon: "paintbrush.pointed", title: "Brush / Box / Lasso",
+                              detail: "Pick a tool to mark splat regions for deletion. Save commits the removals.")
+                onboardingRow(icon: "arrow.uturn.backward", title: "Undo / Redo",
+                              detail: "Cmd-Z reverts the last commit; the pending-edits panel lets you remove specific items.")
+                onboardingRow(icon: "scope", title: "Starting view",
+                              detail: "While viewing, tap “Set starting view” to record the current head pose for new visitors.")
+            }
+            Button {
+                onboardingShown = true
+                showOnboarding = false
+            } label: {
+                Text("Got it")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .accessibilityLabel("Dismiss onboarding")
+        }
+        .padding(28)
+        .frame(maxWidth: 560)
+    }
+
+    @ViewBuilder
+    private func onboardingRow(icon: String, title: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(.tint)
+                .frame(width: 28)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.headline)
+                Text(detail).font(.callout).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var pendingEditsPanel: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            let total = panelWaypoints.count + panelSpheres.count
+                + panelBoxes.count + panelLassos.count + panelYawUpdates.count
+            Button {
+                if !pendingPanelExpanded { refreshPanelSnapshots() }
+                withAnimation(.easeOut(duration: 0.2)) { pendingPanelExpanded.toggle() }
+            } label: {
+                Label(pendingPanelExpanded ? "Hide pending edits (\(total))" : "Pending edits (\(total))",
+                      systemImage: pendingPanelExpanded ? "chevron.up" : "list.bullet")
+                    .font(.caption)
+            }
+            .buttonStyle(.borderless)
+            if pendingPanelExpanded {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(Array(panelWaypoints.enumerated()), id: \.element.id) { idx, wp in
+                            pendingRow(label: "Waypoint @ (\(fmt(wp.localPosition.x)), \(fmt(wp.localPosition.y)), \(fmt(wp.localPosition.z)))") {
+                                SplatImmersiveRenderer.currentRenderer?.removePendingWaypoint(at: idx)
+                                refreshPanelSnapshots()
+                                refreshHistoryDepth()
+                            }
+                        }
+                        ForEach(Array(panelYawUpdates.enumerated()), id: \.offset) { _, pair in
+                            pendingRow(label: "Yaw update on existing waypoint (\(Int(pair.1 * 180.0 / .pi))°)") {
+                                SplatImmersiveRenderer.currentRenderer?.removeYawUpdate(forWaypointId: pair.0)
+                                refreshPanelSnapshots()
+                                refreshHistoryDepth()
+                            }
+                        }
+                        ForEach(Array(panelSpheres.enumerated()), id: \.offset) { idx, sph in
+                            pendingRow(label: "Brush sphere r=\(fmt(Float(sph.radius))) m") {
+                                SplatImmersiveRenderer.currentRenderer?.removePendingDeletionSphere(at: idx)
+                                refreshPanelSnapshots()
+                                refreshHistoryDepth()
+                            }
+                        }
+                        ForEach(Array(panelBoxes.enumerated()), id: \.offset) { idx, box in
+                            let dx = Float(box.max[0] - box.min[0])
+                            let dy = Float(box.max[1] - box.min[1])
+                            let dz = Float(box.max[2] - box.min[2])
+                            pendingRow(label: "Box \(fmt(dx))×\(fmt(dy))×\(fmt(dz)) m") {
+                                SplatImmersiveRenderer.currentRenderer?.removePendingDeletionBox(at: idx)
+                                refreshPanelSnapshots()
+                                refreshHistoryDepth()
+                            }
+                        }
+                        ForEach(Array(panelLassos.enumerated()), id: \.offset) { idx, lasso in
+                            pendingRow(label: "Lasso (\(lasso.polygon.count) pts)") {
+                                SplatImmersiveRenderer.currentRenderer?.removePendingDeletionLasso(at: idx)
+                                refreshPanelSnapshots()
+                                refreshHistoryDepth()
+                            }
+                        }
+                        if total == 0 {
+                            Text("Nothing pending")
+                                .font(.callout)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                }
+                .frame(maxHeight: 180)
+            }
+        }
+        .frame(maxWidth: 360, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func pendingRow(label: String, onDelete: @escaping () -> Void) -> some View {
+        HStack {
+            Text(label)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer()
+            Button(role: .destructive, action: onDelete) {
+                Image(systemName: "trash")
+            }
+            .buttonStyle(.borderless)
+            .controlSize(.small)
+        }
+    }
+
+    private func fmt(_ v: Float) -> String { String(format: "%.2f", v) }
+    private func fmt(_ v: Double) -> String { String(format: "%.2f", v) }
+
+    @ViewBuilder
+    private var displayHUD: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) { hudExpanded.toggle() }
+            } label: {
+                Label(hudExpanded ? "Hide display options" : "Display options",
+                      systemImage: hudExpanded ? "chevron.up" : "slider.horizontal.3")
+                    .font(.caption)
+            }
+            .buttonStyle(.borderless)
+            if hudExpanded {
+                Toggle("Hide waypoints", isOn: $hideWaypoints)
+                    .onChange(of: hideWaypoints) { _, _ in pushDisplayFlags() }
+                Toggle("Hide pending deletions", isOn: $hidePendingDeletions)
+                    .onChange(of: hidePendingDeletions) { _, _ in pushDisplayFlags() }
+                Toggle("Hide calibration silhouette", isOn: $hideSilhouette)
+                    .onChange(of: hideSilhouette) { _, _ in pushDisplayFlags() }
+            }
+        }
+        .font(.callout)
+        .frame(maxWidth: 360, alignment: .leading)
+    }
+
+    @ViewBuilder
     private var editingControls: some View {
         VStack(spacing: 16) {
+            pendingEditsPanel
+            displayHUD
+
             // Tool picker
             Picker("Tool", selection: Binding(
                 get: { activeTool },
@@ -485,6 +874,11 @@ struct SplatViewerView: View {
                 .frame(maxWidth: 520)
             }
 
+            // M5.6 — numeric calibrate panel
+            if activeTool == .calibrate {
+                numericCalibratePanel
+            }
+
             // Brush-mode radius slider
             if activeTool == .brush {
                 HStack(spacing: 12) {
@@ -506,6 +900,30 @@ struct SplatViewerView: View {
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                         .frame(width: 64, alignment: .trailing)
+                }
+                .frame(maxWidth: 520)
+            }
+
+            // View-mode starting-view capture
+            if activeTool == .view {
+                HStack(spacing: 12) {
+                    Button {
+                        captureStartingView()
+                    } label: {
+                        Label(pendingStartingView == nil ? "Set starting view" : "Re-capture starting view",
+                              systemImage: "scope")
+                            .font(.callout)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.regular)
+                    .disabled(isSaving)
+                    if pendingStartingView != nil {
+                        Label("Captured — Save to persist", systemImage: "checkmark.circle.fill")
+                            .font(.callout)
+                            .foregroundStyle(.green)
+                    }
                 }
                 .frame(maxWidth: 520)
             }
@@ -537,8 +955,34 @@ struct SplatViewerView: View {
                     .disabled(isSaving)
                 }
 
+                Button {
+                    performUndo()
+                } label: {
+                    Label("Undo", systemImage: "arrow.uturn.backward")
+                        .font(.title3)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .disabled(isSaving || undoDepth == 0)
+                .keyboardShortcut("z", modifiers: .command)
+
+                Button {
+                    performRedo()
+                } label: {
+                    Label("Redo", systemImage: "arrow.uturn.forward")
+                        .font(.title3)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .disabled(isSaving || redoDepth == 0)
+                .keyboardShortcut("z", modifiers: [.command, .shift])
+
                 Button(role: .cancel) {
-                    exitImmersive()
+                    cancelEditWithGuard()
                 } label: {
                     Label("Cancel", systemImage: "xmark.circle")
                         .font(.title3)
@@ -548,6 +992,33 @@ struct SplatViewerView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.large)
                 .disabled(isSaving)
+            }
+            .confirmationDialog(
+                "Discard pending edits?",
+                isPresented: $showCancelConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Discard", role: .destructive) {
+                    EditorDraftStore.discard(sceneId: currentScene.id)
+                    SplatImmersiveRenderer.currentRenderer?.clearWaypointEdits()
+                    SplatImmersiveRenderer.currentRenderer?.clearPendingDeletions()
+                    pendingStartingView = nil
+                    exitImmersive()
+                }
+                Button("Keep editing", role: .cancel) { }
+            } message: {
+                Text("Closing now drops all unsaved waypoints, deletions, and starting-view captures.")
+            }
+            .alert("Resume previous draft?", isPresented: $showResumePrompt) {
+                Button("Resume") { resumeFromDraft() }
+                Button("Discard", role: .destructive) { discardDraft() }
+            } message: {
+                if let d = pendingResumeDraft {
+                    Text("Found an autosaved draft from \(d.savedAt.formatted(date: .abbreviated, time: .shortened)). Resume to keep its pending edits, or discard to start fresh.")
+                }
+            }
+            .sheet(isPresented: $showOnboarding) {
+                onboardingSheet
             }
 
             if let saveError {

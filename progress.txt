@@ -867,3 +867,38 @@
   - The visionOS build is the de-facto Swift typecheck for cloudtour-avp; SourceKit "No such module 'Supabase'" diagnostics are editor-only and clear after `xcodebuild` resolves SPM packages.
   - Use `generic/platform=visionOS Simulator` to avoid pinning to a specific simulator UDID in CI/local typecheck loops.
 ---
+
+## 2026-04-27 - M5 batch (M5.1, M5.2, M5.3, M5.5, M5.6, M5.10, M5.11, M5.20, M5.21*, M5.22*, M5.23-ADR)
+- M5.1 undo/redo: HistorySnapshot deep-copy of pending lists + transform on each commit (5 sites: waypoint pinch, brush sphere, box release, lasso release, applyTransform). Undo/redo public API + Cmd-Z / Cmd-Shift-Z keyboard shortcuts. Stack capped at 64 entries.
+- M5.2 per-item delete panel: scrollable list of pending waypoints / yaw updates / spheres / boxes / lassos with trash icon per row. Removal pushes onto undo stack so deletions are reversible.
+- M5.3 local autosave: new EditorDraftStore (Application Support/CloudTour/drafts/<sceneId>.json), 5s autosave loop while editor open, resume-prompt alert on reopen, Cancel-with-confirm if pending edits exist, draft-discard on successful Save.
+- M5.5 set starting view: Scene model gains `defaultCameraPosition`. Renderer caches lastHeadWorld + lastSplatModel each frame; snapshotHeadPoseInSplatLocal() inverts splat model to write CameraPosition. View-mode button captures pose, Save persists to scenes.default_camera_position.
+- M5.6 numeric calibrate: Stepper panel for X/Y/Z (cm), scale (%), yaw (°). Renderer.applyTransform pushes onto undo stack so numeric edits are reversible.
+- M5.10 scene-link graph: WaypointGraphView (list-style) — sections per source scene, edges to target scenes, orphan-scenes section. Linked from TourEditorView.
+- M5.11 display HUD: 3 toggles (hide waypoints, hide pending deletions, hide silhouette) wired to renderer flags read in buildMarkers. Opacity / point-size sliders deferred (need Metal shader uniform).
+- M5.20 first-run onboarding: AppStorage-gated sheet with 5 sections (calibrate, waypoint, brush/box/lasso, undo/redo, starting view). Shown once.
+- M5.21 a11y partial: critical button labels + accessibilityHints; full VoiceOver sweep deferred.
+- M5.22 sim partial: spacebar keyboard shortcut on the sim pinch button. Box/lasso commit shortcut deferred (gesture-state sim needs renderer support).
+- M5.23 ADR: .docs/architecture/splatpainting-evaluation.md — full rationale for not integrating SplatPainting (license, stack, no API, feature shape mismatch).
+
+Files changed:
+- cloudtour-avp/CloudTourVision/Models/Scene.swift, Models/Waypoint.swift (CameraPosition + defaultCameraPosition)
+- cloudtour-avp/CloudTourVision/Viewer/SplatImmersiveRenderer.swift (HistorySnapshot, undo/redo, applyTransform, applyDraft, snapshotDraft, snapshotHeadPoseInSplatLocal, setDisplayFlags, removePendingDeletion* APIs, frame-loop pose cache)
+- cloudtour-avp/CloudTourVision/Viewer/SplatViewerView.swift (HUD, numeric panel, pending-edits panel, undo/redo buttons, starting-view button, autosave loop, resume-draft alert, cancel-confirm dialog, onboarding sheet)
+- cloudtour-avp/CloudTourVision/Viewer/EditorDraftStore.swift (new, file-backed autosave)
+- cloudtour-avp/CloudTourVision/Dashboard/WaypointGraphView.swift (new, scene graph)
+- cloudtour-avp/CloudTourVision/Dashboard/TourEditorView.swift (link to graph view)
+- cloudtour-avp/CloudTourVision.xcodeproj/project.pbxproj (xcodegen regenerate after adding Swift files)
+- .docs/milestones/M5.md (status flips + deferred summary)
+- .docs/architecture/splatpainting-evaluation.md (new ADR-001)
+
+Build: xcodebuild visionOS Simulator BUILD SUCCEEDED.
+
+**Learnings for future iterations:**
+  - When adding new Swift files under cloudtour-avp/CloudTourVision/, run `xcodegen generate` so they're added to project.pbxproj before xcodebuild — Xcode targets use group references, not folder references, so files don't auto-include.
+  - SourceKit emits "No such module 'Supabase'" diagnostics in the editor before SPM resolution; xcodebuild resolves it correctly. Don't chase those.
+  - `editLock.withLock { ... }` closures are non-isolated/non-Sendable contexts — capturing mutable `var` from outside causes "captured var in concurrently-executing code" errors. Use immutable `let` (e.g., Dictionary literal init) or move the mutation inside the closure.
+  - The renderer's `EditState` is the right home for any session-only state shared between hand-tracking, the render thread, and the SwiftUI layer. Public API: snapshot* (read), set*/clear* (mutate), apply* (replace + history). Pushing every mutation through `recordHistory(&state)` keeps undo/redo coherent across all commit paths.
+  - SwiftUI on visionOS doesn't auto-refresh polled state; use a `.task { while !cancelled { refresh; await sleep } }` loop on a parent view that's tied to the editor lifecycle.
+  - `@AppStorage` is the simplest persistence for per-user one-shot flags (onboarding, dismissed-tip). No need for UserDefaults wrappers.
+---
