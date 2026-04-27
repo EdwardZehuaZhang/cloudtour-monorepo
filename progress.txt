@@ -839,3 +839,31 @@
   - BackButton is a reusable struct with chevron.left icon only
   - Manual browser verification needed — no visionOS simulator available
 ---
+
+## 2026-04-27 - M4.13
+- Added Box and Lasso entries to the in-immersive ToolMode segmented picker in `cloudtour-avp/CloudTourVision/Viewer/SplatViewerView.swift` (`cube.transparent` / `lasso` SF Symbols).
+- Extended `editingInstructions` switch with `.box` and `.lasso` cases — covers gesture mapping (dual-pinch for box, pinch+drag for lasso) and the Save-commits semantics.
+- Files changed: cloudtour-avp/CloudTourVision/Viewer/SplatViewerView.swift
+- **Learnings for future iterations:**
+  - The `editingInstructions` switch in SplatViewerView is exhaustive over `ToolMode` — adding a new tool requires a case here or the build fails.
+  - Tool picker labels use SF Symbols only; descriptive copy lives in the instructions panel above the picker, not in the segmented control.
+---
+
+## 2026-04-27 - M4.14
+- Drafted MetalSplatter fork plan at cloudtour-avp/METALSPLATTER_FORK_PLAN.md — captures rationale (mutable splat buffers, depth read-back, mask attribute), branch strategy (`cloudtour/main` + topic branches), upstream-PR ordering, and the SPM pin swap (`exactVersion` instead of `from:`).
+- Current upstream pin recorded: `scier/MetalSplatter` 1.0.1 (revision 71ff248e3016ac43c0a9271e322538421b28c360) — referenced from project.yml + Package.resolved.
+- Files changed: cloudtour-avp/METALSPLATTER_FORK_PLAN.md (new)
+- **Learnings for future iterations:**
+  - SPM consumers should pin to `exactVersion` for downstream forks so upstream tag drift cannot silently override our patches.
+  - The actual fork creation + pin swap is M4.16 (separate commit) — M4.14 is plan-only.
+---
+
+## 2026-04-27 - M4.15
+- Ran `pnpm typecheck` — 5/5 packages pass (FULL TURBO cache hit; nothing in TS land touched).
+- Ran `xcodebuild -project CloudTourVision.xcodeproj -scheme CloudTourVision -destination 'generic/platform=visionOS Simulator' build` — `** BUILD SUCCEEDED **`.
+- Only diagnostics: pre-existing `SplatScenePoint` deprecation warnings from MetalSplatter 1.0.1 (renamed upstream to `SplatPoint`) — handled by M4.14 fork rebase.
+- Files changed: none.
+- **Learnings for future iterations:**
+  - The visionOS build is the de-facto Swift typecheck for cloudtour-avp; SourceKit "No such module 'Supabase'" diagnostics are editor-only and clear after `xcodebuild` resolves SPM packages.
+  - Use `generic/platform=visionOS Simulator` to avoid pinning to a specific simulator UDID in CI/local typecheck loops.
+---
