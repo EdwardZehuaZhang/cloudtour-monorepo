@@ -612,6 +612,251 @@
       "priority": 36,
       "passes": true,
       "notes": "Empty states that teach — not just 'Nothing here'. Dashboard page entrance uses staggered fade-up animation: 40px transform, 30ms delay between items. Loading skeletons should match the layout shape of actual content."
+    },
+    {
+      "id": "US-037",
+      "title": "AVP M7.10 — Replace raw Color status pills with material capsules",
+      "description": "As a visionOS user, I want status indicators that adapt to passthrough lighting so the UI feels native instead of garish on bright walls.",
+      "acceptanceCriteria": [
+        "All raw `Color.green/.orange/.red.opacity(...)` chrome in `cloudtour-avp/CloudTourVision/**` replaced with `Capsule().fill(.fill.tertiary)` + tinted SF Symbol per DESIGN.md §3 / §12",
+        "TourEditorView status pills (~L181) use the new pattern",
+        "Cross-cutting sweep: Explore/, Members/, Dashboard/ — no raw RGB chrome remains",
+        "Color is never the only signal — SF Symbol or text always present",
+        "xcodebuild visionOS scheme green"
+      ],
+      "priority": 37,
+      "passes": true,
+      "notes": "DESIGN.md §11 forbidden list rule 2. Use `.foregroundStyle(.green | .orange | .red)` on the symbol, not the background. Background is always a system material. Audit with `grep -RIn 'Color\\.\\(green\\|orange\\|red\\)\\.opacity' cloudtour-avp/`."
+    },
+    {
+      "id": "US-038",
+      "title": "AVP M7.11 — Explore thumbnail hit-target fix",
+      "description": "As a visionOS user, I want explore-row thumbnails to either be a real tap target or to defer to the row, so eye-targeting doesn't ambiguate.",
+      "acceptanceCriteria": [
+        "TourDetailView.swift ~L61 thumbnail either: (a) bumped to ≥60pt short axis with `.hoverEffect()`, or (b) inner tap removed and the entire row becomes the Button",
+        "Spacing between adjacent tappables ≥16pt",
+        "VoiceOver label describes the destination, not the image",
+        "xcodebuild green"
+      ],
+      "priority": 38,
+      "passes": false,
+      "notes": "DESIGN.md §5 — 60pt minimum hit target. Prefer option (b) row-as-button for editorial density."
+    },
+    {
+      "id": "US-039",
+      "title": "AVP M7.13 — Splat viewer ornaments (scene jumper + reticle toggle)",
+      "description": "As an editor in immersive mode, I want persistent floating chrome for scene jump and reticle toggle so I'm not hunting through menus while pinching.",
+      "acceptanceCriteria": [
+        "SplatViewerView attaches `.ornament(attachmentAnchor: .scene(.bottom))` for primary controls (reticle toggle, exit) and `.ornament(attachmentAnchor: .scene(.leading))` for scene jumper",
+        "Both ornaments use `.glassBackgroundEffect()` (DESIGN.md §2)",
+        "One ornament per edge maximum",
+        "Exit affordance always visible (DESIGN.md §7)",
+        "xcodebuild green"
+      ],
+      "priority": 39,
+      "passes": false,
+      "notes": "DESIGN.md §2 ornaments. Scene jumper shows scenes for current tour; tap teleports head pose to scene start."
+    },
+    {
+      "id": "US-040",
+      "title": "AVP M7.14 — glassBackgroundEffect + hoverEffect sweep",
+      "description": "As a visionOS user, I want all custom interactive surfaces to lift on gaze and read as floating chrome so the spatial affordances are consistent.",
+      "acceptanceCriteria": [
+        "All custom card/panel/button-shaped Views in `cloudtour-avp/CloudTourVision/**` apply `.hoverEffect()` (or `.hoverEffect(.lift)` for cards, `.hoverEffect(.highlight, in: shape)` for non-rect)",
+        "All floating chrome (ornaments, transient HUDs, overlays) uses `.glassBackgroundEffect()`",
+        "WaypointOverlay material pattern replicated for new floating chrome",
+        "No `onTapGesture` on a non-Button view used for navigation (DESIGN.md §11.12)",
+        "xcodebuild green"
+      ],
+      "priority": 40,
+      "passes": false,
+      "notes": "DESIGN.md §12 — no glass/hover currently in code. Sweep order: Dashboard/, Explore/, Viewer/, Members/."
+    },
+    {
+      "id": "US-041",
+      "title": "AVP M7.12 — Promote multi-screen sheets to WindowGroup",
+      "description": "As a visionOS user, I want multi-step modals to open as their own window so I keep spatial context instead of being trapped in a sheet.",
+      "acceptanceCriteria": [
+        "Audit `Shell/AppShell.swift`, `Settings/SettingsView.swift`, `Members/MembersView.swift`, `Dashboard/WaypointEditorView.swift`",
+        "Any modal containing >1 logical screen → new `WindowGroup(id:)` registered in `CloudTourVisionApp.swift`",
+        "Auth modal stays as `.sheet` (single short flow)",
+        "Each promoted window has a stable id for `openWindow(id:)`",
+        "xcodebuild green"
+      ],
+      "priority": 41,
+      "passes": false,
+      "notes": "DESIGN.md §2 — 'Sheets are a last resort on visionOS'. WaypointEditor and Members are multi-screen → promote."
+    },
+    {
+      "id": "US-042",
+      "title": "AVP M7.15 — Plan badge + upgrade CTA in sidebar",
+      "description": "As a visionOS user, I want my plan visible at all times and a one-tap path to upgrade so I'm not blocked by plan limits inside immersive sessions.",
+      "acceptanceCriteria": [
+        "Sidebar.swift renders plan badge (Free/Pro/Enterprise) at bottom",
+        "Tap on badge opens web `/pricing` via `openURL` (visionOS does not host Stripe checkout)",
+        "Settings/SettingsView.swift gains 'Plan' Section with current plan, usage (tours / scenes / storage), and 'Manage subscription' link to web `/dashboard/billing`",
+        "Plan data fetched from BE `/api/me` (already returns org plan)",
+        "xcodebuild green"
+      ],
+      "priority": 42,
+      "passes": false,
+      "notes": "Mirrors web US-028 in read-only form. Use `Environment(\\.openURL)`. Brand color via asset catalog `AccentColor`, not raw RGB."
+    },
+    {
+      "id": "US-043",
+      "title": "AVP M7.16 — Org switcher in sidebar",
+      "description": "As a multi-org user, I want to switch active org context inside the visionOS app so I can manage tours across orgs without leaving immersion.",
+      "acceptanceCriteria": [
+        "Sidebar.swift bottom region: `Picker` listing orgs from `/api/me/orgs`",
+        "Switching org refreshes DashboardViewModel + TourDirectoryViewModel against new org context",
+        "Active org persisted in `@AppStorage(\"activeOrgId\")`",
+        "Empty state if user has only one org (hide picker, show org name)",
+        "xcodebuild green"
+      ],
+      "priority": 43,
+      "passes": false,
+      "notes": "Mirrors web US-006 sidebar org switcher. Need new `Models/Organization` query on AuthViewModel or DashboardViewModel."
+    },
+    {
+      "id": "US-044",
+      "title": "AVP M7.17 — First-run onboarding for new users",
+      "description": "As a first-time visionOS user, I want a guided flow on the empty dashboard so I know how to get to my first immersive walkthrough.",
+      "acceptanceCriteria": [
+        "AppStorage-gated onboarding shown when dashboard tour list is empty AND `hasCompletedAVPOnboarding == false`",
+        "3 steps max (DESIGN.md §13 / web US-035): upload first splat → place first waypoint → publish/share",
+        "Use `ContentUnavailableView` for the empty-state shell",
+        "Progress dots, not numbered steps (matches web pattern)",
+        "Skippable; flag flips on completion or skip",
+        "xcodebuild green"
+      ],
+      "priority": 44,
+      "passes": false,
+      "notes": "Mirrors web US-035. Onboarding never inside ImmersiveSpace — Shared Space only (DESIGN.md §7)."
+    },
+    {
+      "id": "US-045",
+      "title": "AVP M7.5 — Tour metadata quick-edit in-immersive",
+      "description": "As an editor in immersive mode, I want to edit tour title / category / status without exiting the immersive space so I keep context.",
+      "acceptanceCriteria": [
+        "SplatViewerView ornament or side-panel exposes title (TextField), category (Picker), status (Picker: draft/published/archived)",
+        "Save calls existing PATCH `/api/orgs/[orgId]/tours/[tourId]`",
+        "TourDetailViewModel publishes the patched tour back to the dashboard list (no manual refetch)",
+        "Optimistic UI with rollback on 4xx/5xx",
+        "xcodebuild green"
+      ],
+      "priority": 45,
+      "passes": false,
+      "notes": "Was M6.14. Reuse existing BE PATCH; no new routes. Form lives in a popover so it does not break the spatial context."
+    },
+    {
+      "id": "US-046",
+      "title": "AVP M7.4 — Floor-plan editor in AVP",
+      "description": "As a tour editor, I want to drag scenes onto a 2D floor-plan inside the AVP app so visitors get a top-down map alongside the immersive view.",
+      "acceptanceCriteria": [
+        "New `Dashboard/FloorPlanEditorView.swift` opened as `WindowGroup(id: \"floor-plan\")`",
+        "Drag-drop scenes onto a 2D canvas; positions normalized to [0..1]",
+        "PATCH `tours.scene_positions` via existing BE",
+        "Snap-to-grid toggle (5%-of-canvas grid)",
+        "Undo/redo via standard SwiftUI UndoManager",
+        "xcodebuild green"
+      ],
+      "priority": 46,
+      "passes": false,
+      "notes": "Was M6.13. BE route already exists. Use `Canvas` API for the floor-plan render to avoid heavy view tree."
+    },
+    {
+      "id": "US-047",
+      "title": "AVP M7.7 — Comments / annotation overlay",
+      "description": "As a tour editor and viewer, I want pinch-anchored comment threads in splat-local space so collaborators can leave context-aware feedback.",
+      "acceptanceCriteria": [
+        "New `comments` table: id, scene_id, author_id, position_3d, body, parent_id, resolved, created_at, updated_at",
+        "RLS: org members read/write on tours they belong to; viewers read-only on published tours",
+        "BE routes: GET/POST `/api/orgs/[orgId]/tours/[tourId]/scenes/[sceneId]/comments`, PATCH/DELETE on `/comments/[commentId]`",
+        "AVP: pinch-anchored comment markers; tap marker opens thread in `.popover`",
+        "Editor mode: read-write. Viewer mode: read-only",
+        "Zod validation on all comment inputs",
+        "xcodebuild green + pnpm typecheck green"
+      ],
+      "priority": 47,
+      "passes": false,
+      "notes": "Was M6.16. Multi-package change: `packages/db/migrations/`, `cloudtour-be/src/routes/`, `cloudtour-avp/CloudTourVision/Viewer/`. Position stored as `Position3D` jsonb (matches existing Waypoint pattern)."
+    },
+    {
+      "id": "US-048",
+      "title": "AVP M7.6 — Multi-editor presence + conflict detection",
+      "description": "As a co-editor, I want to see other editors' presence in the same scene and get a clear conflict warning at Save time so we don't overwrite each other.",
+      "acceptanceCriteria": [
+        "Supabase Realtime channel per `(tour_id, scene_id)`. Presence payload: editor_id, display_name, avatar_url, current_aim_position",
+        "AVP renders other editors' aim cones / avatars in splat-local space (color per editor)",
+        "BE: optimistic-lock on `scene_edits.version`; PATCH returns 409 + diff when client version is stale",
+        "AVP: 409 surfaces a 'Reload latest' prompt with diff summary",
+        "xcodebuild green + pnpm typecheck green"
+      ],
+      "priority": 48,
+      "passes": false,
+      "notes": "Was M6.15. New `cloudtour-avp/CloudTourVision/Realtime/EditorPresence.swift`. BE: extend scene_edits with `version` int + bump on every PATCH."
+    },
+    {
+      "id": "US-049",
+      "title": "AVP M7.1 — Execute MetalSplatter fork",
+      "description": "As a developer, I want the MetalSplatter fork landed and pinned so erase-restore, opacity sliders, and stamp tooling can move forward.",
+      "acceptanceCriteria": [
+        "Fork `scier/MetalSplatter@1.0.1` to `EdwardZehuaZhang/MetalSplatter`",
+        "Long-lived branch `cloudtour/main`. Topic branches: `cloudtour/mask-attribute`, `cloudtour/depth-readback`",
+        "Land per `cloudtour-avp/METALSPLATTER_FORK_PLAN.md` scope: public SplatBuffer view, per-splat `mask: UInt8`, frameDepthTexture accessor, `applyMaskRange(_:)`",
+        "Tag `1.0.1-cloudtour.1`",
+        "Swap SPM pin in `cloudtour-avp/project.yml` and `Package.resolved` to `exactVersion: \"1.0.1-cloudtour.1\"`",
+        "Upstream tests still green; new tests for mask path",
+        "xcodebuild green"
+      ],
+      "priority": 49,
+      "passes": false,
+      "notes": "Was M4.16. Blocks US-050, US-051, US-052. Requires GitHub repo creation under `EdwardZehuaZhang/` — needs human-in-the-loop confirmation before pushing tags."
+    },
+    {
+      "id": "US-050",
+      "title": "AVP M7.2 — Display HUD opacity + point-size sliders",
+      "description": "As an editor, I want continuous opacity and point-size sliders so I can see through dense splats without committing destructive edits.",
+      "acceptanceCriteria": [
+        "HUD adds two `Slider`s: opacity (0.1–1.0), point-size (0.5–2.0)",
+        "Values plumbed as shader uniforms through fork's MetalSplatter render path",
+        "Off by default (1.0 / 1.0); reset button restores defaults",
+        "xcodebuild green"
+      ],
+      "priority": 50,
+      "passes": false,
+      "notes": "Was M6.7. Depends on US-049 (fork)."
+    },
+    {
+      "id": "US-051",
+      "title": "AVP M7.3 — Erase-the-eraser (positive-mask deletion)",
+      "description": "As an editor, I want a long-pinch inside a pending deletion volume to restore splats in that sub-region so I can recover from over-aggressive erase.",
+      "acceptanceCriteria": [
+        "New gesture state: long pinch (≥0.5s) inside pending deletion → enters restore submode",
+        "Restore brush flips mask bits back to 0 within its sphere; renders as positive-mask diff",
+        "Undo/redo includes restore as its own HistorySnapshot",
+        "VoiceOver hint differentiates erase vs restore",
+        "xcodebuild green"
+      ],
+      "priority": 51,
+      "passes": false,
+      "notes": "Was M6.8. Depends on US-049 (per-splat mask attribute)."
+    },
+    {
+      "id": "US-052",
+      "title": "AVP M7.9 — Stamp / clone tool",
+      "description": "As an editor, I want to capture a region as a brush and stamp it elsewhere with blend cap and jitter so I can repair holes / repeat tile patterns naturally.",
+      "acceptanceCriteria": [
+        "New `ToolMode.stamp`. Capture: region select (reuse box/lasso) → save gaussians as brush with canonical local frame",
+        "Paste: aim + pinch deposits brush at target pose",
+        "Blend cap (0–100%) prevents density blow-up between overlapping stamps",
+        "Jitter: random scale (±10%) + in-plane rotation (±15°) per stamp",
+        "Undo/redo on every stamp commit",
+        "xcodebuild green"
+      ],
+      "priority": 52,
+      "passes": false,
+      "notes": "Was M6.17. Concept-only borrow from SplatPainting per `.docs/architecture/splatpainting-evaluation.md` (no code, no weights). Depends on US-049, US-001 (M5.1 undo, shipped)."
     }
   ]
 }

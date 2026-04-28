@@ -4,42 +4,53 @@ struct SettingsView: View {
     @Bindable var authViewModel: AuthViewModel
     @State private var organization: Organization?
     @State private var isLoading = true
+    @State private var showSignIn = false
 
     var body: some View {
         NavigationStack {
             Form {
-                if let org = organization {
-                    Section("Organization") {
-                        LabeledContent("Name", value: org.name)
-
-                        LabeledContent("Plan") {
-                            Text(org.plan?.capitalized ?? "Free")
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(.tint.opacity(0.1), in: Capsule())
+                if !authViewModel.isAuthenticated {
+                    Section("Account") {
+                        Button {
+                            showSignIn = true
+                        } label: {
+                            Label("Sign In", systemImage: "rectangle.portrait.and.arrow.right.fill")
                         }
                     }
+                } else {
+                    if let org = organization {
+                        Section("Organization") {
+                            LabeledContent("Name", value: org.name)
 
-                    if org.stripeCustomerId != nil {
-                        Section("Billing") {
-                            Button {
-                                openBillingPortal(org: org)
-                            } label: {
-                                Label("Manage Billing", systemImage: "creditcard")
+                            LabeledContent("Plan") {
+                                Text(org.plan?.capitalized ?? "Free")
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .background(.fill.tertiary, in: Capsule())
                             }
                         }
-                    }
-                } else if isLoading {
-                    Section {
-                        ProgressView()
-                    }
-                }
 
-                Section("Account") {
-                    Button(role: .destructive) {
-                        Task { await authViewModel.signOut() }
-                    } label: {
-                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                        if org.stripeCustomerId != nil {
+                            Section("Billing") {
+                                Button {
+                                    openBillingPortal(org: org)
+                                } label: {
+                                    Label("Manage Billing", systemImage: "creditcard")
+                                }
+                            }
+                        }
+                    } else if isLoading {
+                        Section {
+                            ProgressView()
+                        }
+                    }
+
+                    Section("Account") {
+                        Button(role: .destructive) {
+                            Task { await authViewModel.signOut() }
+                        } label: {
+                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                        }
                     }
                 }
 
@@ -49,13 +60,25 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .task {
-                await loadOrganization()
+            .task(id: authViewModel.isAuthenticated) {
+                if authViewModel.isAuthenticated {
+                    await loadOrganization()
+                } else {
+                    organization = nil
+                    isLoading = false
+                }
+            }
+            .sheet(isPresented: $showSignIn) {
+                SignInView(authViewModel: authViewModel)
+                    .onChange(of: authViewModel.isAuthenticated) { _, isAuth in
+                        if isAuth { showSignIn = false }
+                    }
             }
         }
     }
 
     private func loadOrganization() async {
+        isLoading = true
         guard let userId = authViewModel.currentUserId else {
             isLoading = false
             return

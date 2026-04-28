@@ -172,14 +172,37 @@ struct TourGridCard: View {
 struct StatusBadge: View {
     let status: String
 
+    private var symbolName: String {
+        switch status {
+        case "published": "checkmark.seal.fill"
+        case "draft": "pencil.circle.fill"
+        case "archived": "archivebox.fill"
+        default: "circle.fill"
+        }
+    }
+
+    private var symbolTint: Color {
+        switch status {
+        case "published": .green
+        case "draft": .orange
+        case "archived": .secondary
+        default: .secondary
+        }
+    }
+
     var body: some View {
-        Text(status.capitalized)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(status == "published" ? Color.green.opacity(0.15) : Color.orange.opacity(0.15))
-            .foregroundStyle(status == "published" ? .green : .orange)
-            .clipShape(Capsule())
+        HStack(spacing: 4) {
+            Image(systemName: symbolName)
+                .foregroundStyle(symbolTint)
+            Text(status.capitalized)
+                .foregroundStyle(.secondary)
+        }
+        .font(.caption2)
+        .fontWeight(.medium)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(.fill.tertiary, in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Status: \(status.capitalized)")
     }
 }

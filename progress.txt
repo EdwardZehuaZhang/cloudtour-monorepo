@@ -986,3 +986,16 @@ Deferred (with explicit reason in M6.md):
   - When the AVP needs file-side data (Files picker), the Files-picked URL is security-scoped: call `startAccessingSecurityScopedResource()` before reading, and copy the bytes into the app's `temporaryDirectory` so subsequent UI pauses can't strand you with a stale scope.
   - `Scene` is the name of both SwiftUI's protocol AND our domain model. In files that import SwiftUI but reference our `Scene` model in `ForEach`, the compiler may resolve the SwiftUI protocol — keep usages as `[Scene]` and pass through methods so type inference flows from the array element type.
 ---
+
+## 2026-04-27 - US-037 (AVP M7.10 status pills)
+- Replaced `StatusBadge` raw-color chrome (`Color.green.opacity(0.15)` / `Color.orange.opacity(0.15)`) with `.fill.tertiary` Capsule + tinted SF Symbol per DESIGN.md §3 / §11 rule 2.
+- Symbol-per-status: `checkmark.seal.fill` (published, .green), `pencil.circle.fill` (draft, .orange), `archivebox.fill` (archived, .secondary). Color is no longer the only signal.
+- Replaced `Settings/SettingsView.swift` `.tint.opacity(0.1)` plan capsule with `.fill.tertiary` for consistency.
+- Files: `cloudtour-avp/CloudTourVision/Dashboard/DashboardView.swift`, `cloudtour-avp/CloudTourVision/Settings/SettingsView.swift`, `prd.json`, `progress.txt`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED.
+- **Learnings for future iterations:**
+  - DESIGN.md §11 audit grep: `grep -RIn 'Color\.\(green\|orange\|red\|yellow\|pink\|purple\)\.opacity\|\.tint\.opacity' cloudtour-avp/CloudTourVision/`. After this story the tree is clean of raw-color chrome; future audits should re-run before claiming compliance.
+  - `Color.accentColor.opacity(...)` inside `Canvas` `ctx.stroke/fill` (e.g. `WaypointGraphView`) is data-viz, NOT chrome — leave it. `.tint` shape style does not type-check there (see prior M6.12 learning).
+  - SwiftUI `.background(.fill.tertiary, in: Capsule())` is the canonical replacement; pair with `.foregroundStyle(.secondary)` on label text and a tinted symbol for status semantics.
+  - Cross-file SourceKit "Cannot find type 'X' in scope" diagnostics during local edits are noise when working in a single-target Xcode project — trust `xcodebuild`, not the inline diagnostics.
+---
