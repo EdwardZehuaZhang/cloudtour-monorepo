@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var authViewModel: AuthViewModel
+    @Environment(\.openURL) private var openURL
     @State private var organization: Organization?
     @State private var isLoading = true
     @State private var showSignIn = false
@@ -30,13 +31,20 @@ struct SettingsView: View {
                             }
                         }
 
-                        if org.stripeCustomerId != nil {
-                            Section("Billing") {
+                        Section("Billing") {
+                            Button {
+                                openManageSubscription()
+                            } label: {
+                                Label("Manage Subscription", systemImage: "creditcard")
+                            }
+                            .accessibilityHint("Open billing page in browser")
+                            if (org.plan ?? "free").lowercased() == "free" {
                                 Button {
-                                    openBillingPortal(org: org)
+                                    openPricing()
                                 } label: {
-                                    Label("Manage Billing", systemImage: "creditcard")
+                                    Label("Upgrade Plan", systemImage: "sparkles")
                                 }
+                                .accessibilityHint("Open pricing page in browser")
                             }
                         }
                     } else if isLoading {
@@ -109,13 +117,27 @@ struct SettingsView: View {
         isLoading = false
     }
 
-    private func openBillingPortal(org: Organization) {
-        guard let apiBase = Bundle.main.infoDictionary?["API_BASE_URL"] as? String,
-              let url = URL(string: "\(apiBase)/api/billing/portal?customer_id=\(org.stripeCustomerId ?? "")") else {
-            return
+    private func openManageSubscription() {
+        guard let url = SettingsView.webURL(path: "/dashboard/billing") else { return }
+        openURL(url)
+    }
+
+    private func openPricing() {
+        guard let url = SettingsView.webURL(path: "/pricing") else { return }
+        openURL(url)
+    }
+
+    private static func webURL(path: String) -> URL? {
+        let apiBase = (Bundle.main.infoDictionary?["API_BASE_URL"] as? String) ?? ""
+        let trimmed = apiBase.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, var components = URLComponents(string: trimmed) else {
+            return URL(string: "https://cloudtour.io" + path)
         }
-        #if os(visionOS)
-        // visionOS can open URLs via UIApplication.shared
-        #endif
+        if let host = components.host, host.hasPrefix("api.") {
+            components.host = String(host.dropFirst("api.".count))
+        }
+        components.path = path
+        components.query = nil
+        return components.url
     }
 }

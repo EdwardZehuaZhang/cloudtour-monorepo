@@ -699,7 +699,7 @@
         "xcodebuild green"
       ],
       "priority": 42,
-      "passes": false,
+      "passes": true,
       "notes": "Mirrors web US-028 in read-only form. Use `Environment(\\.openURL)`. Brand color via asset catalog `AccentColor`, not raw RGB."
     },
     {

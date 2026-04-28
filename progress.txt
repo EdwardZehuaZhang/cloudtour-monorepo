@@ -1069,3 +1069,16 @@ Deferred (with explicit reason in M6.md):
   - Auth flow stack (SignIn → SignUp → ForgotPassword) is the canonical exception: nested sheets are tolerated because the user perceives them as a single auth task. Don't promote auth even if it has 3 levels.
   - When a story's audit comes up empty, document the audit findings in `progress.txt` with the file:line breakdown so the next iteration doesn't have to redo the same grep+read pass.
 ---
+
+## 2026-04-27 - US-042 (AVP M7.15 plan badge + upgrade CTA)
+- `Shell/Sidebar.swift`: added optional `plan: String?` + `onUpgradeTapped: (() -> Void)?` parameters. When `isAuthenticated && plan != nil`, renders a tappable plan capsule pinned at the sidebar bottom. Free plan shows `sparkles` + "Upgrade" hint; paid plans show `checkmark.seal.fill`.
+- `Shell/AppShell.swift`: added `currentPlan: String?` state, `loadPlan()` task on auth-change, and `openPlanLink()` that routes Free → `/pricing`, paid → `/dashboard/billing` via `Environment(\.openURL)`. Web base derived by stripping the `api.` subdomain prefix from the existing `API_BASE_URL` Info.plist key — no new config knob.
+- `Settings/SettingsView.swift`: replaced the dead `openBillingPortal` (the function had a `#if os(visionOS)` block with no implementation) with two real Buttons: "Manage Subscription" → `/dashboard/billing`, "Upgrade Plan" → `/pricing` (only shown for free orgs). Both use the same web-URL derivation as AppShell.
+- Files: `cloudtour-avp/CloudTourVision/Shell/Sidebar.swift`, `cloudtour-avp/CloudTourVision/Shell/AppShell.swift`, `cloudtour-avp/CloudTourVision/Settings/SettingsView.swift`, `prd.json`, `progress.txt`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED.
+- **Learnings for future iterations:**
+  - The avp app uses `API_BASE_URL` (not `WEB_APP_URL`) as its only env-driven URL. Future stories that need a web link should derive it the same way: strip `api.` from the host, set the path. Centralize this if it appears in a third file.
+  - `Environment(\.openURL)` works in visionOS for opening external URLs — no need for `UIApplication.shared.open(_:)` shims. The earlier `openBillingPortal` was dead code that never actually called open.
+  - When passing optional behavior into `Sidebar` (or any shared shell), prefer adding new optional parameters with default `nil` rather than constructor overloads — keeps the demo cases (`--demo explore` / `--demo dashboard`) working without touching them.
+  - `org.plan` from Supabase is nullable — always coalesce to "free" before lowercase-comparing, otherwise the badge silently disappears for orgs that haven't been migrated to the new plan column.
+---
