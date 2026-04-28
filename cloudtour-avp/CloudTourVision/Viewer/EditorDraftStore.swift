@@ -22,6 +22,14 @@ struct EditorDraft: Codable, Sendable {
     var pendingDeletionBoxes: [DeletionBox]
     var pendingDeletionLassos: [DeletionLasso]
     var startingView: CameraPosition?
+    var pendingHotspots: [DraftHotspot]?
+
+    enum CodingKeys: String, CodingKey {
+        case sceneId, savedAt, transform, hasUserAdjusted
+        case pendingWaypoints, yawUpdates
+        case pendingDeletionSpheres, pendingDeletionBoxes, pendingDeletionLassos
+        case startingView, pendingHotspots
+    }
 }
 
 struct DraftWaypoint: Codable, Sendable, Hashable {
@@ -35,6 +43,17 @@ struct DraftWaypoint: Codable, Sendable, Hashable {
 struct DraftYawUpdate: Codable, Sendable, Hashable {
     let waypointId: UUID
     let yaw: Float
+}
+
+struct DraftHotspot: Codable, Sendable, Hashable {
+    let id: UUID
+    let x: Float
+    let y: Float
+    let z: Float
+    let title: String
+    let contentType: String
+    let contentMarkdown: String?
+    let mediaUrl: String?
 }
 
 enum EditorDraftStore {

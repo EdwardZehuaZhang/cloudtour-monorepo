@@ -64,6 +64,8 @@
 - Blog content lives in `apps/web/content/blog/*.mdx`; utility in `apps/web/src/lib/blog.ts` reads/parses them with `gray-matter`
 - MDX rendering uses `next-mdx-remote/rsc` for server-side rendering (zero client JS); `@tailwindcss/typography` for prose styles
 - RSS feed at `/feed.xml` via route handler; blog posts statically generated via `generateStaticParams`
+- AVP `EditorDraft` evolves with new optional fields — make new lists `Optional` with explicit `CodingKeys` so prior drafts on disk still decode (Swift's synthesised `Decodable` only tolerates missing keys for Optionals).
+- AVP renderer mutation paths must call `Self.recordHistory(&state)` BEFORE mutating undoable surface (`pendingWaypoints`, `pendingHotspots`, deletions, transform). Skipping it leaves the undo stack incoherent.
 
 ---
 
@@ -901,4 +903,45 @@ Build: xcodebuild visionOS Simulator BUILD SUCCEEDED.
   - The renderer's `EditState` is the right home for any session-only state shared between hand-tracking, the render thread, and the SwiftUI layer. Public API: snapshot* (read), set*/clear* (mutate), apply* (replace + history). Pushing every mutation through `recordHistory(&state)` keeps undo/redo coherent across all commit paths.
   - SwiftUI on visionOS doesn't auto-refresh polled state; use a `.task { while !cancelled { refresh; await sleep } }` loop on a parent view that's tied to the editor lifecycle.
   - `@AppStorage` is the simplest persistence for per-user one-shot flags (onboarding, dismissed-tip). No need for UserDefaults wrappers.
+---
+
+## 2026-04-28 - M6.1
+- Added `Hotspot` model (Models/Hotspot.swift) + `HotspotContentType` enum with 3-step in-immersive cycle (text → image → link). Five-type allCases reachable via SwiftUI inspector.
+- Added `HotspotMarker` Sendable view + extended `SplatSession` to carry `hotspots: [HotspotMarker]`.
+- Renderer (`SplatImmersiveRenderer.swift`):
+  - New `EditState` fields: `pendingHotspots`, `hotspotPinchPending`, `selectedPendingHotspotId`.
+  - `HistorySnapshot` includes hotspot pendings + selection so undo/redo round-trips them.
+  - `processHandUpdate` `.hotspot` case (rising-edge pinch identical to waypoint).
+  - `updateNavigation` block: aim+pinch on existing pending hotspot cycles content type; else drops a new pending at the reticle in splat-local space and selects it.
+  - `aimedPendingHotspot` static helper mirrors `aimedPending`.
+  - `buildMarkers` always renders committed hotspots (amber filled) and pending hotspots (green; selected → amber-bright).
+  - Public API: `snapshotPendingHotspots`, `snapshotSelectedHotspotId`, `updatePendingHotspot(id:title:contentType:contentMarkdown:mediaUrl:)`, `selectPendingHotspot(_:)`, `removePendingHotspot(at:)`, `clearHotspotEdits()`.
+  - `applyDraft` / `snapshotDraft` round-trip pending hotspots through `EditorDraft.pendingHotspots` (new optional field).
+- SwiftUI (`SplatViewerView.swift`):
+  - `.hotspot` added to tool picker (SF Symbol `star.bubble`).
+  - `editingInstructions` `.hotspot` case.
+  - New `hotspotInspectorPanel` + `hotspotInspectorFields` — title, segmented content_type picker, multiline markdown, conditional URL field (image/video/audio/link). Per-field bindings write through to `updatePendingHotspot`.
+  - Pending-edits panel includes hotspots with delete row.
+  - `loadHotspots()` populates `hotspots` after scene load; `enterImmersive` passes them into SplatSession.
+  - Save flow inserts each pending hotspot into Supabase `hotspots` table (Zod schema-aligned: scene_id, title, content_type, content_markdown, media_url, position_3d), then `loadHotspots()` re-fetches.
+  - Cancel-discard path also calls `clearHotspotEdits()`.
+- `EditorDraftStore.swift`: `EditorDraft` gained optional `pendingHotspots: [DraftHotspot]?` (back-compat decode for older drafts via explicit CodingKeys).
+- `xcodegen generate` then `xcodebuild -scheme CloudTourVision -destination 'generic/platform=visionOS Simulator' build` — `** BUILD SUCCEEDED **`. `pnpm typecheck` — 5/5 packages pass (FULL TURBO).
+
+Files changed:
+- cloudtour-avp/CloudTourVision/Models/Hotspot.swift (new)
+- cloudtour-avp/CloudTourVision/Viewer/Tools/EditTool.swift (`.hotspot` case)
+- cloudtour-avp/CloudTourVision/Viewer/ImmersiveView.swift (HotspotMarker, SplatSession.hotspots)
+- cloudtour-avp/CloudTourVision/Viewer/EditorDraftStore.swift (DraftHotspot, optional pendingHotspots)
+- cloudtour-avp/CloudTourVision/Viewer/SplatImmersiveRenderer.swift (state, history, hand dispatch, pinch consumption, render, public API)
+- cloudtour-avp/CloudTourVision/Viewer/SplatViewerView.swift (state, picker, inspector, save, draft, panel)
+- cloudtour-avp/CloudTourVision.xcodeproj/project.pbxproj (xcodegen regen for the new Hotspot.swift)
+- .docs/milestones/M6.md (status flipped + M6.1 checked)
+
+**Learnings for future iterations:**
+  - When extending `EditorDraft` with a new optional list, prefer explicit `CodingKeys` + `var pendingHotspots: [DraftHotspot]?` over a non-optional with defaulted value — older draft files on disk lack the key, and Swift's synthesised `Decodable` only tolerates missing keys when the property is Optional. Without that, the resume-prompt would silently fail to load any pre-M6.1 draft.
+  - The renderer marker pipeline only knows how to draw spheres (`ReticleRenderer.Marker`), so "filled circle for hotspot" is approximated by a single sphere at the hotspot position. If we need true filled-circle hotspot iconography we'll have to extend the reticle shader; out of scope for M6.1.
+  - `editLock`-guarded mutators that should be undoable always need `Self.recordHistory(&state)` BEFORE mutation — added it to every hotspot write path (place, cycle, inspector edit, remove). Forgetting this for a single path would silently de-coherence the history stack.
+  - SplatSession is `Codable + Hashable`, so any new field added to it must be Codable + Hashable too. `HotspotMarker` already conforms, but a future field carrying a non-Codable type would block visionOS's `openImmersiveSpace(value:)` from accepting it.
+  - The autosave-loop only refreshed panel snapshots when `pendingPanelExpanded` — for the hotspot inspector to stay live, we now also refresh when `activeTool == .hotspot`. Anything else that wants live mirrors of renderer state from SwiftUI should follow the same gated-refresh pattern.
 ---

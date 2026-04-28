@@ -11,6 +11,7 @@ struct SplatViewerView: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var waypoints: [Waypoint] = []
+    @State private var hotspots: [Hotspot] = []
     @State private var isImmersiveOpen = false
     @State private var isEditingMode = false
     @State private var activeTool: ToolMode = .calibrate
@@ -48,6 +49,11 @@ struct SplatViewerView: View {
     @State private var panelBoxes: [DeletionBox] = []
     @State private var panelLassos: [DeletionLasso] = []
     @State private var panelYawUpdates: [(UUID, Float)] = []
+    // M6.1 — hotspot inspector mirror. Updated each panel-snapshot tick so
+    // SwiftUI text fields stay in sync with renderer state (selected via
+    // aim+pinch in-immersive).
+    @State private var panelHotspots: [SplatImmersiveRenderer.PendingHotspot] = []
+    @State private var selectedHotspotId: UUID? = nil
     // M5.3 — autosave + resume-draft state
     @State private var pendingResumeDraft: EditorDraft? = nil
     @State private var showResumePrompt: Bool = false
@@ -142,6 +148,7 @@ struct SplatViewerView: View {
             fileURL = nil
             await loadSplatFile()
             await loadWaypoints()
+            await loadHotspots()
             if pendingAutoReenter, fileURL != nil, !isImmersiveOpen {
                 pendingAutoReenter = false
                 enterImmersive()
@@ -200,6 +207,7 @@ struct SplatViewerView: View {
             selectedTargetSceneId = scenes.first(where: { $0.id != currentScene.id })?.id ?? currentScene.id
         }
         let markers = waypoints.map(WaypointMarker.init(from:))
+        let hotspotMarkers = hotspots.map(HotspotMarker.init(from:))
         let session = SplatSession(
             url: url,
             sceneId: currentScene.id,
@@ -207,7 +215,8 @@ struct SplatViewerView: View {
             orgId: tourOrgId,
             editMode: isEditingMode,
             sceneEdits: currentScene.sceneEdits,
-            waypoints: markers
+            waypoints: markers,
+            hotspots: hotspotMarkers
         )
         Task {
             let result = await openImmersiveSpace(value: session)
@@ -244,6 +253,7 @@ struct SplatViewerView: View {
         let transform = renderer.snapshotTransform()
         let waypointEdits = renderer.snapshotWaypointEdits()
         let pendingDeletions = renderer.snapshotPendingDeletions()
+        let pendingHotspots = renderer.snapshotPendingHotspots()
         let needsSceneEditsSave = didCalibrate
             || currentScene.sceneEdits == nil
             || !pendingDeletions.isEmpty
@@ -329,6 +339,36 @@ struct SplatViewerView: View {
                         .execute()
                 }
 
+                if !pendingHotspots.isEmpty {
+                    for hs in pendingHotspots {
+                        struct HotspotInsert: Encodable {
+                            let scene_id: String
+                            let title: String
+                            let content_type: String
+                            let content_markdown: String?
+                            let media_url: String?
+                            let position_3d: Position3D
+                        }
+                        let pos = Position3D(
+                            x: Double(hs.localPosition.x),
+                            y: Double(hs.localPosition.y),
+                            z: Double(hs.localPosition.z)
+                        )
+                        let row = HotspotInsert(
+                            scene_id: currentScene.id.uuidString,
+                            title: hs.title.isEmpty ? "Hotspot" : hs.title,
+                            content_type: hs.contentType.rawValue,
+                            content_markdown: hs.contentMarkdown,
+                            media_url: hs.mediaUrl,
+                            position_3d: pos
+                        )
+                        try await AppSupabase.client
+                            .from("hotspots")
+                            .insert(row)
+                            .execute()
+                    }
+                }
+
                 if let starting = startingViewToPersist {
                     struct StartingViewUpdate: Encodable { let default_camera_position: CameraPosition }
                     let updated: Scene = try await AppSupabase.client
@@ -347,8 +387,10 @@ struct SplatViewerView: View {
 
                 renderer.clearWaypointEdits()
                 renderer.clearPendingDeletions()
+                renderer.clearHotspotEdits()
                 EditorDraftStore.discard(sceneId: currentScene.id)
                 await loadWaypoints()
+                await loadHotspots()
                 await MainActor.run {
                     isSaving = false
                     // Brush deletions only re-cull on splat reload, so dismiss
@@ -407,7 +449,7 @@ struct SplatViewerView: View {
         // If anything pending — drafts on disk OR in-memory state — confirm.
         let hasPending = EditorDraftStore.hasDraft(sceneId: currentScene.id)
             || (panelWaypoints.count + panelSpheres.count + panelBoxes.count
-                + panelLassos.count + panelYawUpdates.count) > 0
+                + panelLassos.count + panelYawUpdates.count + panelHotspots.count) > 0
         if hasPending {
             showCancelConfirm = true
         } else {
@@ -417,7 +459,8 @@ struct SplatViewerView: View {
 
     private func refreshPanelSnapshots() {
         guard let r = SplatImmersiveRenderer.currentRenderer else {
-            panelWaypoints = []; panelSpheres = []; panelBoxes = []; panelLassos = []; panelYawUpdates = []
+            panelWaypoints = []; panelSpheres = []; panelBoxes = []; panelLassos = []
+            panelYawUpdates = []; panelHotspots = []; selectedHotspotId = nil
             return
         }
         let edits = r.snapshotWaypointEdits()
@@ -426,6 +469,8 @@ struct SplatViewerView: View {
         panelSpheres = r.snapshotPendingDeletions()
         panelBoxes = r.snapshotPendingBoxes()
         panelLassos = r.snapshotPendingLassos()
+        panelHotspots = r.snapshotPendingHotspots()
+        selectedHotspotId = r.snapshotSelectedHotspotId() ?? panelHotspots.last?.id
     }
 
     private func refreshHistoryDepth() {
@@ -534,7 +579,9 @@ struct SplatViewerView: View {
                         var ticks = 0
                         while !Task.isCancelled, isEditingMode {
                             refreshHistoryDepth()
-                            if pendingPanelExpanded { refreshPanelSnapshots() }
+                            if pendingPanelExpanded || activeTool == .hotspot {
+                                refreshPanelSnapshots()
+                            }
                             // Autosave every 20 ticks (~5 s).
                             if ticks % 20 == 0 { autosaveDraft() }
                             ticks += 1
@@ -623,6 +670,12 @@ struct SplatViewerView: View {
                 Text("• Pinch + drag to draw a 2D lasso around the area")
                 Text("• Release to commit the lasso volume for deletion")
                 Text("• Save commits the removals — splat re-loads cleaned")
+            case .hotspot:
+                Text("Place hotspots inside the scene")
+                    .font(.headline)
+                Text("• Aim where you want a hotspot, then pinch")
+                Text("• Aim + pinch on a placed hotspot to cycle: text → image → link")
+                Text("• Use the inspector below to fill in title + content")
             }
         }
         .font(.callout)
@@ -722,11 +775,128 @@ struct SplatViewerView: View {
         }
     }
 
+    /// M6.1 — title + content_type + markdown/url editor for the renderer's
+    /// `selectedPendingHotspotId`. Selection follows the most recent
+    /// place / aim+pinch action; the picker below lets the user re-pick from
+    /// the list without re-aiming.
+    @ViewBuilder
+    private var hotspotInspectorPanel: some View {
+        let selected = panelHotspots.first(where: { $0.id == selectedHotspotId })
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Text("Hotspot")
+                    .font(.headline)
+                Spacer()
+                if !panelHotspots.isEmpty {
+                    Picker("", selection: Binding(
+                        get: { selectedHotspotId ?? panelHotspots.last?.id ?? UUID() },
+                        set: { newId in
+                            selectedHotspotId = newId
+                            SplatImmersiveRenderer.currentRenderer?.selectPendingHotspot(newId)
+                        }
+                    )) {
+                        ForEach(panelHotspots, id: \.id) { hs in
+                            Text(hs.title.isEmpty ? "(untitled)" : hs.title).tag(hs.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                }
+            }
+            if let selected {
+                hotspotInspectorFields(for: selected)
+            } else {
+                Text("Aim + pinch in-immersive to place a hotspot.")
+                    .font(.callout)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .frame(maxWidth: 520, alignment: .leading)
+        .padding(.horizontal, 4)
+    }
+
+    @ViewBuilder
+    private func hotspotInspectorFields(for selected: SplatImmersiveRenderer.PendingHotspot) -> some View {
+        let id = selected.id
+        let titleBinding = Binding<String>(
+            get: { panelHotspots.first(where: { $0.id == id })?.title ?? "" },
+            set: { newValue in
+                if let idx = panelHotspots.firstIndex(where: { $0.id == id }) {
+                    panelHotspots[idx].title = newValue
+                }
+                SplatImmersiveRenderer.currentRenderer?.updatePendingHotspot(id: id, title: newValue)
+            }
+        )
+        let typeBinding = Binding<HotspotContentType>(
+            get: { panelHotspots.first(where: { $0.id == id })?.contentType ?? .text },
+            set: { newValue in
+                if let idx = panelHotspots.firstIndex(where: { $0.id == id }) {
+                    panelHotspots[idx].contentType = newValue
+                }
+                SplatImmersiveRenderer.currentRenderer?.updatePendingHotspot(id: id, contentType: newValue)
+            }
+        )
+        let markdownBinding = Binding<String>(
+            get: { panelHotspots.first(where: { $0.id == id })?.contentMarkdown ?? "" },
+            set: { newValue in
+                if let idx = panelHotspots.firstIndex(where: { $0.id == id }) {
+                    panelHotspots[idx].contentMarkdown = newValue.isEmpty ? nil : newValue
+                }
+                SplatImmersiveRenderer.currentRenderer?.updatePendingHotspot(id: id, contentMarkdown: newValue)
+            }
+        )
+        let mediaBinding = Binding<String>(
+            get: { panelHotspots.first(where: { $0.id == id })?.mediaUrl ?? "" },
+            set: { newValue in
+                if let idx = panelHotspots.firstIndex(where: { $0.id == id }) {
+                    panelHotspots[idx].mediaUrl = newValue.isEmpty ? nil : newValue
+                }
+                SplatImmersiveRenderer.currentRenderer?.updatePendingHotspot(id: id, mediaUrl: newValue)
+            }
+        )
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Title").font(.callout).foregroundStyle(.secondary).frame(width: 80, alignment: .leading)
+                TextField("Hotspot title", text: titleBinding)
+                    .textFieldStyle(.roundedBorder)
+            }
+            HStack {
+                Text("Type").font(.callout).foregroundStyle(.secondary).frame(width: 80, alignment: .leading)
+                Picker("Type", selection: typeBinding) {
+                    ForEach(HotspotContentType.allCases, id: \.self) { type in
+                        Text(type.rawValue.capitalized).tag(type)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            HStack(alignment: .top) {
+                Text("Markdown").font(.callout).foregroundStyle(.secondary).frame(width: 80, alignment: .leading)
+                TextField("Body / caption", text: markdownBinding, axis: .vertical)
+                    .lineLimit(2...4)
+                    .textFieldStyle(.roundedBorder)
+            }
+            if typeBinding.wrappedValue == .image
+                || typeBinding.wrappedValue == .video
+                || typeBinding.wrappedValue == .audio
+                || typeBinding.wrappedValue == .link {
+                HStack {
+                    Text("URL").font(.callout).foregroundStyle(.secondary).frame(width: 80, alignment: .leading)
+                    TextField("https://…", text: mediaBinding)
+                        .textFieldStyle(.roundedBorder)
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled(true)
+                }
+            }
+        }
+    }
+
     @ViewBuilder
     private var pendingEditsPanel: some View {
         VStack(alignment: .leading, spacing: 6) {
             let total = panelWaypoints.count + panelSpheres.count
                 + panelBoxes.count + panelLassos.count + panelYawUpdates.count
+                + panelHotspots.count
             Button {
                 if !pendingPanelExpanded { refreshPanelSnapshots() }
                 withAnimation(.easeOut(duration: 0.2)) { pendingPanelExpanded.toggle() }
@@ -773,6 +943,13 @@ struct SplatViewerView: View {
                         ForEach(Array(panelLassos.enumerated()), id: \.offset) { idx, lasso in
                             pendingRow(label: "Lasso (\(lasso.polygon.count) pts)") {
                                 SplatImmersiveRenderer.currentRenderer?.removePendingDeletionLasso(at: idx)
+                                refreshPanelSnapshots()
+                                refreshHistoryDepth()
+                            }
+                        }
+                        ForEach(Array(panelHotspots.enumerated()), id: \.element.id) { idx, hs in
+                            pendingRow(label: "Hotspot \(hs.contentType.rawValue): \(hs.title.isEmpty ? "(untitled)" : hs.title)") {
+                                SplatImmersiveRenderer.currentRenderer?.removePendingHotspot(at: idx)
                                 refreshPanelSnapshots()
                                 refreshHistoryDepth()
                             }
@@ -847,6 +1024,7 @@ struct SplatViewerView: View {
             )) {
                 Label("Calibrate", systemImage: "ruler").tag(ToolMode.calibrate)
                 Label("Waypoint", systemImage: "mappin.and.ellipse").tag(ToolMode.waypoint)
+                Label("Hotspot", systemImage: "star.bubble").tag(ToolMode.hotspot)
                 Label("Brush", systemImage: "paintbrush.pointed").tag(ToolMode.brush)
                 Label("Box", systemImage: "cube.transparent").tag(ToolMode.box)
                 Label("Lasso", systemImage: "lasso").tag(ToolMode.lasso)
@@ -877,6 +1055,11 @@ struct SplatViewerView: View {
             // M5.6 — numeric calibrate panel
             if activeTool == .calibrate {
                 numericCalibratePanel
+            }
+
+            // M6.1 — hotspot inspector
+            if activeTool == .hotspot {
+                hotspotInspectorPanel
             }
 
             // Brush-mode radius slider
@@ -1002,6 +1185,7 @@ struct SplatViewerView: View {
                     EditorDraftStore.discard(sceneId: currentScene.id)
                     SplatImmersiveRenderer.currentRenderer?.clearWaypointEdits()
                     SplatImmersiveRenderer.currentRenderer?.clearPendingDeletions()
+                    SplatImmersiveRenderer.currentRenderer?.clearHotspotEdits()
                     pendingStartingView = nil
                     exitImmersive()
                 }
@@ -1111,6 +1295,19 @@ struct SplatViewerView: View {
                 .value
         } catch {
             waypoints = []
+        }
+    }
+
+    private func loadHotspots() async {
+        do {
+            hotspots = try await AppSupabase.client
+                .from("hotspots")
+                .select()
+                .eq("scene_id", value: currentScene.id.uuidString)
+                .execute()
+                .value
+        } catch {
+            hotspots = []
         }
     }
 }

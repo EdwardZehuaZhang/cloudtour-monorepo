@@ -57,6 +57,15 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
     static let reticleColor = SIMD4<Float>(1, 1, 1, 0.6)
     static let waypointColor = SIMD4<Float>(0.40, 0.78, 1.0, 0.55)
     static let waypointAimedColor = SIMD4<Float>(1.0, 0.78, 0.30, 0.85)
+    /// Committed hotspot — warm amber, distinct from cool waypoint blue so
+    /// the user can tell tap-to-content nodes from teleport nodes at a glance.
+    static let hotspotColor = SIMD4<Float>(1.0, 0.62, 0.18, 0.65)
+    static let hotspotAimedColor = SIMD4<Float>(1.0, 0.85, 0.40, 0.95)
+    /// Pending (unsaved) hotspot — green, matches the pending-waypoint hue
+    /// so "draft" reads consistently across tools.
+    static let pendingHotspotColor = SIMD4<Float>(0.30, 0.85, 0.55, 0.70)
+    static let pendingHotspotSelectedColor = SIMD4<Float>(1.0, 0.85, 0.40, 0.95)
+    static let hotspotRadius: Float = 0.14
     /// Pending (in-session-not-yet-saved) waypoints — green to clearly
     /// signal "this is a draft you haven't committed yet".
     static let pendingWaypointColor = SIMD4<Float>(0.30, 0.85, 0.55, 0.65)
@@ -86,6 +95,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
     private let inFlightSemaphore = DispatchSemaphore(value: maxSimultaneousRenders)
     private let session: SplatSession
     private let waypoints: [WaypointMarker]
+    private let hotspots: [HotspotMarker]
 
     private let arSession = ARKitSession()
     private let worldTracking = WorldTrackingProvider()
@@ -130,6 +140,18 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         let id: UUID
         var localPosition: SIMD3<Float>
         var targetYaw: Float?
+    }
+
+    /// M6.1 — in-session not-yet-persisted hotspot. Save flushes these to
+    /// the `hotspots` table. `contentType` cycles through .text/.image/.link
+    /// via aim+pinch; the SwiftUI inspector edits the rest.
+    struct PendingHotspot: Sendable, Hashable {
+        let id: UUID
+        var localPosition: SIMD3<Float>
+        var contentType: HotspotContentType
+        var title: String
+        var contentMarkdown: String?
+        var mediaUrl: String?
     }
 
     /// Editor state shared between the hand-tracking consumer and the render
@@ -180,6 +202,15 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         var hidePendingDeletions: Bool = false
         var hideSilhouette: Bool = false
 
+        // ── M6.1 hotspot tool ───────────────────────────────────────────
+        /// Single-edge pinch event consumed by the hotspot tool.
+        var hotspotPinchPending: Bool = false
+        var pendingHotspots: [PendingHotspot] = []
+        /// Pending hotspot focused by the SwiftUI inspector. Updated when
+        /// the user places or aim-pinches a pending hotspot. The inspector
+        /// reads/writes the matching entry by id.
+        var selectedPendingHotspotId: UUID? = nil
+
         // ── M5.1 undo/redo history ──────────────────────────────────────
         var undoStack: [HistorySnapshot] = []
         var redoStack: [HistorySnapshot] = []
@@ -197,6 +228,8 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         let pendingDeletionSpheres: [DeletionSphere]
         let pendingDeletionBoxes: [DeletionBox]
         let pendingDeletionLassos: [DeletionLasso]
+        let pendingHotspots: [PendingHotspot]
+        let selectedPendingHotspotId: UUID?
     }
     /// Cap to keep memory predictable on large erase sessions.
     private static let undoStackCap = 64
@@ -225,6 +258,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         self.commandQueue = self.device.makeCommandQueue()!
         self.session = session
         self.waypoints = session.waypoints
+        self.hotspots = session.hotspots
         let initialTransform = session.sceneEdits?.transform ?? .identity
         // Force calibrate mode if the scene has never been calibrated, even
         // when the session was opened in view mode — uncalibrated splats
@@ -331,6 +365,16 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         let yawDict: [UUID: Float] = Dictionary(
             uniqueKeysWithValues: draft.yawUpdates.map { ($0.waypointId, $0.yaw) }
         )
+        let hotspots: [PendingHotspot] = (draft.pendingHotspots ?? []).map {
+            PendingHotspot(
+                id: $0.id,
+                localPosition: SIMD3<Float>($0.x, $0.y, $0.z),
+                contentType: HotspotContentType(rawValue: $0.contentType) ?? .text,
+                title: $0.title,
+                contentMarkdown: $0.contentMarkdown,
+                mediaUrl: $0.mediaUrl
+            )
+        }
         editLock.withLock { state in
             state.transform = draft.transform
             state.hasUserAdjusted = draft.hasUserAdjusted
@@ -339,6 +383,8 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             state.pendingDeletionSpheres = draft.pendingDeletionSpheres
             state.pendingDeletionBoxes = draft.pendingDeletionBoxes
             state.pendingDeletionLassos = draft.pendingDeletionLassos
+            state.pendingHotspots = hotspots
+            state.selectedPendingHotspotId = hotspots.last?.id
             state.calibratePhase = .idle
             state.undoStack.removeAll(keepingCapacity: true)
             state.redoStack.removeAll(keepingCapacity: true)
@@ -355,6 +401,16 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                               z: $0.localPosition.z, targetYaw: $0.targetYaw)
             }
             let yaws = state.yawUpdates.map { DraftYawUpdate(waypointId: $0.key, yaw: $0.value) }
+            let hotspots = state.pendingHotspots.map {
+                DraftHotspot(
+                    id: $0.id,
+                    x: $0.localPosition.x, y: $0.localPosition.y, z: $0.localPosition.z,
+                    title: $0.title,
+                    contentType: $0.contentType.rawValue,
+                    contentMarkdown: $0.contentMarkdown,
+                    mediaUrl: $0.mediaUrl
+                )
+            }
             return EditorDraft(
                 sceneId: sceneId,
                 savedAt: Date(),
@@ -365,7 +421,8 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                 pendingDeletionSpheres: state.pendingDeletionSpheres,
                 pendingDeletionBoxes: state.pendingDeletionBoxes,
                 pendingDeletionLassos: state.pendingDeletionLassos,
-                startingView: startingView
+                startingView: startingView,
+                pendingHotspots: hotspots
             )
         }
     }
@@ -464,6 +521,67 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         }
     }
 
+    /// M6.1 — pending in-session hotspots (splat-local). Flushed by Save.
+    func snapshotPendingHotspots() -> [PendingHotspot] {
+        editLock.withLock { $0.pendingHotspots }
+    }
+
+    /// M6.1 — currently inspected pending hotspot id, if any. Drives the
+    /// SwiftUI side panel binding.
+    func snapshotSelectedHotspotId() -> UUID? {
+        editLock.withLock { $0.selectedPendingHotspotId }
+    }
+
+    /// M6.1 — write-through update of a pending hotspot's editable fields.
+    /// Pushes onto the undo stack so inspector edits are reversible.
+    func updatePendingHotspot(
+        id: UUID,
+        title: String? = nil,
+        contentType: HotspotContentType? = nil,
+        contentMarkdown: String? = nil,
+        mediaUrl: String? = nil
+    ) {
+        editLock.withLock { state in
+            guard let idx = state.pendingHotspots.firstIndex(where: { $0.id == id }) else { return }
+            Self.recordHistory(&state)
+            if let title { state.pendingHotspots[idx].title = title }
+            if let contentType { state.pendingHotspots[idx].contentType = contentType }
+            // Markdown / URL are intentionally allowed to clear via empty
+            // string from the inspector — the caller distinguishes "unset"
+            // (omit) vs "clear" (pass empty / nil) per call site.
+            if let contentMarkdown {
+                state.pendingHotspots[idx].contentMarkdown = contentMarkdown.isEmpty ? nil : contentMarkdown
+            }
+            if let mediaUrl {
+                state.pendingHotspots[idx].mediaUrl = mediaUrl.isEmpty ? nil : mediaUrl
+            }
+        }
+    }
+
+    func selectPendingHotspot(_ id: UUID?) {
+        editLock.withLock { $0.selectedPendingHotspotId = id }
+    }
+
+    func removePendingHotspot(at idx: Int) {
+        editLock.withLock { state in
+            guard idx >= 0, idx < state.pendingHotspots.count else { return }
+            Self.recordHistory(&state)
+            let removedId = state.pendingHotspots[idx].id
+            state.pendingHotspots.remove(at: idx)
+            if state.selectedPendingHotspotId == removedId {
+                state.selectedPendingHotspotId = state.pendingHotspots.last?.id
+            }
+        }
+    }
+
+    func clearHotspotEdits() {
+        editLock.withLock {
+            $0.pendingHotspots = []
+            $0.selectedPendingHotspotId = nil
+            $0.hotspotPinchPending = false
+        }
+    }
+
     func clearPendingDeletions() {
         editLock.withLock {
             $0.pendingDeletionSpheres = []
@@ -492,7 +610,9 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             yawUpdates: state.yawUpdates,
             pendingDeletionSpheres: state.pendingDeletionSpheres,
             pendingDeletionBoxes: state.pendingDeletionBoxes,
-            pendingDeletionLassos: state.pendingDeletionLassos
+            pendingDeletionLassos: state.pendingDeletionLassos,
+            pendingHotspots: state.pendingHotspots,
+            selectedPendingHotspotId: state.selectedPendingHotspotId
         )
     }
 
@@ -505,6 +625,8 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         state.pendingDeletionSpheres = snap.pendingDeletionSpheres
         state.pendingDeletionBoxes = snap.pendingDeletionBoxes
         state.pendingDeletionLassos = snap.pendingDeletionLassos
+        state.pendingHotspots = snap.pendingHotspots
+        state.selectedPendingHotspotId = snap.selectedPendingHotspotId
     }
 
     /// Push a pre-mutation snapshot onto `undoStack` and clear `redoStack`.
@@ -871,6 +993,23 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                     state.rightHandPos = pinch.isPinching ? pinch.position : nil
                 }
             }
+        case .hotspot:
+            editLock.withLock { state in
+                let wasPinched: Bool
+                switch anchor.chirality {
+                case .left:
+                    wasPinched = state.leftWasPinched
+                    state.leftWasPinched = pinch.isPinching
+                    state.leftHandPos = pinch.isPinching ? pinch.position : nil
+                case .right:
+                    wasPinched = state.rightWasPinched
+                    state.rightWasPinched = pinch.isPinching
+                    state.rightHandPos = pinch.isPinching ? pinch.position : nil
+                }
+                if pinch.isPinching && !wasPinched {
+                    state.hotspotPinchPending = true
+                }
+            }
         }
     }
 
@@ -1053,6 +1192,32 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         return best?.marker
     }
 
+    /// M6.1 — closest pending hotspot along the head-forward ray.
+    private static func aimedPendingHotspot(
+        headPos: SIMD3<Float>,
+        forward: SIMD3<Float>,
+        splatModelMatrix: matrix_float4x4,
+        pending: [PendingHotspot]
+    ) -> PendingHotspot? {
+        guard !pending.isEmpty else { return nil }
+        let hitRadius = SplatImmersiveRenderer.hotspotRadius * SplatImmersiveRenderer.waypointHitRadiusMultiplier
+        var best: (proj: Float, hs: PendingHotspot)?
+        for hs in pending {
+            let local = SIMD4<Float>(hs.localPosition.x, hs.localPosition.y, hs.localPosition.z, 1)
+            let world4 = splatModelMatrix * local
+            let world = SIMD3<Float>(world4.x, world4.y, world4.z)
+            let toHs = world - headPos
+            let proj = dot(toHs, forward)
+            guard proj > 0, proj < SplatImmersiveRenderer.waypointMaxAimDistance else { continue }
+            let perp = length(toHs - forward * proj)
+            guard perp < hitRadius else { continue }
+            if best == nil || proj < best!.proj {
+                best = (proj, hs)
+            }
+        }
+        return best?.hs
+    }
+
     /// Same hit-test as `aimedWaypoint` but against the in-session pending
     /// waypoint list. Returns the closest hit (by projection along forward).
     private static func aimedPending(
@@ -1148,6 +1313,46 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                 }
             }
             return aimedPending?.id
+        }
+
+        // M6.1 — Hotspot-tool pinch consumption: aim at existing pending
+        // hotspot → cycle content type + select; otherwise drop a new
+        // pending hotspot at the reticle in splat-local space and select it.
+        // Committed hotspots are not edited from the renderer in v1 — the
+        // SwiftUI inspector handles those via direct PATCH (out of scope).
+        editLock.withLock { state in
+            guard state.activeTool == .hotspot, state.hotspotPinchPending else { return }
+            state.hotspotPinchPending = false
+            let aimedPendingHotspot = Self.aimedPendingHotspot(
+                headPos: headPos,
+                forward: forward,
+                splatModelMatrix: preSplatModel,
+                pending: state.pendingHotspots
+            )
+            Self.recordHistory(&state)
+            if let aimedPendingHotspot,
+               let idx = state.pendingHotspots.firstIndex(where: { $0.id == aimedPendingHotspot.id }) {
+                state.pendingHotspots[idx].contentType = state.pendingHotspots[idx].contentType.nextInCycle()
+                state.selectedPendingHotspotId = aimedPendingHotspot.id
+            } else {
+                let worldDrop = headPos + forward * Self.reticleDistance
+                let inverseSplat = preSplatModel.inverse
+                let local4 = inverseSplat * SIMD4<Float>(worldDrop.x, worldDrop.y, worldDrop.z, 1)
+                let local = SIMD3<Float>(local4.x, local4.y, local4.z)
+                let newId = UUID()
+                let nextIndex = state.pendingHotspots.count + 1
+                state.pendingHotspots.append(
+                    PendingHotspot(
+                        id: newId,
+                        localPosition: local,
+                        contentType: .text,
+                        title: "Hotspot \(nextIndex)",
+                        contentMarkdown: nil,
+                        mediaUrl: nil
+                    )
+                )
+                state.selectedPendingHotspotId = newId
+            }
         }
 
         // Brush-tool pinch consumption: rising-edge pinch records a deletion
@@ -1316,6 +1521,8 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         brushRadius: Float,
         brushPreviewWorldPos: SIMD3<Float>?,
         activeTool: ToolMode,
+        pendingHotspots: [PendingHotspot] = [],
+        selectedPendingHotspotId: UUID? = nil,
         hideWaypoints: Bool = false,
         hidePendingDeletions: Bool = false,
         hideSilhouette: Bool = false
@@ -1347,6 +1554,27 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                     color: aimed ? Self.pendingWaypointAimedColor : Self.pendingWaypointColor
                 ))
             }
+        }
+        // M6.1 — committed + pending hotspots. Always visible (no separate
+        // toggle; the user expects content markers to persist across modes).
+        for hs in hotspots {
+            let local = SIMD4<Float>(hs.x, hs.y, hs.z, 1)
+            let world4 = splatModelMatrix * local
+            markers.append(ReticleRenderer.Marker(
+                worldPosition: SIMD3<Float>(world4.x, world4.y, world4.z),
+                radius: Self.hotspotRadius,
+                color: Self.hotspotColor
+            ))
+        }
+        for hs in pendingHotspots {
+            let local = SIMD4<Float>(hs.localPosition.x, hs.localPosition.y, hs.localPosition.z, 1)
+            let world4 = splatModelMatrix * local
+            let selected = (hs.id == selectedPendingHotspotId)
+            markers.append(ReticleRenderer.Marker(
+                worldPosition: SIMD3<Float>(world4.x, world4.y, world4.z),
+                radius: Self.hotspotRadius,
+                color: selected ? Self.pendingHotspotSelectedColor : Self.pendingHotspotColor
+            ))
         }
         if activeTool == .calibrate, !hideSilhouette {
             // 5-sphere stick-figure: head, shoulders, waist, hip, feet —
@@ -1464,7 +1692,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                     ))
                 }
             }
-        case .view, .calibrate, .waypoint:
+        case .view, .calibrate, .waypoint, .hotspot:
             break
         }
         return markers
@@ -1586,7 +1814,9 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             brushPreview: SIMD3<Float>?,
             hideWaypoints: Bool,
             hidePendingDeletions: Bool,
-            hideSilhouette: Bool
+            hideSilhouette: Bool,
+            pendingHotspots: [PendingHotspot],
+            selectedPendingHotspotId: UUID?
         ) = editLock.withLock {
             (
                 $0.activeTool,
@@ -1600,7 +1830,9 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                 $0.brushPreviewWorldPos,
                 $0.hideWaypoints,
                 $0.hidePendingDeletions,
-                $0.hideSilhouette
+                $0.hideSilhouette,
+                $0.pendingHotspots,
+                $0.selectedPendingHotspotId
             )
         }
         let markers = buildMarkers(
@@ -1617,6 +1849,8 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             brushRadius: editSnapshot.brushRadius,
             brushPreviewWorldPos: editSnapshot.brushPreview,
             activeTool: editSnapshot.activeTool,
+            pendingHotspots: editSnapshot.pendingHotspots,
+            selectedPendingHotspotId: editSnapshot.selectedPendingHotspotId,
             hideWaypoints: editSnapshot.hideWaypoints,
             hidePendingDeletions: editSnapshot.hidePendingDeletions,
             hideSilhouette: editSnapshot.hideSilhouette
