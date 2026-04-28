@@ -1045,3 +1045,27 @@ Deferred (with explicit reason in M6.md):
   - Map `onTapGesture { screenPoint in ... }` is a legitimate non-Button use because the closure parameter (the screen point) is required for `proxy.convert(_:from:)`. Wrap the rest of the data flow in a Button if the *result* is navigation; here it only mutates a selection model, so the bare gesture is fine.
   - On visionOS, NavigationLink + `.buttonStyle(.plain)` does not auto-apply hoverEffect to a custom card — you have to add `.hoverEffect(.lift)` explicitly. Cells inside `Form`/`List`/`Section` rows DO get default hoverEffect from the cell, so don't double-apply.
 ---
+
+## 2026-04-27 - US-041 (AVP M7.12 sheet→WindowGroup audit)
+- Audited every `.sheet(...)` call in `cloudtour-avp/CloudTourVision/`:
+  | Site | Content | Verdict |
+  |---|---|---|
+  | `Settings/SettingsView.swift:71` | SignInView | keep — auth, single flow |
+  | `Shell/AppShell.swift:70` | SignInView | keep — auth, single flow |
+  | `Auth/SignInView.swift:74` | SignUpView | keep — auth nested, single short flow |
+  | `Auth/SignInView.swift:77` | ForgotPasswordView | keep — auth nested, single short flow |
+  | `Explore/TourDetailView.swift:97` | SplatUploadView | keep — single Files-picker form |
+  | `Dashboard/DashboardView.swift:72` | New Tour Form (1 TextField) | keep — single field |
+  | `Dashboard/WaypointEditorView.swift:65` | WaypointFormView | keep — single Form with 4 sections, `.cancellationAction` + `.confirmationAction` only |
+  | `Dashboard/WaypointEditorView.swift:80` | WaypointFormView | keep — same as above |
+  | `Members/MembersView.swift:57` | Invite Form (TextField + Picker) | keep — single field set |
+  | `Viewer/SplatViewerView.swift:1407` | Onboarding overlay | keep — single sheet, single flow |
+- PRD acceptance criterion 2 ("Any modal containing >1 logical screen → new WindowGroup") triggers on no current sheet. WaypointFormView and the invite sheet are each `NavigationStack { Form { ... } }` with cancel/save toolbar items only — that is one logical screen of input, which DESIGN.md §2 explicitly allows.
+- No code changes; documenting the audit so future iterations don't re-audit.
+- Files: `prd.json`, `progress.txt`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED (cached from US-040, no swift edits in this story).
+- **Learnings for future iterations:**
+  - "Multi-screen" means *navigates within itself* (push, NavigationLink inside the sheet, sub-sheets that aren't auth) — not "has multiple Form sections". A long Form is still one screen.
+  - Auth flow stack (SignIn → SignUp → ForgotPassword) is the canonical exception: nested sheets are tolerated because the user perceives them as a single auth task. Don't promote auth even if it has 3 levels.
+  - When a story's audit comes up empty, document the audit findings in `progress.txt` with the file:line breakdown so the next iteration doesn't have to redo the same grep+read pass.
+---

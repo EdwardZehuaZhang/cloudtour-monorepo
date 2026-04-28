@@ -684,7 +684,7 @@
         "xcodebuild green"
       ],
       "priority": 41,
-      "passes": false,
+      "passes": true,
       "notes": "DESIGN.md §2 — 'Sheets are a last resort on visionOS'. WaypointEditor and Members are multi-screen → promote."
     },
     {
