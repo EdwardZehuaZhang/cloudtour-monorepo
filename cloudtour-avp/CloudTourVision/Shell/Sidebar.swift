@@ -30,6 +30,11 @@ struct Sidebar: View {
     // `plan` is nil; renders a compact tappable capsule when supplied.
     var plan: String? = nil
     var onUpgradeTapped: (() -> Void)? = nil
+    // M7.16 — org switcher. Picker only renders when `orgs.count > 1`.
+    // Single-org users see a static org name above the plan badge.
+    var orgs: [Organization] = []
+    var activeOrgId: UUID? = nil
+    var onOrgChanged: ((UUID) -> Void)? = nil
 
     private var visibleTabs: [SidebarTab] {
         isAuthenticated
@@ -57,12 +62,53 @@ struct Sidebar: View {
                 }
                 .buttonStyle(.plain)
                 .hoverEffect(.highlight)
-            } else if let plan {
-                Divider()
-                planBadge(plan: plan)
+            } else {
+                if orgs.count > 1 {
+                    Divider()
+                    orgPicker
+                } else if let only = orgs.first {
+                    Divider()
+                    HStack(spacing: 8) {
+                        Image(systemName: "building.2")
+                            .foregroundStyle(.secondary)
+                        Text(only.name)
+                            .font(.callout)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Organization \(only.name)")
+                }
+                if let plan {
+                    Divider()
+                    planBadge(plan: plan)
+                }
             }
         }
         .navigationTitle("CloudTour")
+    }
+
+    @ViewBuilder
+    private var orgPicker: some View {
+        Picker(selection: Binding(
+            get: { activeOrgId ?? orgs.first?.id },
+            set: { newId in
+                guard let newId, newId != activeOrgId else { return }
+                onOrgChanged?(newId)
+            }
+        )) {
+            ForEach(orgs) { org in
+                Text(org.name).tag(Optional(org.id))
+            }
+        } label: {
+            Label("Organization", systemImage: "building.2")
+        }
+        .pickerStyle(.menu)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .accessibilityLabel("Switch organization")
     }
 
     @ViewBuilder

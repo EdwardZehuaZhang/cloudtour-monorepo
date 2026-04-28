@@ -13,6 +13,10 @@ struct AppShell: View {
     // M7.15 — plan badge data. Loaded from org_members → organizations on
     // auth restore; nil while loading or unauthenticated.
     @State private var currentPlan: String? = nil
+    // M7.16 — org switcher state. Available orgs come from the user's
+    // membership rows; activeOrgId is persisted across sessions.
+    @State private var availableOrgs: [Organization] = []
+    @AppStorage("activeOrgId") private var activeOrgIdRaw: String = ""
 
     private var demoScreen: String {
         let args = CommandLine.arguments
@@ -60,7 +64,10 @@ struct AppShell: View {
                         isAuthenticated: authViewModel.isAuthenticated,
                         onSignInTapped: { showSignInSheet = true },
                         plan: currentPlan,
-                        onUpgradeTapped: openPlanLink
+                        onUpgradeTapped: openPlanLink,
+                        orgs: availableOrgs,
+                        activeOrgId: activeOrgUUID,
+                        onOrgChanged: switchActiveOrg
                     )
                 } detail: {
                     switch selectedTab {
@@ -124,9 +131,25 @@ struct AppShell: View {
         return components.url
     }
 
+    private var activeOrgUUID: UUID? {
+        UUID(uuidString: activeOrgIdRaw) ?? availableOrgs.first?.id
+    }
+
+    private func switchActiveOrg(_ id: UUID) {
+        activeOrgIdRaw = id.uuidString
+        currentPlan = availableOrgs.first { $0.id == id }?.plan ?? "free"
+        dashboardVM.setActiveOrg(id)
+        membersVM.setActiveOrg(id)
+        Task {
+            await dashboardVM.loadTours()
+            await membersVM.loadMembers()
+        }
+    }
+
     private func loadPlan() async {
         guard let userId = authViewModel.currentUserId else {
             currentPlan = nil
+            availableOrgs = []
             return
         }
         do {
@@ -134,18 +157,35 @@ struct AppShell: View {
                 .from("org_members")
                 .select()
                 .eq("user_id", value: userId.uuidString)
-                .limit(1)
                 .execute()
                 .value
-            guard let member = members.first else { return }
+            guard !members.isEmpty else {
+                currentPlan = "free"
+                availableOrgs = []
+                return
+            }
+            let orgIds = members.map { $0.orgId.uuidString }
             let orgs: [Organization] = try await AppSupabase.client
                 .from("organizations")
                 .select()
-                .eq("id", value: member.orgId.uuidString)
-                .limit(1)
+                .in("id", values: orgIds)
                 .execute()
                 .value
-            currentPlan = orgs.first?.plan ?? "free"
+            availableOrgs = orgs
+            // Resolve the active org: AppStorage takes priority, fall back
+            // to the first membership. Persist whichever we landed on so
+            // sidebar + viewmodels share a single source of truth.
+            let resolvedId: UUID = {
+                if let stored = UUID(uuidString: activeOrgIdRaw),
+                   orgs.contains(where: { $0.id == stored }) {
+                    return stored
+                }
+                return orgs.first?.id ?? members[0].orgId
+            }()
+            activeOrgIdRaw = resolvedId.uuidString
+            currentPlan = orgs.first { $0.id == resolvedId }?.plan ?? "free"
+            dashboardVM.setActiveOrg(resolvedId)
+            membersVM.setActiveOrg(resolvedId)
         } catch {
             currentPlan = "free"
         }

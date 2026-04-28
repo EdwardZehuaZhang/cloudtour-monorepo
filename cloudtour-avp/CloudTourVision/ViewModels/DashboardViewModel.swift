@@ -11,10 +11,28 @@ final class DashboardViewModel {
 
     private var orgId: UUID?
 
+    /// M7.16 — explicit org selection from the sidebar switcher. When set,
+    /// `loadTours()` skips the "first member" lookup and queries this org
+    /// directly. Reload is triggered by the caller.
+    func setActiveOrg(_ id: UUID) {
+        orgId = id
+    }
+
     func loadTours() async {
         isLoading = true
         do {
-            // First get user's org
+            if let orgId {
+                tours = try await AppSupabase.client
+                    .from("tours")
+                    .select()
+                    .eq("org_id", value: orgId.uuidString)
+                    .order("view_count", ascending: false)
+                    .execute()
+                    .value
+                isLoading = false
+                return
+            }
+            // Fallback: derive from the user's first org membership.
             let session = try await AppSupabase.client.auth.session
             let members: [OrgMember] = try await AppSupabase.client
                 .from("org_members")

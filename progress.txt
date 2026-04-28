@@ -1082,3 +1082,16 @@ Deferred (with explicit reason in M6.md):
   - When passing optional behavior into `Sidebar` (or any shared shell), prefer adding new optional parameters with default `nil` rather than constructor overloads — keeps the demo cases (`--demo explore` / `--demo dashboard`) working without touching them.
   - `org.plan` from Supabase is nullable — always coalesce to "free" before lowercase-comparing, otherwise the badge silently disappears for orgs that haven't been migrated to the new plan column.
 ---
+
+## 2026-04-27 - US-043 (AVP M7.16 org switcher)
+- `Shell/Sidebar.swift`: added `orgs: [Organization]`, `activeOrgId: UUID?`, `onOrgChanged: ((UUID) -> Void)?` parameters. Renders a `Picker(.menu)` when `orgs.count > 1`; renders a static `building.2` + org name row when exactly one org; renders nothing on signed-out / loading. Picker sits above the plan badge so the bottom of the sidebar reads org → plan.
+- `Shell/AppShell.swift`: extended the M7.15 `loadPlan()` to fetch every membership row (not just the first), look up all matching organizations in one `IN` query, and resolve the active org via `@AppStorage("activeOrgId")` with fallback to the first membership. `switchActiveOrg(_:)` persists the choice and notifies both viewmodels. Plan badge updates synchronously on switch.
+- `ViewModels/DashboardViewModel.swift` + `ViewModels/MembersViewModel.swift`: added `setActiveOrg(_ id: UUID)` API. `loadTours()` / `loadMembers()` now fast-path on a known orgId and only hit `org_members` lookup when no override is set. Existing single-org flow still works because the legacy "first member" branch is the fallback.
+- Files: `cloudtour-avp/CloudTourVision/Shell/Sidebar.swift`, `cloudtour-avp/CloudTourVision/Shell/AppShell.swift`, `cloudtour-avp/CloudTourVision/ViewModels/DashboardViewModel.swift`, `cloudtour-avp/CloudTourVision/ViewModels/MembersViewModel.swift`, `prd.json`, `progress.txt`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED.
+- **Learnings for future iterations:**
+  - Both viewmodels previously hardcoded "first member" lookup — that's a multi-org bug that the org switcher fixes. Any future viewmodel that needs an active org should adopt the same `setActiveOrg(_:)` + fallback pattern, not duplicate the first-member query.
+  - `@AppStorage` cannot store `UUID?` directly; persist as `String` (empty = unset) and resolve via `UUID(uuidString:)` at read time. Fallback chain: stored UUID → first available org → nil. Always validate the stored UUID is still in the available set before honoring it (orgs the user was removed from must not stick).
+  - Supabase `.in("id", values: [String])` filter is the right way to fetch a batch of orgs in one round-trip; do not loop `.eq("id", ...)` per id.
+  - When you change a `@State` array (`availableOrgs`) AND a derived value (`currentPlan`), set both in the same code path so the sidebar render doesn't briefly show stale plan against the new org list.
+---

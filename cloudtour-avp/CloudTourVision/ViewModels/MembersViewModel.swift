@@ -11,9 +11,24 @@ final class MembersViewModel {
 
     private var orgId: UUID?
 
+    /// M7.16 — explicit org selection from the sidebar switcher.
+    func setActiveOrg(_ id: UUID) {
+        orgId = id
+    }
+
     func loadMembers() async {
         isLoading = true
         do {
+            if let orgId {
+                members = try await AppSupabase.client
+                    .from("org_members")
+                    .select()
+                    .eq("org_id", value: orgId.uuidString)
+                    .execute()
+                    .value
+                isLoading = false
+                return
+            }
             let session = try await AppSupabase.client.auth.session
             let myMemberships: [OrgMember] = try await AppSupabase.client
                 .from("org_members")
