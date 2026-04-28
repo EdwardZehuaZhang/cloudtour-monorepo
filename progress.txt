@@ -1013,3 +1013,19 @@ Deferred (with explicit reason in M6.md):
   - When wrapping a row in NavigationLink, the row's inner Image/icon should be `.accessibilityHidden(true)` so VoiceOver reads the row's combined label once, not the image's auto-derived label and the row label sequentially.
   - SourceKit "Cannot find type 'X'" + "any Scene" warnings on `Scene` model are pre-existing noise (SwiftUI.Scene protocol vs. domain Scene struct, M6.12 learning). Do not chase them when xcodebuild is green.
 ---
+
+## 2026-04-27 - US-039 (AVP M7.13 viewer ornaments)
+- Added two ornaments on `SplatViewerView` body, both gated by `isImmersiveOpen`:
+  - Bottom (`.scene(.bottom)`): `Toggle(.button)` for reticle visibility + `Button(role: .destructive)` for exit. Wraps in `.glassBackgroundEffect()` per DESIGN.md §2.
+  - Leading (`.scene(.leading)`): scrollable scene list with current-scene indicator, tap-to-jump. Hidden when `scenes.count <= 1`. Glass background.
+- Renderer plumbing: added `hideReticle` flag to `EditState`, extended `setDisplayFlags(...)` and `buildMarkers(...)` signatures, and gated the leading reticle marker append in `buildMarkers`. Default `false` keeps prior behavior.
+- `pushDisplayFlags()` now passes the new flag; `Toggle` flips it via inverted `Binding` (toggle reads as "show reticle").
+- Files: `cloudtour-avp/CloudTourVision/Viewer/SplatImmersiveRenderer.swift`, `cloudtour-avp/CloudTourVision/Viewer/SplatViewerView.swift`, `prd.json`, `progress.txt`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED.
+- **Learnings for future iterations:**
+  - `.foregroundStyle(condition ? .tint : .secondary)` does not type-check — Swift infers `TintShapeStyle` for the first branch and rejects `.secondary` (a different ShapeStyle). Fix: use `Color.accentColor` and `Color.secondary` explicitly so the ternary unifies on `Color`.
+  - Ornaments attach to the host **WindowGroup window**, not the immersive space. The viewer window stays open while immersive is active, which is exactly the surface that needs persistent chrome for "exit" + "scene jump".
+  - `attachmentAnchor: .scene(.bottom)` + `contentAlignment: .top` puts the ornament directly below the window with content top-aligned (so the ornament hugs the window edge). Use `.leading` + `.trailing` for the side jumper (ornament sits to the left, content right-aligned against the window).
+  - `Toggle(.button)` on visionOS renders as a tappable bordered button — no slider — which is the right affordance for "show/hide" inside an ornament.
+  - SourceKit "No such module 'Supabase'" on `import Supabase` is a SourceKit-only resolution miss; SPM-resolved modules build fine. Ignore.
+---

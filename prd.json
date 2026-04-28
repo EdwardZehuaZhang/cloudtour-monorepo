@@ -654,7 +654,7 @@
         "xcodebuild green"
       ],
       "priority": 39,
-      "passes": false,
+      "passes": true,
       "notes": "DESIGN.md §2 ornaments. Scene jumper shows scenes for current tour; tap teleports head pose to scene start."
     },
     {

@@ -31,6 +31,8 @@ struct SplatViewerView: View {
     @State private var hideSilhouette: Bool = false
     // M6.6 — perf counters HUD. Off by default; sampled at 4 Hz alongside
     // the existing history-depth poll while the editor is open.
+    // M7.13 — bottom ornament reticle visibility toggle
+    @State private var hideReticle: Bool = false
     @State private var showPerfCounters: Bool = false
     @State private var perfFps: Double = 0
     @State private var perfMarkers: Int = 0
@@ -150,6 +152,20 @@ struct SplatViewerView: View {
         }
         .navigationTitle(currentScene.title)
         .toolbar(isImmersiveOpen ? .hidden : .visible, for: .navigationBar)
+        .ornament(
+            visibility: isImmersiveOpen ? .visible : .hidden,
+            attachmentAnchor: .scene(.bottom),
+            contentAlignment: .top
+        ) {
+            immersiveBottomOrnament
+        }
+        .ornament(
+            visibility: (isImmersiveOpen && scenes.count > 1) ? .visible : .hidden,
+            attachmentAnchor: .scene(.leading),
+            contentAlignment: .trailing
+        ) {
+            sceneJumperOrnament
+        }
         .task(id: currentScene.id) {
             isLoading = true
             fileURL = nil
@@ -240,6 +256,82 @@ struct SplatViewerView: View {
             isEditingMode = false
             loadState.set(.idle)
         }
+    }
+
+    // M7.13 — bottom ornament: reticle toggle + exit, attached to the
+    // viewer window so it stays reachable in the user's ergonomic zone
+    // while the splat fills the immersive space.
+    private var immersiveBottomOrnament: some View {
+        HStack(spacing: 12) {
+            Toggle(isOn: Binding(
+                get: { !hideReticle },
+                set: { hideReticle = !$0; pushDisplayFlags() }
+            )) {
+                Label("Reticle", systemImage: "scope")
+            }
+            .toggleStyle(.button)
+            .accessibilityLabel("Show aim reticle")
+            .accessibilityHint("Toggle the on-screen aim dot")
+
+            Divider()
+                .frame(height: 24)
+
+            Button(role: .destructive) {
+                exitImmersive()
+            } label: {
+                Label("Exit", systemImage: "xmark.circle.fill")
+            }
+            .accessibilityLabel("Exit immersive")
+            .accessibilityHint("Close the immersive splat view")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .glassBackgroundEffect()
+    }
+
+    // M7.13 — leading ornament: scene jumper. Tap a scene to switch
+    // currentScene; the .task(id:) reloads the splat for the new scene.
+    private var sceneJumperOrnament: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Scenes")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(scenes) { scene in
+                        Button {
+                            jumpToScene(scene)
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: scene.id == currentScene.id ? "circle.fill" : "circle")
+                                    .foregroundStyle(scene.id == currentScene.id ? Color.accentColor : Color.secondary)
+                                Text(scene.title)
+                                    .lineLimit(1)
+                                Spacer(minLength: 0)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .contentShape(.hoverEffect, RoundedRectangle(cornerRadius: 8))
+                        }
+                        .buttonStyle(.plain)
+                        .hoverEffect(.highlight)
+                        .accessibilityLabel("Jump to scene \(scene.title)")
+                    }
+                }
+                .padding(.bottom, 8)
+            }
+        }
+        .frame(width: 220)
+        .frame(maxHeight: 360)
+        .glassBackgroundEffect()
+    }
+
+    private func jumpToScene(_ scene: Scene) {
+        guard scene.id != currentScene.id else { return }
+        currentScene = scene
     }
 
     /// Unified Save: persists the live-calibrated transform AND any pending
@@ -513,7 +605,8 @@ struct SplatViewerView: View {
         SplatImmersiveRenderer.currentRenderer?.setDisplayFlags(
             hideWaypoints: hideWaypoints,
             hidePendingDeletions: hidePendingDeletions,
-            hideSilhouette: hideSilhouette
+            hideSilhouette: hideSilhouette,
+            hideReticle: hideReticle
         )
     }
 

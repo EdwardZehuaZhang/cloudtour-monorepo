@@ -222,6 +222,8 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         var hideWaypoints: Bool = false
         var hidePendingDeletions: Bool = false
         var hideSilhouette: Bool = false
+        // ── M7.13 viewer ornament: hide aim reticle ─────────────────────
+        var hideReticle: Bool = false
 
         // ── M6.1 hotspot tool ───────────────────────────────────────────
         /// Single-edge pinch event consumed by the hotspot tool.
@@ -699,11 +701,17 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
     /// M5.11 — flip on/off renderer-side overlays (waypoints, pending
     /// deletion volumes, calibration silhouette). Reads on each frame in
     /// `buildMarkers`. Persistence is per-session only.
-    func setDisplayFlags(hideWaypoints: Bool, hidePendingDeletions: Bool, hideSilhouette: Bool) {
+    func setDisplayFlags(
+        hideWaypoints: Bool,
+        hidePendingDeletions: Bool,
+        hideSilhouette: Bool,
+        hideReticle: Bool = false
+    ) {
         editLock.withLock {
             $0.hideWaypoints = hideWaypoints
             $0.hidePendingDeletions = hidePendingDeletions
             $0.hideSilhouette = hideSilhouette
+            $0.hideReticle = hideReticle
         }
     }
 
@@ -1695,15 +1703,18 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         yawPreviewYaw: Float? = nil,
         hideWaypoints: Bool = false,
         hidePendingDeletions: Bool = false,
-        hideSilhouette: Bool = false
+        hideSilhouette: Bool = false,
+        hideReticle: Bool = false
     ) -> [ReticleRenderer.Marker] {
         var markers: [ReticleRenderer.Marker] = []
         markers.reserveCapacity(1 + waypoints.count + pendingWaypoints.count + 5)
-        markers.append(ReticleRenderer.Marker(
-            worldPosition: reticleWorldPosition,
-            radius: Self.reticleRadius,
-            color: Self.reticleColor
-        ))
+        if !hideReticle {
+            markers.append(ReticleRenderer.Marker(
+                worldPosition: reticleWorldPosition,
+                radius: Self.reticleRadius,
+                color: Self.reticleColor
+            ))
+        }
         if !hideWaypoints {
             for wp in waypoints {
                 let worldPos = waypointWorldPosition(wp, splatModelMatrix: splatModelMatrix)
@@ -2058,6 +2069,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             hideWaypoints: Bool,
             hidePendingDeletions: Bool,
             hideSilhouette: Bool,
+            hideReticle: Bool,
             pendingHotspots: [PendingHotspot],
             selectedPendingHotspotId: UUID?
         ) = editLock.withLock {
@@ -2074,6 +2086,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                 $0.hideWaypoints,
                 $0.hidePendingDeletions,
                 $0.hideSilhouette,
+                $0.hideReticle,
                 $0.pendingHotspots,
                 $0.selectedPendingHotspotId
             )
@@ -2098,7 +2111,8 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             yawPreviewYaw: nav.yawPreviewYaw,
             hideWaypoints: editSnapshot.hideWaypoints,
             hidePendingDeletions: editSnapshot.hidePendingDeletions,
-            hideSilhouette: editSnapshot.hideSilhouette
+            hideSilhouette: editSnapshot.hideSilhouette,
+            hideReticle: editSnapshot.hideReticle
         )
 
         // M6.6 — sample per-frame perf counters BEFORE the encode loop so
