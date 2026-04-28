@@ -6,6 +6,7 @@ import Foundation
 import Metal
 import MetalSplatter
 import os
+import QuartzCore
 import simd
 import SplatIO
 import SwiftUI
@@ -96,6 +97,26 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
     private let session: SplatSession
     private let waypoints: [WaypointMarker]
     private let hotspots: [HotspotMarker]
+
+    /// M6.3 — splat-local AABB computed at load time from raw points (post
+    /// deletions). nil until `load()` finishes. Read by snap-to-floor.
+    /// `splat-local` here means the same coordinate space as
+    /// `SplatScenePoint.position` — i.e. before any user calibrate transform.
+    private let aabbLock = OSAllocatedUnfairLock(initialState: AABB?(nil))
+    private struct AABB { let lo: SIMD3<Float>; let hi: SIMD3<Float> }
+
+    /// M6.6 — perf counters. Frame counts + last-fps sample + last-frame
+    /// marker count. Read by SwiftUI HUD via `snapshotPerfCounters()`.
+    private struct PerfCounters {
+        var frameCount: Int = 0
+        var fpsWindowStart: TimeInterval = 0
+        var fpsWindowFrames: Int = 0
+        var lastFps: Double = 0
+        var lastMarkerCount: Int = 0
+        var lastDrawableCount: Int = 0
+        var splatPointCount: Int = 0
+    }
+    private let perfLock = OSAllocatedUnfairLock(initialState: PerfCounters())
 
     private let arSession = ARKitSession()
     private let worldTracking = WorldTrackingProvider()
@@ -667,6 +688,14 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         editLock.withLock { ($0.undoStack.count, $0.redoStack.count) }
     }
 
+    /// M6.6 — read the latest perf snapshot. Always cheap; safe for the
+    /// SwiftUI 4 Hz refresh loop.
+    func snapshotPerfCounters() -> (fps: Double, markers: Int, drawables: Int, splatPoints: Int) {
+        perfLock.withLock {
+            ($0.lastFps, $0.lastMarkerCount, $0.lastDrawableCount, $0.splatPointCount)
+        }
+    }
+
     /// M5.11 — flip on/off renderer-side overlays (waypoints, pending
     /// deletion volumes, calibration silhouette). Reads on each frame in
     /// `buildMarkers`. Persistence is per-session only.
@@ -683,6 +712,36 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
     /// hand-tracked pinch and dolly forward on the next frame.
     static func debugTriggerPinch() {
         currentRenderer?.stateLock.withLock { $0.pinchPending = true }
+    }
+
+    /// M6.11 simulator-only: commit a small synthetic box volume for
+    /// deletion (10 cm cube centred at splat-local origin). Skips the real
+    /// dual-pinch gesture state machine; we go straight to the same code
+    /// path that the gesture-release branch takes after a successful box.
+    static func debugTriggerBoxCommit() {
+        currentRenderer?.editLock.withLock { state in
+            Self.recordHistory(&state)
+            state.pendingDeletionBoxes.append(DeletionBox(
+                min: [-0.05, -0.05, -0.05],
+                max: [0.05, 0.05, 0.05]
+            ))
+            state.liveBoxLocal = nil
+        }
+    }
+
+    /// M6.11 simulator-only: commit a small synthetic lasso polygon (a
+    /// 10 cm square in the splat XY plane). Same shortcut as box — bypass
+    /// the gesture-state machine and inject the post-release shape.
+    static func debugTriggerLassoCommit() {
+        currentRenderer?.editLock.withLock { state in
+            Self.recordHistory(&state)
+            // Plane: Z = 0 → normal (0, 0, 1), d = 0.
+            state.pendingDeletionLassos.append(DeletionLasso(
+                plane: [0, 0, 1, 0],
+                polygon: [[-0.05, -0.05], [0.05, -0.05], [0.05, 0.05], [-0.05, 0.05]]
+            ))
+            state.lassoLive = nil
+        }
     }
 
     private func setupReticle() {
@@ -759,9 +818,93 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             boxes: deletions?.boxes ?? [],
             lassos: deletions?.lassos ?? []
         )
+        // Stash splat-local AABB BEFORE the chunk consumes the array — used
+        // by snap-to-floor / snap-to-grid which run on the main thread.
+        let computedAABB: AABB? = {
+            guard let first = points.first else { return nil }
+            var lo = first.position, hi = first.position
+            for p in points.dropFirst() {
+                lo = simd_min(lo, p.position)
+                hi = simd_max(hi, p.position)
+            }
+            return AABB(lo: lo, hi: hi)
+        }()
+        if let computedAABB {
+            aabbLock.withLock { $0 = computedAABB }
+        }
+        let pointsCountSnapshot = points.count
+        perfLock.withLock { $0.splatPointCount = pointsCountSnapshot }
         let chunk = try SplatChunk(device: device, from: points)
         await splat.addChunk(chunk)
         splatRenderer = splat
+    }
+
+    /// M6.3 — snap the user's translation so the lowest face of the
+    /// splat-local AABB lands on world y=0 under the current transform.
+    /// No-op if AABB or splat hasn't loaded. Returns true if applied.
+    @discardableResult
+    func snapToFloor() -> Bool {
+        guard let aabb = aabbLock.withLock({ $0 }) else { return false }
+        editLock.withLock { state in
+            let editMatrix = Self.editTransformMatrix(for: state.transform)
+            // Up-axis flip applied in `splatModelMatrix` (rotate π around Z).
+            // Replicate it here so we read the same world Y the renderer paints.
+            let upFlip = matrix4x4_rotation(radians: .pi, axis: SIMD3<Float>(0, 0, 1))
+            // 8 AABB corners → world; pick the lowest.
+            let xs: [Float] = [aabb.lo.x, aabb.hi.x]
+            let ys: [Float] = [aabb.lo.y, aabb.hi.y]
+            let zs: [Float] = [aabb.lo.z, aabb.hi.z]
+            var minY: Float = .infinity
+            for x in xs { for y in ys { for z in zs {
+                let local = SIMD4<Float>(x, y, z, 1)
+                let world4 = upFlip * (editMatrix * local)
+                if world4.y < minY { minY = world4.y }
+            } } }
+            // World minY is relative to the splat's pre-translation origin
+            // because `editTransformMatrix` already includes translation.
+            // Adjusting tx.y by -minY zeroes the lowest face.
+            guard minY.isFinite else { return }
+            Self.recordHistory(&state)
+            state.transform = SceneTransform(
+                scale: state.transform.scale,
+                rotation: state.transform.rotation,
+                translation: Position3D(
+                    x: state.transform.translation.x,
+                    y: state.transform.translation.y - Double(minY),
+                    z: state.transform.translation.z
+                )
+            )
+            state.hasUserAdjusted = true
+            state.calibratePhase = .idle
+        }
+        return true
+    }
+
+    /// M6.3 — quantise the live translation to a 5 cm grid (configurable).
+    /// Pushes onto undo so the user can revert with ⌘Z.
+    @discardableResult
+    func snapToGrid(spacingMeters: Double = 0.05) -> Bool {
+        guard spacingMeters > 0 else { return false }
+        editLock.withLock { state in
+            let snap: (Double) -> Double = { v in
+                (v / spacingMeters).rounded() * spacingMeters
+            }
+            let snapped = Position3D(
+                x: snap(state.transform.translation.x),
+                y: snap(state.transform.translation.y),
+                z: snap(state.transform.translation.z)
+            )
+            if snapped == state.transform.translation { return }
+            Self.recordHistory(&state)
+            state.transform = SceneTransform(
+                scale: state.transform.scale,
+                rotation: state.transform.rotation,
+                translation: snapped
+            )
+            state.hasUserAdjusted = true
+            state.calibratePhase = .idle
+        }
+        return true
     }
 
     /// Filters splat points by every persisted deletion region: spheres,
@@ -1256,7 +1399,9 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
     ) -> (viewerOffset: SIMD3<Float>,
           reticleWorldPosition: SIMD3<Float>,
           aimedWaypointId: UUID?,
-          aimedPendingId: UUID?) {
+          aimedPendingId: UUID?,
+          yawPreviewOrigin: SIMD3<Float>?,
+          yawPreviewYaw: Float?) {
         let headTransform = deviceAnchor?.originFromAnchorTransform ?? matrix_identity_float4x4
         let headPos = SIMD3<Float>(headTransform.columns.3.x,
                                    headTransform.columns.3.y,
@@ -1499,7 +1644,30 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             return state.viewerOffset
         }
 
-        return (viewerOffset, reticlePos, aimed?.id, aimedPendingId)
+        // M6.5 — arrival-yaw preview arrow. Only meaningful while the
+        // waypoint tool is active AND the user is aimed at an existing or
+        // pending waypoint; in that case we expose the world origin (the
+        // waypoint's world position) plus the candidate yaw (current head
+        // yaw) so buildMarkers can draw a translucent arrow before pinch.
+        var yawPreviewOrigin: SIMD3<Float>? = nil
+        var yawPreviewYaw: Float? = nil
+        let activeToolNow = editLock.withLock { $0.activeTool }
+        if activeToolNow == .waypoint {
+            if let aimed {
+                yawPreviewOrigin = waypointWorldPosition(aimed, splatModelMatrix: preSplatModel)
+                yawPreviewYaw = headYaw
+            } else if let aimedPendingId,
+                      let pending = editLock.withLock({
+                          $0.pendingWaypoints.first(where: { $0.id == aimedPendingId })
+                      }) {
+                let local = SIMD4<Float>(pending.localPosition.x, pending.localPosition.y, pending.localPosition.z, 1)
+                let world4 = preSplatModel * local
+                yawPreviewOrigin = SIMD3<Float>(world4.x, world4.y, world4.z)
+                yawPreviewYaw = headYaw
+            }
+        }
+
+        return (viewerOffset, reticlePos, aimed?.id, aimedPendingId, yawPreviewOrigin, yawPreviewYaw)
     }
 
     /// Builds the marker list passed to `ReticleRenderer.render`: the
@@ -1523,6 +1691,8 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         activeTool: ToolMode,
         pendingHotspots: [PendingHotspot] = [],
         selectedPendingHotspotId: UUID? = nil,
+        yawPreviewOrigin: SIMD3<Float>? = nil,
+        yawPreviewYaw: Float? = nil,
         hideWaypoints: Bool = false,
         hidePendingDeletions: Bool = false,
         hideSilhouette: Bool = false
@@ -1574,6 +1744,37 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                 worldPosition: SIMD3<Float>(world4.x, world4.y, world4.z),
                 radius: Self.hotspotRadius,
                 color: selected ? Self.pendingHotspotSelectedColor : Self.pendingHotspotColor
+            ))
+        }
+        if activeTool == .calibrate {
+            // M6.4 — XYZ axis gizmo at splat origin. ReticleRenderer only
+            // knows spheres, so axes are 6 small spheres along each axis
+            // (3 per axis, exponentially-spaced). Always shown in calibrate
+            // mode, irrespective of the silhouette toggle, since they're a
+            // separate orientation cue.
+            let gizmoLocalLengths: [Float] = [0.10, 0.22, 0.40]
+            let axes: [(SIMD3<Float>, SIMD4<Float>)] = [
+                (SIMD3<Float>(1, 0, 0), SIMD4<Float>(1.0, 0.30, 0.30, 0.85)), // X red
+                (SIMD3<Float>(0, 1, 0), SIMD4<Float>(0.35, 1.0, 0.40, 0.85)), // Y green
+                (SIMD3<Float>(0, 0, 1), SIMD4<Float>(0.40, 0.55, 1.0, 0.85)), // Z blue
+            ]
+            for (dir, color) in axes {
+                for d in gizmoLocalLengths {
+                    let local = SIMD4<Float>(dir * d, 1)
+                    let world4 = splatModelMatrix * local
+                    markers.append(ReticleRenderer.Marker(
+                        worldPosition: SIMD3<Float>(world4.x, world4.y, world4.z),
+                        radius: 0.022,
+                        color: color
+                    ))
+                }
+            }
+            // White origin sphere so the user sees where the axes converge.
+            let origin4 = splatModelMatrix * SIMD4<Float>(0, 0, 0, 1)
+            markers.append(ReticleRenderer.Marker(
+                worldPosition: SIMD3<Float>(origin4.x, origin4.y, origin4.z),
+                radius: 0.030,
+                color: SIMD4<Float>(1, 1, 1, 0.95)
             ))
         }
         if activeTool == .calibrate, !hideSilhouette {
@@ -1682,6 +1883,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             }
         case .lasso:
             if let live = liveLasso {
+                // Outline samples (existing).
                 for sample in live.samples {
                     let local = SIMD4<Float>(sample.x, sample.y, sample.z, 1)
                     let world4 = splatModelMatrix * local
@@ -1691,9 +1893,50 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                         color: Self.brushPreviewColor
                     ))
                 }
+                // M6.9 — projection-cone preview. Reticle only knows
+                // spheres so the "cone" is the lasso polyline shifted along
+                // the splat-local plane normal at a few discrete depths.
+                // The user reads the stack of outlines as the volume that
+                // will be erased on release.
+                let coneDepths: [Float] = [-0.45, -0.22, 0.22, 0.45]
+                let coneColor = SIMD4<Float>(
+                    Self.brushPreviewColor.x,
+                    Self.brushPreviewColor.y,
+                    Self.brushPreviewColor.z,
+                    0.18
+                )
+                for depth in coneDepths {
+                    for sample in live.samples {
+                        let shifted = sample + live.planeNormalLocal * depth
+                        let local = SIMD4<Float>(shifted.x, shifted.y, shifted.z, 1)
+                        let world4 = splatModelMatrix * local
+                        markers.append(ReticleRenderer.Marker(
+                            worldPosition: SIMD3<Float>(world4.x, world4.y, world4.z),
+                            radius: 0.012,
+                            color: coneColor
+                        ))
+                    }
+                }
             }
         case .view, .calibrate, .waypoint, .hotspot:
             break
+        }
+        // M6.5 — arrival-yaw preview arrow at the aimed waypoint. Stack of
+        // small spheres along the candidate yaw direction (world XZ plane,
+        // matching the calibrate yaw convention: 0 = facing -Z).
+        if activeTool == .waypoint, let origin = yawPreviewOrigin, let yaw = yawPreviewYaw {
+            let dir = SIMD3<Float>(sin(yaw), 0, -cos(yaw))
+            let tipColor = SIMD4<Float>(1.0, 0.85, 0.30, 0.80)
+            let trailColor = SIMD4<Float>(1.0, 0.78, 0.30, 0.45)
+            let lengths: [Float] = [0.10, 0.20, 0.32, 0.46]
+            for (idx, d) in lengths.enumerated() {
+                let pos = origin + dir * d
+                markers.append(ReticleRenderer.Marker(
+                    worldPosition: pos,
+                    radius: idx == lengths.count - 1 ? 0.045 : 0.025,
+                    color: idx == lengths.count - 1 ? tipColor : trailColor
+                ))
+            }
         }
         return markers
     }
@@ -1851,10 +2094,32 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             activeTool: editSnapshot.activeTool,
             pendingHotspots: editSnapshot.pendingHotspots,
             selectedPendingHotspotId: editSnapshot.selectedPendingHotspotId,
+            yawPreviewOrigin: nav.yawPreviewOrigin,
+            yawPreviewYaw: nav.yawPreviewYaw,
             hideWaypoints: editSnapshot.hideWaypoints,
             hidePendingDeletions: editSnapshot.hidePendingDeletions,
             hideSilhouette: editSnapshot.hideSilhouette
         )
+
+        // M6.6 — sample per-frame perf counters BEFORE the encode loop so
+        // the SwiftUI HUD reflects the last fully-built frame.
+        let drawableCount = drawables.count
+        let markerCount = markers.count
+        perfLock.withLock { p in
+            p.frameCount += 1
+            p.fpsWindowFrames += 1
+            p.lastMarkerCount = markerCount
+            p.lastDrawableCount = drawableCount
+            let now = CACurrentMediaTime()
+            if p.fpsWindowStart <= 0 { p.fpsWindowStart = now }
+            let elapsed = now - p.fpsWindowStart
+            // Sample once per ~0.5 s for a smooth-but-responsive readout.
+            if elapsed >= 0.5 {
+                p.lastFps = Double(p.fpsWindowFrames) / elapsed
+                p.fpsWindowStart = now
+                p.fpsWindowFrames = 0
+            }
+        }
 
         for (index, drawable) in drawables.enumerated() {
             guard let commandBuffer = commandQueue.makeCommandBuffer() else {

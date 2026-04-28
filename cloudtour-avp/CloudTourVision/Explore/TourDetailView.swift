@@ -3,6 +3,7 @@ import SwiftUI
 struct TourDetailView: View {
     @Bindable var viewModel: TourDetailViewModel
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+    @State private var showingUpload = false
 
     var body: some View {
         Group {
@@ -49,16 +50,33 @@ struct TourDetailView: View {
 
                         Divider()
 
-                        Text("Scenes")
-                            .font(.title2)
-                            .fontWeight(.semibold)
+                        HStack {
+                            Text("Scenes")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            Spacer()
+                            Button {
+                                showingUpload = true
+                            } label: {
+                                Label("Upload splat", systemImage: "square.and.arrow.up")
+                                    .font(.callout)
+                            }
+                            .buttonStyle(.bordered)
+                            .accessibilityLabel("Upload a splat file from device")
+                            .accessibilityHint("Pick a .ply, .splat, or .spz file to attach as a new scene")
+                        }
 
                         if viewModel.scenes.isEmpty {
                             ContentUnavailableView("No Scenes", systemImage: "cube.transparent", description: Text("This tour has no scenes yet."))
                         } else {
                             ForEach(viewModel.scenes) { scene in
                                 NavigationLink {
-                                    SplatViewerView(scene: scene, tourOrgId: viewModel.tour.orgId, tourId: viewModel.tour.id)
+                                    SplatViewerView(
+                                        scene: scene,
+                                        scenes: viewModel.scenes,
+                                        tourOrgId: viewModel.tour.orgId,
+                                        tourId: viewModel.tour.id
+                                    )
                                 } label: {
                                     SceneRowView(scene: scene)
                                 }
@@ -76,6 +94,11 @@ struct TourDetailView: View {
                 viewModel.autoNavigateScene = scene
             }
         }
+        .sheet(isPresented: $showingUpload) {
+            SplatUploadView(tour: viewModel.tour) { _ in
+                Task { await viewModel.loadScenes() }
+            }
+        }
     }
 }
 
@@ -90,7 +113,7 @@ struct SceneRowView: View {
                 .frame(width: 40, height: 40)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(scene.name)
+                Text(scene.title)
                     .font(.headline)
                 if let desc = scene.description {
                     Text(desc)

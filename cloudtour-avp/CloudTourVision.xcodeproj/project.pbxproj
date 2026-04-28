@@ -50,6 +50,7 @@
 		CB41D3567FE28D8647590ABE /* StreetViewClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342E3698FD93EE0BE8D14198 /* StreetViewClient.swift */; };
 		CC9D4BE8D2B60436818EDF49 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E174922DC5DD1B9CEFD38A10 /* AuthViewModel.swift */; };
 		CEC163E57CE0D5144A0E9595 /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1136953D44EC78BD3210041A /* ImmersiveView.swift */; };
+		CFA7860E7D7BFEE3EB3F251F /* SplatUploadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1497FD895E885B44BAB7D3 /* SplatUploadView.swift */; };
 		D08AAFDC290A453AD1287E66 /* StreetViewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC8D4CE6024255ACAE36653 /* StreetViewViewModel.swift */; };
 		D1BC89D18BB6F66DC3BD8EB7 /* PanoramaImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C3363DC1FBD28AD95EFB1B /* PanoramaImmersiveView.swift */; };
 		D7DF0BD2403F4E3A2B43F7B1 /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B568AB4231BBC7FFF84D6716 /* SupabaseClient.swift */; };
@@ -114,7 +115,8 @@
 		F41F062C30A0071CC6B2F59C /* SplatImmersiveRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatImmersiveRenderer.swift; sourceTree = "<group>"; };
 		F8BB9454E1E24925DA78410E /* MembersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersViewModel.swift; sourceTree = "<group>"; };
 		F9E67D9EBF1F9507900F92E9 /* StreetViewMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewMapView.swift; sourceTree = "<group>"; };
-		"TEMP_414A45E8-3863-4BE4-A983-F12404A50B7E" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		FF1497FD895E885B44BAB7D3 /* SplatUploadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatUploadView.swift; sourceTree = "<group>"; };
+		"TEMP_DE2F9DC3-BDBD-4E07-9AB5-C3542098F820" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -293,6 +295,7 @@
 			isa = PBXGroup;
 			children = (
 				B3C117BF48B2F73660402091 /* DashboardView.swift */,
+				FF1497FD895E885B44BAB7D3 /* SplatUploadView.swift */,
 				76CF2C97FE30B87747B644F2 /* TourEditorView.swift */,
 				91CEC5149BBF70509D7DD5B8 /* WaypointEditorView.swift */,
 				13DB025586FC943E4DA0446C /* WaypointGraphView.swift */,
@@ -308,10 +311,10 @@
 			path = FAQ;
 			sourceTree = "<group>";
 		};
-		"TEMP_34659224-3C89-44F2-B911-A026ACA77E53" /* cloudtour-avp */ = {
+		"TEMP_E4DE6F4C-C290-4739-8300-9E2C53913CBF" /* cloudtour-avp */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_414A45E8-3863-4BE4-A983-F12404A50B7E" /* Config.xcconfig */,
+				"TEMP_DE2F9DC3-BDBD-4E07-9AB5-C3542098F820" /* Config.xcconfig */,
 			);
 			path = "cloudtour-avp";
 			sourceTree = "<group>";
@@ -423,6 +426,7 @@
 				56C8080005A046B4C34D005F /* SplatCache.swift in Sources */,
 				A74CC96B66B4B074860DDA82 /* SplatImmersiveRenderer.swift in Sources */,
 				5CE52466027080B50FF1FA8E /* SplatLoadState.swift in Sources */,
+				CFA7860E7D7BFEE3EB3F251F /* SplatUploadView.swift in Sources */,
 				F9A9DAFC31135AC7F1DC668D /* SplatViewerView.swift in Sources */,
 				CB41D3567FE28D8647590ABE /* StreetViewClient.swift in Sources */,
 				4AB13AFEF22C538EED2A57C1 /* StreetViewMapView.swift in Sources */,
@@ -490,7 +494,7 @@
 		};
 		791F49A1A75E631F71936C78 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_414A45E8-3863-4BE4-A983-F12404A50B7E" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_DE2F9DC3-BDBD-4E07-9AB5-C3542098F820" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -555,7 +559,7 @@
 		};
 		8C265FB73CDBD82CE541319B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_414A45E8-3863-4BE4-A983-F12404A50B7E" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_DE2F9DC3-BDBD-4E07-9AB5-C3542098F820" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

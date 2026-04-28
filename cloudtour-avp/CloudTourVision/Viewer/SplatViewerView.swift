@@ -29,6 +29,13 @@ struct SplatViewerView: View {
     @State private var hideWaypoints: Bool = false
     @State private var hidePendingDeletions: Bool = false
     @State private var hideSilhouette: Bool = false
+    // M6.6 — perf counters HUD. Off by default; sampled at 4 Hz alongside
+    // the existing history-depth poll while the editor is open.
+    @State private var showPerfCounters: Bool = false
+    @State private var perfFps: Double = 0
+    @State private var perfMarkers: Int = 0
+    @State private var perfDrawables: Int = 0
+    @State private var perfSplatPoints: Int = 0
     // M5.6 — numeric calibrate panel state. Lazily synced from the renderer
     // when the user expands the panel; deltas push back via setTransform.
     @State private var numericExpanded: Bool = false
@@ -582,6 +589,14 @@ struct SplatViewerView: View {
                             if pendingPanelExpanded || activeTool == .hotspot {
                                 refreshPanelSnapshots()
                             }
+                            if showPerfCounters {
+                                let perf = SplatImmersiveRenderer.currentRenderer?
+                                    .snapshotPerfCounters() ?? (fps: 0, markers: 0, drawables: 0, splatPoints: 0)
+                                perfFps = perf.fps
+                                perfMarkers = perf.markers
+                                perfDrawables = perf.drawables
+                                perfSplatPoints = perf.splatPoints
+                            }
                             // Autosave every 20 ticks (~5 s).
                             if ticks % 20 == 0 { autosaveDraft() }
                             ticks += 1
@@ -625,6 +640,38 @@ struct SplatViewerView: View {
                 .controlSize(.regular)
                 .keyboardShortcut(.space, modifiers: [])
                 .accessibilityHint("Triggers a synthetic pinch in the simulator")
+
+                Button {
+                    SplatImmersiveRenderer.debugTriggerBoxCommit()
+                    refreshHistoryDepth()
+                    if pendingPanelExpanded { refreshPanelSnapshots() }
+                } label: {
+                    Label("Commit Box (10 cm cube)", systemImage: "cube.transparent")
+                        .font(.callout)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.regular)
+                .keyboardShortcut("b", modifiers: [])
+                .accessibilityLabel("Sim: commit synthetic box")
+                .accessibilityHint("Skips dual-pinch and pushes a 10 cm cube onto pending deletions")
+
+                Button {
+                    SplatImmersiveRenderer.debugTriggerLassoCommit()
+                    refreshHistoryDepth()
+                    if pendingPanelExpanded { refreshPanelSnapshots() }
+                } label: {
+                    Label("Commit Lasso (10 cm square)", systemImage: "lasso")
+                        .font(.callout)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.regular)
+                .keyboardShortcut("l", modifiers: [])
+                .accessibilityLabel("Sim: commit synthetic lasso")
+                .accessibilityHint("Skips pinch+drag and pushes a 10 cm square lasso onto pending deletions")
             }
             .padding(.top, 16)
             #endif
@@ -682,6 +729,42 @@ struct SplatViewerView: View {
         .foregroundStyle(.secondary)
         .frame(maxWidth: 520, alignment: .leading)
         .padding(.horizontal, 24)
+    }
+
+    /// M6.3 — snap-to-floor and snap-to-grid quick actions. Both push onto
+    /// the undo stack so the user can revert with ⌘Z.
+    @ViewBuilder
+    private var snapPanel: some View {
+        HStack(spacing: 12) {
+            Button {
+                _ = SplatImmersiveRenderer.currentRenderer?.snapToFloor()
+                refreshHistoryDepth()
+                if numericExpanded { syncNumericFromRenderer() }
+            } label: {
+                Label("Snap to floor", systemImage: "arrow.down.to.line.compact")
+                    .font(.callout)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.bordered)
+            .accessibilityLabel("Snap to floor")
+            .accessibilityHint("Aligns the lowest splat point to the room floor")
+
+            Button {
+                _ = SplatImmersiveRenderer.currentRenderer?.snapToGrid()
+                refreshHistoryDepth()
+                if numericExpanded { syncNumericFromRenderer() }
+            } label: {
+                Label("Snap to 5 cm grid", systemImage: "square.grid.3x3")
+                    .font(.callout)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.bordered)
+            .accessibilityLabel("Snap translation to 5 centimetre grid")
+            .accessibilityHint("Rounds X, Y, and Z translation to the nearest 5 cm")
+        }
+        .frame(maxWidth: 520, alignment: .leading)
     }
 
     @ViewBuilder
@@ -1005,6 +1088,18 @@ struct SplatViewerView: View {
                     .onChange(of: hidePendingDeletions) { _, _ in pushDisplayFlags() }
                 Toggle("Hide calibration silhouette", isOn: $hideSilhouette)
                     .onChange(of: hideSilhouette) { _, _ in pushDisplayFlags() }
+                Toggle("Show perf counters", isOn: $showPerfCounters)
+                    .accessibilityHint("Overlay frames-per-second and marker count")
+                if showPerfCounters {
+                    HStack(spacing: 16) {
+                        Text(String(format: "%.0f fps", perfFps)).monospacedDigit()
+                        Text("\(perfMarkers) markers").monospacedDigit()
+                        Text("\(perfDrawables) drawables").monospacedDigit()
+                        Text("\(perfSplatPoints) splats").monospacedDigit()
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                }
             }
         }
         .font(.callout)
@@ -1031,6 +1126,8 @@ struct SplatViewerView: View {
             }
             .pickerStyle(.segmented)
             .frame(maxWidth: 520)
+            .accessibilityLabel("Editor tool")
+            .accessibilityHint("Pick which gesture is active in the immersive scene")
 
             // Waypoint-mode target scene picker
             if activeTool == .waypoint, !scenes.isEmpty {
@@ -1055,6 +1152,7 @@ struct SplatViewerView: View {
             // M5.6 — numeric calibrate panel
             if activeTool == .calibrate {
                 numericCalibratePanel
+                snapPanel
             }
 
             // M6.1 — hotspot inspector
@@ -1078,6 +1176,8 @@ struct SplatViewerView: View {
                         ),
                         in: 0.03...0.50
                     )
+                    .accessibilityLabel("Brush radius")
+                    .accessibilityValue("\(Int(brushRadius * 100)) centimetres")
                     Text(String(format: "%.2f m", brushRadius))
                         .font(.callout)
                         .foregroundStyle(.secondary)
@@ -1123,6 +1223,8 @@ struct SplatViewerView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .disabled(isSaving)
+                .accessibilityLabel("Save scene edits")
+                .accessibilityHint("Persists calibrate, waypoints, hotspots, and deletions to the cloud")
 
                 if activeTool == .calibrate {
                     Button {
@@ -1136,6 +1238,8 @@ struct SplatViewerView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.large)
                     .disabled(isSaving)
+                    .accessibilityLabel("Reset calibration")
+                    .accessibilityHint("Returns the splat to its uncalibrated identity transform")
                 }
 
                 Button {
@@ -1150,6 +1254,8 @@ struct SplatViewerView: View {
                 .controlSize(.large)
                 .disabled(isSaving || undoDepth == 0)
                 .keyboardShortcut("z", modifiers: .command)
+                .accessibilityLabel("Undo last edit")
+                .accessibilityHint("Reverts the most recent commit. Cmd-Z keyboard shortcut.")
 
                 Button {
                     performRedo()
@@ -1163,6 +1269,8 @@ struct SplatViewerView: View {
                 .controlSize(.large)
                 .disabled(isSaving || redoDepth == 0)
                 .keyboardShortcut("z", modifiers: [.command, .shift])
+                .accessibilityLabel("Redo edit")
+                .accessibilityHint("Re-applies the last undone edit. Cmd-Shift-Z keyboard shortcut.")
 
                 Button(role: .cancel) {
                     cancelEditWithGuard()
@@ -1175,6 +1283,8 @@ struct SplatViewerView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.large)
                 .disabled(isSaving)
+                .accessibilityLabel("Cancel editing session")
+                .accessibilityHint("Exits the editor. Confirms before discarding unsaved edits.")
             }
             .confirmationDialog(
                 "Discard pending edits?",

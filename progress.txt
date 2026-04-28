@@ -66,6 +66,10 @@
 - RSS feed at `/feed.xml` via route handler; blog posts statically generated via `generateStaticParams`
 - AVP `EditorDraft` evolves with new optional fields — make new lists `Optional` with explicit `CodingKeys` so prior drafts on disk still decode (Swift's synthesised `Decodable` only tolerates missing keys for Optionals).
 - AVP renderer mutation paths must call `Self.recordHistory(&state)` BEFORE mutating undoable surface (`pendingWaypoints`, `pendingHotspots`, deletions, transform). Skipping it leaves the undo stack incoherent.
+- Swift 6 `@Sendable`-region captures: `OSAllocatedUnfairLock.withLock { $0 = ... }` cannot read `var` locals declared outside; hoist the computation into a `let` (use an IIFE-style closure if needed) and then assign that constant inside the lock.
+- Non-Sendable Compositor types (`[LayerRenderer.Drawable]`, `[ReticleRenderer.Marker]`, `LayerRenderer.Drawable`): always extract `.count` (or other trivial scalars) into a local `let` before passing into `@Sendable` lock closures.
+- SwiftUI `Canvas` `ctx.stroke(_:with:)` wants a `Color`, not a `TintShapeStyle`. Use `Color.accentColor.opacity(...)` (NOT `.tint.opacity(...)`).
+- Files-picked URLs from `.fileImporter` are security-scoped: wrap reads in `startAccessingSecurityScopedResource()` / `stopAccessing…`, and copy bytes into the app's `temporaryDirectory` before deferring work to a later UI tick.
 
 ---
 
@@ -944,4 +948,41 @@ Files changed:
   - `editLock`-guarded mutators that should be undoable always need `Self.recordHistory(&state)` BEFORE mutation — added it to every hotspot write path (place, cycle, inspector edit, remove). Forgetting this for a single path would silently de-coherence the history stack.
   - SplatSession is `Codable + Hashable`, so any new field added to it must be Codable + Hashable too. `HotspotMarker` already conforms, but a future field carrying a non-Codable type would block visionOS's `openImmersiveSpace(value:)` from accepting it.
   - The autosave-loop only refreshed panel snapshots when `pendingPanelExpanded` — for the hotspot inspector to stay live, we now also refresh when `activeTool == .hotspot`. Anything else that wants live mirrors of renderer state from SwiftUI should follow the same gated-refresh pattern.
+---
+
+## 2026-04-28 - M6 batch (M6.2, M6.3, M6.4, M6.5, M6.6, M6.9, M6.10, M6.11, M6.12)
+- M6.2 splat upload from device: new `Dashboard/SplatUploadView.swift` with `.fileImporter` (.ply/.splat/.spz), local magic-byte validation (PLY ascii "ply\n", SPZ `4e 47 53 50` "NGSP", .splat = positive multiple of 32 bytes), security-scoped read + tmp scratch copy, direct Supabase scene insert + storage upload + format stamp. Wired into TourDetailView header. No BE round-trip (RLS gates org-editor role) — plan-limit + 10/hour rate-limit are FE-side only and deliberately deferred for AVP.
+- M6.3 snap-to-floor + snap-to-grid: AABB stashed at `load()` time from `[SplatScenePoint]`. Public `snapToFloor()` projects 8 AABB corners through the live transform + up-flip rotation, shifts ty so world minY = 0. `snapToGrid(spacingMeters: 0.05)` rounds translation. Both push undo. SwiftUI `snapPanel` exposes both as buttons in the calibrate panel.
+- M6.4 axis gizmo overlay: in `.calibrate`, render 3 spheres per axis (X red / Y green / Z blue) at 0.10 / 0.22 / 0.40 m along each axis from splat origin, plus a white origin sphere. Driven through `splatModelMatrix` so it tracks live calibrate gestures.
+- M6.5 arrival-yaw preview arrow: `updateNavigation` returns `yawPreviewOrigin` + `yawPreviewYaw` whenever the user is aimed at a committed or pending waypoint in `.waypoint` mode. `buildMarkers` draws 3 trail spheres + 1 amber tip sphere along the head-yaw direction starting at the waypoint world position.
+- M6.6 perf counters HUD: new `perfLock` with frame count + 0.5 s rolling fps + last-frame marker/drawable count + total splat point count. `snapshotPerfCounters()` for SwiftUI; new toggle in display HUD with monospaced fps / markers / drawables / splats readout. Off by default. Added `import QuartzCore` for `CACurrentMediaTime`.
+- M6.9 lasso projection-cone preview: while drawing a lasso, render the polyline samples shifted along `planeNormalLocal` at depths {-0.45, -0.22, +0.22, +0.45} m at low alpha so the user sees the extruded prism that the polygon-frustum will erase.
+- M6.10 VoiceOver audit: accessibilityLabel + accessibilityHint added to Save / Reset / Undo / Redo / Cancel / tool picker / brush radius slider / snap buttons / sim debug buttons / upload button. Continues the M5.21 partial sweep.
+- M6.11 sim parity box / lasso commit: new `debugTriggerBoxCommit` + `debugTriggerLassoCommit` static APIs that bypass the gesture-state machine and append a 10 cm cube / 10 cm planar square directly onto pending lists (with history). Wired to `b` and `l` keyboard shortcuts in the sim-only debug block. Both push onto undo stack.
+- M6.12 scene-link graph 2D layout: new `ForceDirectedSceneGraph` view inside `WaypointGraphView.swift`. Switches in when scenes.count > 12 (else falls back to the M5.10 list). Fruchterman–Reingold-ish layout: 250 iterations of pairwise repulsion + per-edge attraction, temperature anneal `0.10 → ~0.002`, output clipped to `[0.02, 0.98]` unit square, mapped through GeometryReader bounds. Edges drawn in a Canvas with arrow heads; nodes are Buttons (so VoiceOver hits them) styled as Capsule labels.
+
+Files changed:
+- cloudtour-avp/CloudTourVision/Dashboard/SplatUploadView.swift (new)
+- cloudtour-avp/CloudTourVision/Explore/TourDetailView.swift (upload sheet entry)
+- cloudtour-avp/CloudTourVision/Viewer/SplatImmersiveRenderer.swift (AABB cache, snap APIs, gizmo, yaw preview, perf counters, lasso cone, sim debug commits)
+- cloudtour-avp/CloudTourVision/Viewer/SplatViewerView.swift (snap panel, perf HUD, sim debug buttons, a11y labels)
+- cloudtour-avp/CloudTourVision/Dashboard/WaypointGraphView.swift (force-directed renderer + threshold switch)
+- .docs/milestones/M6.md (status flipped to shipped, P0+P1 boxes ticked except fork-blocked, P2 deferred-to-M7 banner)
+- cloudtour-avp/CloudTourVision.xcodeproj/project.pbxproj (xcodegen regen for SplatUploadView.swift)
+
+Build: `xcodebuild -scheme CloudTourVision -destination 'generic/platform=visionOS Simulator' build` — `** BUILD SUCCEEDED **`. `pnpm typecheck` — 5/5 packages pass (FULL TURBO).
+
+Deferred (with explicit reason in M6.md):
+- M6.7 (opacity / point-size sliders) — needs MetalSplatter shader uniform exposure → blocked on M4.16 fork execute.
+- M6.8 (erase-the-eraser) — needs per-splat mask attribute → blocked on M4.16.
+- M6.17 (stamp / clone) — needs mutable splat buffers → blocked on M4.16.
+- M6.13–M6.16 (P2 collaboration cluster) — explicitly deferred to M7 as a unit; the cluster spans Realtime presence, comments schema + RLS + BE, in-immersive metadata edit, AVP floor-plan editor.
+
+**Learnings for future iterations:**
+  - `aabbLock.withLock { $0 = AABB(lo: lo, hi: hi) }` with `lo`/`hi` declared as `var` outside fails Swift 6 `@Sendable`-region capture. Pattern: hoist the computation into a `let` (e.g. an immediately-invoked closure that returns the value) and then assign that constant inside the lock. Same shape as the existing M5 `Dictionary(uniqueKeysWithValues:)` workaround.
+  - `[LayerRenderer.Drawable]` is non-Sendable. Capturing `drawables.count` (or `markers.count`) inside `perfLock.withLock` requires extracting them into local `let` constants first; the lock closure is `@Sendable`.
+  - SwiftUI `Canvas`'s `ctx.stroke(...with: .color(...))` only accepts a `Color`-typed shape style. `.tint` is a `TintShapeStyle` which the type-checker silently rejects with a confusing "static property 'tint' requires the types 'Color' and 'TintShapeStyle' be equivalent" message. Use `Color.accentColor.opacity(...)` instead.
+  - For force-directed graph layouts at the scale of an AVP tour (≤ ~50 scenes), an O(N²) Fruchterman–Reingold loop with ~250 iterations runs synchronously on `onAppear` in <50 ms — no need to dispatch off-main, and no need for a real-time animation loop.
+  - When the AVP needs file-side data (Files picker), the Files-picked URL is security-scoped: call `startAccessingSecurityScopedResource()` before reading, and copy the bytes into the app's `temporaryDirectory` so subsequent UI pauses can't strand you with a stale scope.
+  - `Scene` is the name of both SwiftUI's protocol AND our domain model. In files that import SwiftUI but reference our `Scene` model in `ForEach`, the compiler may resolve the SwiftUI protocol — keep usages as `[Scene]` and pass through methods so type inference flows from the array element type.
 ---
