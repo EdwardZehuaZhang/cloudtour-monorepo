@@ -47,7 +47,7 @@ struct TourRowView: View {
     let tour: Tour
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             AsyncImage(url: tour.coverImageUrl.flatMap { URL(string: $0) }) { image in
                 image.resizable().aspectRatio(contentMode: .fill)
             } placeholder: {
@@ -58,8 +58,9 @@ struct TourRowView: View {
                             .foregroundStyle(.secondary)
                     }
             }
-            .frame(width: 80, height: 60)
+            .frame(width: 96, height: 72)
             .clipShape(RoundedRectangle(cornerRadius: 8))
+            .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(tour.title)
@@ -82,6 +83,18 @@ struct TourRowView: View {
                 .foregroundStyle(.tertiary)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
+        .contentShape(.hoverEffect, RoundedRectangle(cornerRadius: 12))
+        .hoverEffect(.highlight)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+        .accessibilityHint("Open tour")
+    }
+
+    private var accessibilityDescription: String {
+        var parts: [String] = [tour.title]
+        if let location = tour.location { parts.append(location) }
+        parts.append("\(tour.viewCount) views")
+        return parts.joined(separator: ", ")
     }
 }

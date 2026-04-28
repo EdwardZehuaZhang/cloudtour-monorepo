@@ -639,7 +639,7 @@
         "xcodebuild green"
       ],
       "priority": 38,
-      "passes": false,
+      "passes": true,
       "notes": "DESIGN.md §5 — 60pt minimum hit target. Prefer option (b) row-as-button for editorial density."
     },
     {

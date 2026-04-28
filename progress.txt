@@ -999,3 +999,17 @@ Deferred (with explicit reason in M6.md):
   - SwiftUI `.background(.fill.tertiary, in: Capsule())` is the canonical replacement; pair with `.foregroundStyle(.secondary)` on label text and a tinted symbol for status semantics.
   - Cross-file SourceKit "Cannot find type 'X' in scope" diagnostics during local edits are noise when working in a single-target Xcode project — trust `xcodebuild`, not the inline diagnostics.
 ---
+
+## 2026-04-27 - US-038 (AVP M7.11 thumbnail hit-target)
+- Bumped TourDirectoryView TourRowView thumbnail from 80×60 → 96×72 (well above 60pt floor); added `.hoverEffect(.highlight)` keyed to `.contentShape(.hoverEffect, RoundedRectangle(cornerRadius: 12))`. Row-as-button via existing NavigationLink — no inner tap targets remain.
+- Added accessibility: combined element with `accessibilityLabel` (title + location + view count) and `accessibilityHint("Open tour")`. Thumbnail marked `accessibilityHidden(true)` so VoiceOver describes the destination, not the image.
+- Applied same pattern to TourDetailView SceneRowView: 60×60 cube glyph in `.fill.tertiary` rounded rect, hoverEffect, combined a11y element with title + "Open scene in immersive viewer" hint.
+- Bumped HStack spacing 12 → 16 to match DESIGN.md §5 ≥16pt rule (informational — no adjacent tappables here, but consistent with sibling rows).
+- Files: `cloudtour-avp/CloudTourVision/Explore/TourDirectoryView.swift`, `cloudtour-avp/CloudTourVision/Explore/TourDetailView.swift`, `prd.json`, `progress.txt`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED.
+- **Learnings for future iterations:**
+  - visionOS hoverEffect API is `.hoverEffect(.highlight)` (no `in:` parameter). Custom shape comes from `.contentShape(.hoverEffect, RoundedRectangle(...))` BEFORE the `.hoverEffect()` call. The `.hoverEffect(_:in:)` form referenced in DESIGN.md §5 doesn't exist on visionOS 26 — DESIGN.md should be updated.
+  - Compose order: `.contentShape(.hoverEffect, shape)` → `.hoverEffect()`. Reverse order silently no-ops; SwiftUI doesn't warn.
+  - When wrapping a row in NavigationLink, the row's inner Image/icon should be `.accessibilityHidden(true)` so VoiceOver reads the row's combined label once, not the image's auto-derived label and the row label sequentially.
+  - SourceKit "Cannot find type 'X'" + "any Scene" warnings on `Scene` model are pre-existing noise (SwiftUI.Scene protocol vs. domain Scene struct, M6.12 learning). Do not chase them when xcodebuild is green.
+---

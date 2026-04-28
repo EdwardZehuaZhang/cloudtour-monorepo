@@ -106,11 +106,13 @@ struct SceneRowView: View {
     let scene: Scene
 
     var body: some View {
-        HStack {
+        HStack(spacing: 16) {
             Image(systemName: "cube.transparent")
                 .font(.title2)
                 .foregroundStyle(.tint)
-                .frame(width: 40, height: 40)
+                .frame(width: 60, height: 60)
+                .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12))
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(scene.title)
@@ -127,7 +129,13 @@ struct SceneRowView: View {
 
             Image(systemName: "chevron.right")
                 .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
         }
         .padding(.vertical, 6)
+        .contentShape(.hoverEffect, RoundedRectangle(cornerRadius: 12))
+        .hoverEffect(.highlight)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(scene.title)
+        .accessibilityHint("Open scene in immersive viewer")
     }
 }
