@@ -4,12 +4,20 @@ struct DashboardView: View {
     @Bindable var viewModel: DashboardViewModel
     @State private var showCreateSheet = false
     @State private var newTourTitle = ""
+    // M7.17 — first-run onboarding flag. Persisted across launches so the
+    // overlay appears exactly once unless the user resets app data.
+    @AppStorage("avpOnboarding.completed_v1") private var onboardingCompleted: Bool = false
 
     var body: some View {
         NavigationStack {
             Group {
                 if viewModel.isLoading && viewModel.tours.isEmpty {
                     ProgressView("Loading tours…")
+                } else if viewModel.tours.isEmpty && !onboardingCompleted {
+                    OnboardingDashboardView(
+                        onCreateTour: { showCreateSheet = true },
+                        onSkip: { onboardingCompleted = true }
+                    )
                 } else if viewModel.tours.isEmpty {
                     ContentUnavailableView {
                         Label("No Tours", systemImage: "map")
@@ -208,5 +216,95 @@ struct StatusBadge: View {
         .background(.fill.tertiary, in: Capsule())
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Status: \(status.capitalized)")
+    }
+}
+
+// MARK: - M7.17 first-run onboarding
+
+private struct OnboardingDashboardView: View {
+    let onCreateTour: () -> Void
+    let onSkip: () -> Void
+
+    @State private var stepIndex: Int = 0
+
+    private struct Step {
+        let symbol: String
+        let title: String
+        let body: String
+    }
+
+    private static let steps: [Step] = [
+        Step(
+            symbol: "square.and.arrow.up.on.square",
+            title: "Upload your first splat",
+            body: "Drop a .ply, .splat, or .spz file from Files into a new tour. Magic-byte validation runs server-side, so the format check is automatic."
+        ),
+        Step(
+            symbol: "mappin.and.ellipse",
+            title: "Place a waypoint",
+            body: "Open the immersive editor, aim at a spot in the splat, and pinch to drop a waypoint. Pinch a second time to set the arrival yaw."
+        ),
+        Step(
+            symbol: "paperplane.fill",
+            title: "Publish & share",
+            body: "Switch the tour to Published in the editor, then share the public URL — visitors don't need an account to view it."
+        )
+    ]
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Spacer(minLength: 0)
+
+            Image(systemName: Self.steps[stepIndex].symbol)
+                .font(.system(size: 64))
+                .foregroundStyle(.tint)
+                .symbolRenderingMode(.hierarchical)
+
+            VStack(spacing: 12) {
+                Text("Welcome to CloudTour")
+                    .font(.title)
+                    .fontWeight(.semibold)
+                Text(Self.steps[stepIndex].title)
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                Text(Self.steps[stepIndex].body)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 560)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(spacing: 8) {
+                ForEach(Self.steps.indices, id: \.self) { i in
+                    Circle()
+                        .fill(i == stepIndex ? Color.accentColor : Color.secondary.opacity(0.3))
+                        .frame(width: 8, height: 8)
+                }
+            }
+            .accessibilityHidden(true)
+
+            HStack(spacing: 16) {
+                Button("Skip", action: onSkip)
+                    .buttonStyle(.bordered)
+                    .accessibilityHint("Dismiss onboarding and use the dashboard")
+                if stepIndex < Self.steps.count - 1 {
+                    Button("Next") {
+                        withAnimation(.smooth) { stepIndex += 1 }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityHint("Advance to next onboarding step")
+                } else {
+                    Button("Create Tour") {
+                        onSkip()
+                        onCreateTour()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityHint("Finish onboarding and create your first tour")
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(48)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

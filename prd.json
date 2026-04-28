@@ -730,7 +730,7 @@
         "xcodebuild green"
       ],
       "priority": 44,
-      "passes": false,
+      "passes": true,
       "notes": "Mirrors web US-035. Onboarding never inside ImmersiveSpace — Shared Space only (DESIGN.md §7)."
     },
     {

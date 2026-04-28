@@ -1095,3 +1095,17 @@ Deferred (with explicit reason in M6.md):
   - Supabase `.in("id", values: [String])` filter is the right way to fetch a batch of orgs in one round-trip; do not loop `.eq("id", ...)` per id.
   - When you change a `@State` array (`availableOrgs`) AND a derived value (`currentPlan`), set both in the same code path so the sidebar render doesn't briefly show stale plan against the new org list.
 ---
+
+## 2026-04-27 - US-044 (AVP M7.17 first-run onboarding)
+- `Dashboard/DashboardView.swift`: gated empty-state branch on `@AppStorage("avpOnboarding.completed_v1")`. When `false` AND tours empty, renders the new `OnboardingDashboardView`; otherwise the existing `ContentUnavailableView` empty state.
+- New `OnboardingDashboardView` (private struct): 3-step welcome with hierarchical SF Symbol, title + step title + body copy, progress dots (NOT numbered — matches web US-035), Skip + Next/Create Tour buttons. Final step Button calls `onSkip()` (flips the flag) then `onCreateTour()` so it disappears on next launch.
+- Steps: upload first splat → place waypoint → publish/share. Body text references the actual AVP gestures (pinch to place waypoint, second pinch for arrival yaw) so the copy isn't generic.
+- Lives in Shared Space (Dashboard NavigationStack). Never reachable from inside `ImmersiveSpace` per DESIGN.md §7.
+- Files: `cloudtour-avp/CloudTourVision/Dashboard/DashboardView.swift`, `prd.json`, `progress.txt`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED.
+- **Learnings for future iterations:**
+  - Use `@AppStorage("…_v1")` versioned keys for first-run flags; if onboarding copy or steps change in a future story, bumping the suffix re-shows it cleanly without an ad-hoc migration.
+  - Progress dots vs. numbered steps: visionOS HIG prefers a non-numerical indicator because the user is reading at a flexible distance. Match the web (US-035 also uses dots) for cross-platform consistency.
+  - On the final onboarding step, route the primary CTA through both the completion flag flip *and* the actual action (here, opening the create-tour sheet). If you only flip the flag, the user is dropped into an empty empty-state view; if you only open the sheet, the onboarding reappears next launch.
+  - `Color.secondary.opacity(0.3)` is allowed for the inactive progress dot because it is decorative, not chrome — DESIGN.md §11 rule 2 specifically targets status surfaces with raw RGB. System color + opacity for a dot is fine.
+---
