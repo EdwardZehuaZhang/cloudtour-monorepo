@@ -140,6 +140,8 @@ struct TourHeroCard: View {
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .contentShape(.hoverEffect, RoundedRectangle(cornerRadius: 16))
+        .hoverEffect(.lift)
     }
 }
 
@@ -166,6 +168,8 @@ struct TourGridCard: View {
         }
         .padding(12)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .contentShape(.hoverEffect, RoundedRectangle(cornerRadius: 12))
+        .hoverEffect(.lift)
     }
 }
 

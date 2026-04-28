@@ -669,7 +669,7 @@
         "xcodebuild green"
       ],
       "priority": 40,
-      "passes": false,
+      "passes": true,
       "notes": "DESIGN.md §12 — no glass/hover currently in code. Sweep order: Dashboard/, Explore/, Viewer/, Members/."
     },
     {

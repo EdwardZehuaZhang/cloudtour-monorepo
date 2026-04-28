@@ -1029,3 +1029,19 @@ Deferred (with explicit reason in M6.md):
   - `Toggle(.button)` on visionOS renders as a tappable bordered button — no slider — which is the right affordance for "show/hide" inside an ornament.
   - SourceKit "No such module 'Supabase'" on `import Supabase` is a SourceKit-only resolution miss; SPM-resolved modules build fine. Ignore.
 ---
+
+## 2026-04-27 - US-040 (AVP M7.14 glass+hover sweep)
+- Added `.hoverEffect(.lift)` (cards) / `.hoverEffect(.highlight)` (rows + capsules) to interactive surfaces missing them, paired with `.contentShape(.hoverEffect, shape)` so the lift hugs the visible shape:
+  - `Dashboard/DashboardView.swift` — TourHeroCard + TourGridCard (RoundedRectangle 16 / 12)
+  - `Shell/Sidebar.swift` — Sign In button (RoundedRectangle 12); folded existing inner padding into the `.contentShape` so the hover ring matches the tap area
+  - `Dashboard/WaypointGraphView.swift` — `edgeRow` button (RoundedRectangle 8) + `ForceDirectedSceneGraph` node capsule (Capsule lift)
+- Audit verified `onTapGesture` use is limited to `StreetView/StreetViewMapView.swift:58` where it consumes `screenPoint` for MapKit coordinate conversion (data interaction, not navigation) — DESIGN.md §11.12 only forbids it for navigation, so this stays.
+- Existing ornaments (US-039) already carry `.glassBackgroundEffect()`. No other floating chrome was missing it.
+- Files: `cloudtour-avp/CloudTourVision/Dashboard/DashboardView.swift`, `cloudtour-avp/CloudTourVision/Shell/Sidebar.swift`, `cloudtour-avp/CloudTourVision/Dashboard/WaypointGraphView.swift`, `prd.json`, `progress.txt`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED.
+- **Learnings for future iterations:**
+  - Pairing pattern: `.contentShape(.hoverEffect, <shape>)` goes inside the Button's `label`, then `.hoverEffect(_:)` goes on the Button itself. Reversing the layering (hover before contentShape) silently fails to clip the lift to the shape.
+  - SourceKit reports `'hoverEffect' is unavailable in macOS` even on a visionOS-only target because SourceKit can pick a macOS context for the file. xcodebuild for visionOS is the source of truth — ignore.
+  - Map `onTapGesture { screenPoint in ... }` is a legitimate non-Button use because the closure parameter (the screen point) is required for `proxy.convert(_:from:)`. Wrap the rest of the data flow in a Button if the *result* is navigation; here it only mutates a selection model, so the bare gesture is fine.
+  - On visionOS, NavigationLink + `.buttonStyle(.plain)` does not auto-apply hoverEffect to a custom card — you have to add `.hoverEffect(.lift)` explicitly. Cells inside `Form`/`List`/`Section` rows DO get default hoverEffect from the cell, so don't double-apply.
+---

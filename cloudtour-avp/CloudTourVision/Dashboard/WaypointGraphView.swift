@@ -121,8 +121,11 @@ struct WaypointGraphView: View {
                         .foregroundStyle(.tertiary)
                 }
             }
+            .padding(.vertical, 4)
+            .contentShape(.hoverEffect, RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
+        .hoverEffect(.highlight)
     }
 
     private func loadWaypoints() async {
@@ -199,8 +202,10 @@ struct ForceDirectedSceneGraph: View {
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
                                 .background(.thinMaterial, in: Capsule())
+                                .contentShape(.hoverEffect, Capsule())
                         }
                         .buttonStyle(.plain)
+                        .hoverEffect(.lift)
                         .position(x: p.x, y: p.y)
                         .accessibilityLabel(scene.title)
                         .accessibilityHint("Open this scene in the editor")
