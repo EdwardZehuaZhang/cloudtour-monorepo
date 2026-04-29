@@ -745,7 +745,7 @@
         "xcodebuild green"
       ],
       "priority": 45,
-      "passes": false,
+      "passes": true,
       "notes": "Was M6.14. Reuse existing BE PATCH; no new routes. Form lives in a popover so it does not break the spatial context."
     },
     {

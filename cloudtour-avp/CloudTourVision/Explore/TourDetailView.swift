@@ -75,7 +75,8 @@ struct TourDetailView: View {
                                         scene: scene,
                                         scenes: viewModel.scenes,
                                         tourOrgId: viewModel.tour.orgId,
-                                        tourId: viewModel.tour.id
+                                        tourId: viewModel.tour.id,
+                                        tourDetailVM: viewModel
                                     )
                                 } label: {
                                     SceneRowView(scene: scene)

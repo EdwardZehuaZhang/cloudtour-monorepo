@@ -1109,3 +1109,16 @@ Deferred (with explicit reason in M6.md):
   - On the final onboarding step, route the primary CTA through both the completion flag flip *and* the actual action (here, opening the create-tour sheet). If you only flip the flag, the user is dropped into an empty empty-state view; if you only open the sheet, the onboarding reappears next launch.
   - `Color.secondary.opacity(0.3)` is allowed for the inactive progress dot because it is decorative, not chrome — DESIGN.md §11 rule 2 specifically targets status surfaces with raw RGB. System color + opacity for a dot is fine.
 ---
+
+## 2026-04-27 - US-045 (AVP M7.5 metadata quick-edit in-immersive)
+- `ViewModels/TourDetailViewModel.swift`: turned `let tour: Tour` into `var tour: Tour`, added `metadataError: String?` + `onTourUpdated: ((Tour) -> Void)?` hook, and a new `updateMetadata(title:category:status:)` async function that applies an optimistic local mutation, executes the Supabase PATCH against `tours`, calls `onTourUpdated` on success, and rolls back the local snapshot on failure.
+- `Viewer/SplatViewerView.swift`: added optional `tourDetailVM: TourDetailViewModel?` init parameter (default nil so existing constructions still compile). When non-nil, the bottom ornament gains a "Tour info" Button that opens a `.popover(arrowEdge: .top)` containing a Form with title TextField, category TextField, segmented status Picker, error label, and Cancel / Save row. Save runs `commitMetadataDraft()` which awaits `vm.updateMetadata`, dismisses on success, and surfaces `metadataError` on failure.
+- `Explore/TourDetailView.swift`: passes `viewModel` through to `SplatViewerView` so the popover finds the live VM and the dashboard / detail page reflect edits without a refetch.
+- Files: `cloudtour-avp/CloudTourVision/ViewModels/TourDetailViewModel.swift`, `cloudtour-avp/CloudTourVision/Viewer/SplatViewerView.swift`, `cloudtour-avp/CloudTourVision/Explore/TourDetailView.swift`, `prd.json`, `progress.txt`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED.
+- **Learnings for future iterations:**
+  - `.popover(isPresented:arrowEdge:)` from an ornament-hosted Button on visionOS converts to an ornament-style popover automatically (see DESIGN.md §9). It does NOT break spatial context the way a sheet would — popovers anchor to the source button.
+  - Optimistic-update pattern: snapshot the value-type tour before mutating, mutate, await the PATCH, on throw restore from the snapshot AND set the error string. Don't try to patch first then mutate — UI staleness during the round-trip is exactly what optimistic update is supposed to avoid.
+  - When you change a model from `let` to `var` in an `@Observable` class, every read site stays the same but writes now compile. `@Observable` automatically tracks the change because the property reference is a stored property of the observed class.
+  - Plumbing optional callbacks (`onTourUpdated`) is cleaner than threading a `DashboardViewModel` reference through the whole stack — the caller that owns both VMs sets the closure once, and TourDetailViewModel stays decoupled.
+---

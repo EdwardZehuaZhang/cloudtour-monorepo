@@ -5,6 +5,10 @@ struct SplatViewerView: View {
     let scenes: [Scene]
     let tourOrgId: UUID
     let tourId: UUID
+    /// Optional. When supplied, the bottom ornament gains a "Tour info"
+    /// button that opens a popover for title / category / status edit
+    /// (M7.5). When nil, the button is hidden.
+    var tourDetailVM: TourDetailViewModel? = nil
 
     @State private var currentScene: Scene
     @State private var fileURL: URL?
@@ -76,12 +80,27 @@ struct SplatViewerView: View {
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
 
-    init(scene: Scene, scenes: [Scene] = [], tourOrgId: UUID, tourId: UUID) {
+    init(
+        scene: Scene,
+        scenes: [Scene] = [],
+        tourOrgId: UUID,
+        tourId: UUID,
+        tourDetailVM: TourDetailViewModel? = nil
+    ) {
         self.tourOrgId = tourOrgId
         self.tourId = tourId
         self.scenes = scenes.isEmpty ? [scene] : scenes
+        self.tourDetailVM = tourDetailVM
         self._currentScene = State(initialValue: scene)
     }
+
+    // M7.5 — popover state. Title text + selected category + status are
+    // local copies that flush via TourDetailViewModel.updateMetadata.
+    @State private var showMetadataPopover: Bool = false
+    @State private var metadataTitleDraft: String = ""
+    @State private var metadataCategoryDraft: String = ""
+    @State private var metadataStatusDraft: String = "draft"
+    @State private var metadataIsSaving: Bool = false
 
     var body: some View {
         ZStack {
@@ -261,6 +280,8 @@ struct SplatViewerView: View {
     // M7.13 — bottom ornament: reticle toggle + exit, attached to the
     // viewer window so it stays reachable in the user's ergonomic zone
     // while the splat fills the immersive space.
+    // M7.5 adds a "Tour info" button that opens a popover for inline
+    // metadata edit when a TourDetailViewModel is bound.
     private var immersiveBottomOrnament: some View {
         HStack(spacing: 12) {
             Toggle(isOn: Binding(
@@ -272,6 +293,23 @@ struct SplatViewerView: View {
             .toggleStyle(.button)
             .accessibilityLabel("Show aim reticle")
             .accessibilityHint("Toggle the on-screen aim dot")
+
+            if tourDetailVM != nil {
+                Divider()
+                    .frame(height: 24)
+
+                Button {
+                    primeMetadataDraft()
+                    showMetadataPopover = true
+                } label: {
+                    Label("Tour info", systemImage: "info.circle")
+                }
+                .popover(isPresented: $showMetadataPopover, arrowEdge: .top) {
+                    metadataPopover
+                }
+                .accessibilityLabel("Edit tour info")
+                .accessibilityHint("Title, category, and status")
+            }
 
             Divider()
                 .frame(height: 24)
@@ -287,6 +325,73 @@ struct SplatViewerView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .glassBackgroundEffect()
+    }
+
+    private func primeMetadataDraft() {
+        guard let tour = tourDetailVM?.tour else { return }
+        metadataTitleDraft = tour.title
+        metadataCategoryDraft = tour.category ?? ""
+        metadataStatusDraft = tour.status
+    }
+
+    @ViewBuilder
+    private var metadataPopover: some View {
+        Form {
+            Section("Title") {
+                TextField("Tour title", text: $metadataTitleDraft)
+            }
+            Section("Category") {
+                TextField("e.g. Architecture, Real estate", text: $metadataCategoryDraft)
+            }
+            Section("Status") {
+                Picker("Status", selection: $metadataStatusDraft) {
+                    Text("Draft").tag("draft")
+                    Text("Published").tag("published")
+                    Text("Archived").tag("archived")
+                }
+                .pickerStyle(.segmented)
+            }
+            if let err = tourDetailVM?.metadataError {
+                Section {
+                    Label(err, systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.red)
+                        .font(.caption)
+                }
+            }
+            Section {
+                HStack {
+                    Button("Cancel") {
+                        showMetadataPopover = false
+                    }
+                    .buttonStyle(.bordered)
+                    Spacer()
+                    Button {
+                        Task { await commitMetadataDraft() }
+                    } label: {
+                        if metadataIsSaving {
+                            ProgressView()
+                        } else {
+                            Text("Save")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(metadataIsSaving || metadataTitleDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
+        .frame(minWidth: 360, minHeight: 320)
+    }
+
+    private func commitMetadataDraft() async {
+        guard let vm = tourDetailVM else { return }
+        metadataIsSaving = true
+        let title = metadataTitleDraft.trimmingCharacters(in: .whitespaces)
+        let category = metadataCategoryDraft.trimmingCharacters(in: .whitespaces)
+        await vm.updateMetadata(title: title, category: category, status: metadataStatusDraft)
+        metadataIsSaving = false
+        if vm.metadataError == nil {
+            showMetadataPopover = false
+        }
     }
 
     // M7.13 — leading ornament: scene jumper. Tap a scene to switch
