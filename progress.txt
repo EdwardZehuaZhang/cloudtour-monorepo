@@ -1122,3 +1122,20 @@ Deferred (with explicit reason in M6.md):
   - When you change a model from `let` to `var` in an `@Observable` class, every read site stays the same but writes now compile. `@Observable` automatically tracks the change because the property reference is a stored property of the observed class.
   - Plumbing optional callbacks (`onTourUpdated`) is cleaner than threading a `DashboardViewModel` reference through the whole stack — the caller that owns both VMs sets the closure once, and TourDetailViewModel stays decoupled.
 ---
+
+## 2026-04-29 - US-046 (AVP M7.4 floor-plan editor)
+- New `Models/FloorPlan.swift`: Codable `FloorPlan` + `ScenePosition` (snake_case `scene_id` / `x` / `y`) matching `packages/types`.
+- New `Dashboard/FloorPlanEditorView.swift`: full editor screen with toolbar (snap toggle / undo / redo / save), Canvas-rendered grid backdrop at 5% step, draggable per-scene nodes (cube glyph + name capsule), normalized [0..1] positions clamped to bounds.
+- UndoManager wiring: snapshot the positions dict on first `onChanged` of a drag (via `dragStartSnapshot`), register undo on `onEnded` only when positions actually changed. `undo` block calls a sibling `registerRedo` so Cmd-Z / Cmd-Shift-Z toggle endlessly.
+- Save path: `loadScenesAndPlan` does `floor_plans.select().eq(tour_id, ...)` and primes the dict; `save()` PATCHes when `floorPlanId` is set, otherwise inserts a fresh row (with empty `image_url`) and captures the returned id so subsequent saves are PATCHes.
+- `CloudTourVisionApp.swift`: registered `WindowGroup(id: "floor-plan", for: Tour.self) { ... }` with `.defaultSize(width: 960, height: 720)` so it opens in its own window. `Dashboard/TourEditorView.swift` adds a "Floor plan" button in the Connections section that calls `openWindow(id: "floor-plan", value: tour)`.
+- Ran `xcodegen generate` so the new files are picked up by the .xcodeproj.
+- Files: `cloudtour-avp/CloudTourVision/Models/FloorPlan.swift` (new), `cloudtour-avp/CloudTourVision/Dashboard/FloorPlanEditorView.swift` (new), `cloudtour-avp/CloudTourVision/CloudTourVisionApp.swift`, `cloudtour-avp/CloudTourVision/Dashboard/TourEditorView.swift`, `cloudtour-avp/CloudTourVision/Explore/TourDetailView.swift`, `cloudtour-avp/CloudTourVision.xcodeproj/`, `prd.json`, `progress.txt`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED.
+- **Learnings for future iterations:**
+  - **xcodegen workflow**: this project uses xcodegen (`project.yml`). New `.swift` files require running `xcodegen generate` from `cloudtour-avp/` before they show up in xcodebuild — otherwise compile fails with "cannot find 'X' in scope" on import sites. Add this to the sequence whenever introducing a new file.
+  - SwiftUI's `@Environment(\.undoManager)` is `nil` outside a window with the system menu wired up; gate every call with `guard let undoManager else { return }` and disable the buttons via `undoManager?.canUndo != true` / `canRedo` so the UI stays honest if the env is missing.
+  - SwiftUI views are values; `UndoManager.registerUndo(withTarget:handler:)` requires an AnyObject. Wrap the view in a tiny `final class PositionsBox { let view: FloorPlanEditorView }` and pass that as the target. The closure body still captures `self` cleanly because Swift sees the boxed reference.
+  - Snapshot the pre-drag state on the first `onChanged` of a `DragGesture` — not on `onEnded` — and only register undo if `before != after`. Otherwise a tap-without-drag pollutes the undo stack with no-op entries.
+  - `WindowGroup(id:for:)` opens with a typed value (here `Tour`) and you reach it from any view via `Environment(\.openWindow).callAsFunction(id:value:)`. The presented closure receives a `Binding<Tour?>` — unwrap before passing to a child that expects a non-optional.
+---

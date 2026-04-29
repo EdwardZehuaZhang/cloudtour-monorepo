@@ -1,5 +1,5 @@
+import CompositorServices
 import SwiftUI
-import RealityKit
 
 @main
 struct CloudTourVisionApp: App {
@@ -14,9 +14,29 @@ struct CloudTourVisionApp: App {
                 }
         }
 
-        ImmersiveSpace(for: SplatFileIdentifier.self) { $fileIdentifier in
-            if let fileIdentifier {
-                ImmersiveView(fileIdentifier: fileIdentifier)
+        // M7.4 — floor plan editor opens in its own window so the user
+        // can keep the tour editor open alongside.
+        WindowGroup(id: "floor-plan", for: Tour.self) { $tour in
+            if let tour {
+                NavigationStack {
+                    FloorPlanEditorView(tour: tour)
+                }
+            }
+        }
+        .defaultSize(width: 960, height: 720)
+
+        ImmersiveSpace(for: SplatSession.self) { session in
+            CompositorLayer(configuration: SplatImmersiveConfiguration()) { layerRenderer in
+                if let session = session.wrappedValue {
+                    SplatImmersiveRenderer.startRendering(layerRenderer, session: session)
+                }
+            }
+        }
+        .immersionStyle(selection: $immersionStyle, in: .full)
+
+        ImmersiveSpace(for: PanoramaSession.self) { session in
+            if let session = session.wrappedValue {
+                PanoramaImmersiveView(session: session)
             }
         }
         .immersionStyle(selection: $immersionStyle, in: .full)

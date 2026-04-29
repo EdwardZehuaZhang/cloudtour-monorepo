@@ -1,6 +1,15 @@
 {
-  "originHash" : "57d79f54ca7deb3bde35438ec077b6cfe6dd55f728d9448ee668c72224f9f113",
+  "originHash" : "7bf077106dd30ed64c1fd97f40ba6847436418df9fa3ac5e3c09ddb17c0c737b",
   "pins" : [
+    {
+      "identity" : "inject",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/krzysztofzablocki/Inject",
+      "state" : {
+        "revision" : "728c56639ecb3df441d51d5bc6747329afabcfc9",
+        "version" : "1.5.2"
+      }
+    },
     {
       "identity" : "metalsplatter",
       "kind" : "remoteSourceControl",

@@ -761,7 +761,7 @@
         "xcodebuild green"
       ],
       "priority": 46,
-      "passes": false,
+      "passes": true,
       "notes": "Was M6.13. BE route already exists. Use `Canvas` API for the floor-plan render to avoid heavy view tree."
     },
     {

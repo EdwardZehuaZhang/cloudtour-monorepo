@@ -5,6 +5,7 @@ struct TourEditorView: View {
     @Bindable var viewModel: DashboardViewModel
     @State private var scenes: [Scene] = []
     @State private var isLoadingScenes = true
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         Form {
@@ -65,6 +66,12 @@ struct TourEditorView: View {
                     } label: {
                         Label("Scene graph", systemImage: "point.3.connected.trianglepath.dotted")
                     }
+                    Button {
+                        openWindow(id: "floor-plan", value: tour)
+                    } label: {
+                        Label("Floor plan", systemImage: "square.grid.3x3.square")
+                    }
+                    .accessibilityHint("Open the 2D floor plan editor in a new window")
                 }
             }
 

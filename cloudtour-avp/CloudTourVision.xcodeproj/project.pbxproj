@@ -14,7 +14,9 @@
 		224AD5148081B7AC968153B3 /* Scene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 303EAC6B87B732CE38D7BD51 /* Scene.swift */; };
 		26CABF0FED7532575CB4ECB2 /* Waypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA8C7C34AC39478A537E98C8 /* Waypoint.swift */; };
 		2771DC4D1F0FEB02B3D98026 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B6FD14A34F7C372C542513A /* DashboardViewModel.swift */; };
+		280F715F2218A66856379AD9 /* FloorPlanEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44904FF1C8BEC0ED6098A96F /* FloorPlanEditorView.swift */; };
 		28406DC42E10D6A26E6AEC93 /* Tour.swift in Sources */ = {isa = PBXBuildFile; fileRef = 128FCF6342B7DD75F554B965 /* Tour.swift */; };
+		2A0F2306ED9A6FF0CDD82103 /* FloorPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B919D824E29B29D99E631A6 /* FloorPlan.swift */; };
 		3556E52AFA10E251764FA71A /* PanoramaLoadState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F129DEB52AB2A8A7130E2BF /* PanoramaLoadState.swift */; };
 		35E8A765ADFBE3BB7EFD9740 /* TourDirectoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA553687897243102245E66 /* TourDirectoryView.swift */; };
 		37CCBEDFFD0D5AC7F95B5C71 /* MembersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0756D9840310322385729600 /* MembersView.swift */; };
@@ -69,6 +71,7 @@
 		06494B30EF5E7633513B4DD0 /* AppShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShell.swift; sourceTree = "<group>"; };
 		06662361FA04E8BA36A82336 /* SplatCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatCache.swift; sourceTree = "<group>"; };
 		0756D9840310322385729600 /* MembersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersView.swift; sourceTree = "<group>"; };
+		0B919D824E29B29D99E631A6 /* FloorPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloorPlan.swift; sourceTree = "<group>"; };
 		0DA553687897243102245E66 /* TourDirectoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourDirectoryView.swift; sourceTree = "<group>"; };
 		0E9AF5A6B23356AF2242D72B /* FAQView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FAQView.swift; sourceTree = "<group>"; };
 		1136953D44EC78BD3210041A /* ImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveView.swift; sourceTree = "<group>"; };
@@ -85,6 +88,7 @@
 		3B38C5395EC9AE98105E9DA0 /* EditorDraftStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorDraftStore.swift; sourceTree = "<group>"; };
 		3D153849A08FB278C8FB2838 /* SplatViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatViewerView.swift; sourceTree = "<group>"; };
 		3E8623F672FC7815B0248A80 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
+		44904FF1C8BEC0ED6098A96F /* FloorPlanEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloorPlanEditorView.swift; sourceTree = "<group>"; };
 		60F1D8661A3A87D7FBFB8222 /* OrgMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrgMember.swift; sourceTree = "<group>"; };
 		6982D46DAB7D453CE6B216B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		739E7128CEC8AB661A5F5862 /* StreetViewSearchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewSearchModel.swift; sourceTree = "<group>"; };
@@ -116,7 +120,7 @@
 		F8BB9454E1E24925DA78410E /* MembersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersViewModel.swift; sourceTree = "<group>"; };
 		F9E67D9EBF1F9507900F92E9 /* StreetViewMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewMapView.swift; sourceTree = "<group>"; };
 		FF1497FD895E885B44BAB7D3 /* SplatUploadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatUploadView.swift; sourceTree = "<group>"; };
-		"TEMP_DE2F9DC3-BDBD-4E07-9AB5-C3542098F820" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		"TEMP_85E6D272-015B-48C6-BE68-4FEFFAF13F0D" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -234,6 +238,7 @@
 		8674FD6A010B85C67920EB7C /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				0B919D824E29B29D99E631A6 /* FloorPlan.swift */,
 				E243C19C7BD92D73F8B72331 /* Hotspot.swift */,
 				9FE0A2ED90E5314EB7619381 /* Organization.swift */,
 				60F1D8661A3A87D7FBFB8222 /* OrgMember.swift */,
@@ -295,6 +300,7 @@
 			isa = PBXGroup;
 			children = (
 				B3C117BF48B2F73660402091 /* DashboardView.swift */,
+				44904FF1C8BEC0ED6098A96F /* FloorPlanEditorView.swift */,
 				FF1497FD895E885B44BAB7D3 /* SplatUploadView.swift */,
 				76CF2C97FE30B87747B644F2 /* TourEditorView.swift */,
 				91CEC5149BBF70509D7DD5B8 /* WaypointEditorView.swift */,
@@ -311,10 +317,10 @@
 			path = FAQ;
 			sourceTree = "<group>";
 		};
-		"TEMP_E4DE6F4C-C290-4739-8300-9E2C53913CBF" /* cloudtour-avp */ = {
+		"TEMP_2ABAFCEB-29E8-4FC3-B19C-56D937A9A9F5" /* cloudtour-avp */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_DE2F9DC3-BDBD-4E07-9AB5-C3542098F820" /* Config.xcconfig */,
+				"TEMP_85E6D272-015B-48C6-BE68-4FEFFAF13F0D" /* Config.xcconfig */,
 			);
 			path = "cloudtour-avp";
 			sourceTree = "<group>";
@@ -403,6 +409,8 @@
 				57F7B76F02CCB69E3EF3473C /* EditTool.swift in Sources */,
 				60AAE0BC1ED31CCE873BBE31 /* EditorDraftStore.swift in Sources */,
 				826A938CD93A68AD014C13F2 /* FAQView.swift in Sources */,
+				2A0F2306ED9A6FF0CDD82103 /* FloorPlan.swift in Sources */,
+				280F715F2218A66856379AD9 /* FloorPlanEditorView.swift in Sources */,
 				17DE1F73AF8C670237382730 /* ForgotPasswordView.swift in Sources */,
 				ADE980D3A59C8B28A9E9BF06 /* Hotspot.swift in Sources */,
 				CEC163E57CE0D5144A0E9595 /* ImmersiveView.swift in Sources */,
@@ -494,7 +502,7 @@
 		};
 		791F49A1A75E631F71936C78 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_DE2F9DC3-BDBD-4E07-9AB5-C3542098F820" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_85E6D272-015B-48C6-BE68-4FEFFAF13F0D" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -559,7 +567,7 @@
 		};
 		8C265FB73CDBD82CE541319B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_DE2F9DC3-BDBD-4E07-9AB5-C3542098F820" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_85E6D272-015B-48C6-BE68-4FEFFAF13F0D" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

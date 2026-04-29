@@ -3,6 +3,7 @@ import SwiftUI
 struct TourDetailView: View {
     @Bindable var viewModel: TourDetailViewModel
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+    @Environment(\.openWindow) private var openWindow
     @State private var showingUpload = false
 
     var body: some View {
@@ -50,11 +51,20 @@ struct TourDetailView: View {
 
                         Divider()
 
-                        HStack {
+                        HStack(spacing: 12) {
                             Text("Scenes")
                                 .font(.title2)
                                 .fontWeight(.semibold)
                             Spacer()
+                            Button {
+                                openWindow(id: "floor-plan", value: viewModel.tour)
+                            } label: {
+                                Label("Floor plan", systemImage: "map")
+                                    .font(.callout)
+                            }
+                            .buttonStyle(.bordered)
+                            .accessibilityLabel("Open floor plan editor")
+                            .accessibilityHint("Drag scenes onto a 2D floor plan in a new window")
                             Button {
                                 showingUpload = true
                             } label: {
