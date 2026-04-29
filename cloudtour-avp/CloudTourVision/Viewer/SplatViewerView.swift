@@ -16,6 +16,14 @@ struct SplatViewerView: View {
     @State private var errorMessage: String?
     @State private var waypoints: [Waypoint] = []
     @State private var hotspots: [Hotspot] = []
+    @State private var comments: [Comment] = []
+    @State private var currentUserId: UUID? = nil
+    // M7.7 — local mirror of pending comments + thread state. Updated each
+    // panel-snapshot tick so the inspector and thread popover stay live.
+    @State private var panelComments: [SplatImmersiveRenderer.PendingComment] = []
+    @State private var selectedPendingCommentId: UUID? = nil
+    @State private var selectedCommittedCommentId: UUID? = nil
+    @State private var commentReplyDraft: String = ""
     @State private var isImmersiveOpen = false
     @State private var isEditingMode = false
     @State private var activeTool: ToolMode = .calibrate
@@ -191,6 +199,8 @@ struct SplatViewerView: View {
             await loadSplatFile()
             await loadWaypoints()
             await loadHotspots()
+            await loadComments()
+            await loadCurrentUser()
             if pendingAutoReenter, fileURL != nil, !isImmersiveOpen {
                 pendingAutoReenter = false
                 enterImmersive()
@@ -250,6 +260,7 @@ struct SplatViewerView: View {
         }
         let markers = waypoints.map(WaypointMarker.init(from:))
         let hotspotMarkers = hotspots.map(HotspotMarker.init(from:))
+        let commentMarkers = comments.map(CommentMarker.init(from:))
         let session = SplatSession(
             url: url,
             sceneId: currentScene.id,
@@ -258,7 +269,8 @@ struct SplatViewerView: View {
             editMode: isEditingMode,
             sceneEdits: currentScene.sceneEdits,
             waypoints: markers,
-            hotspots: hotspotMarkers
+            hotspots: hotspotMarkers,
+            comments: commentMarkers
         )
         Task {
             let result = await openImmersiveSpace(value: session)
@@ -458,6 +470,7 @@ struct SplatViewerView: View {
         let waypointEdits = renderer.snapshotWaypointEdits()
         let pendingDeletions = renderer.snapshotPendingDeletions()
         let pendingHotspots = renderer.snapshotPendingHotspots()
+        let pendingCommentsSnap = renderer.snapshotPendingComments()
         let needsSceneEditsSave = didCalibrate
             || currentScene.sceneEdits == nil
             || !pendingDeletions.isEmpty
@@ -589,12 +602,38 @@ struct SplatViewerView: View {
                     }
                 }
 
+                if !pendingCommentsSnap.isEmpty {
+                    for c in pendingCommentsSnap {
+                        let trimmed = c.body.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !trimmed.isEmpty else { continue }
+                        struct CommentInsert: Encodable {
+                            let scene_id: String
+                            let body: String
+                            let position_3d: Position3D
+                            let parent_id: String?
+                        }
+                        let row = CommentInsert(
+                            scene_id: currentScene.id.uuidString,
+                            body: trimmed,
+                            position_3d: Position3D(
+                                x: Double(c.localPosition.x),
+                                y: Double(c.localPosition.y),
+                                z: Double(c.localPosition.z)
+                            ),
+                            parent_id: nil
+                        )
+                        try await AppSupabase.client.from("comments").insert(row).execute()
+                    }
+                }
+
                 renderer.clearWaypointEdits()
                 renderer.clearPendingDeletions()
                 renderer.clearHotspotEdits()
+                renderer.clearCommentEdits()
                 EditorDraftStore.discard(sceneId: currentScene.id)
                 await loadWaypoints()
                 await loadHotspots()
+                await loadComments()
                 await MainActor.run {
                     isSaving = false
                     // Brush deletions only re-cull on splat reload, so dismiss
@@ -665,6 +704,7 @@ struct SplatViewerView: View {
         guard let r = SplatImmersiveRenderer.currentRenderer else {
             panelWaypoints = []; panelSpheres = []; panelBoxes = []; panelLassos = []
             panelYawUpdates = []; panelHotspots = []; selectedHotspotId = nil
+            panelComments = []; selectedPendingCommentId = nil; selectedCommittedCommentId = nil
             return
         }
         let edits = r.snapshotWaypointEdits()
@@ -675,6 +715,10 @@ struct SplatViewerView: View {
         panelLassos = r.snapshotPendingLassos()
         panelHotspots = r.snapshotPendingHotspots()
         selectedHotspotId = r.snapshotSelectedHotspotId() ?? panelHotspots.last?.id
+        panelComments = r.snapshotPendingComments()
+        let cIds = r.snapshotSelectedCommentIds()
+        selectedPendingCommentId = cIds.pending ?? panelComments.last?.id
+        selectedCommittedCommentId = cIds.committed
     }
 
     private func refreshHistoryDepth() {
@@ -784,7 +828,7 @@ struct SplatViewerView: View {
                         var ticks = 0
                         while !Task.isCancelled, isEditingMode {
                             refreshHistoryDepth()
-                            if pendingPanelExpanded || activeTool == .hotspot {
+                            if pendingPanelExpanded || activeTool == .hotspot || activeTool == .comment {
                                 refreshPanelSnapshots()
                             }
                             if showPerfCounters {
@@ -921,6 +965,12 @@ struct SplatViewerView: View {
                 Text("• Aim where you want a hotspot, then pinch")
                 Text("• Aim + pinch on a placed hotspot to cycle: text → image → link")
                 Text("• Use the inspector below to fill in title + content")
+            case .comment:
+                Text("Annotate the scene with comments")
+                    .font(.headline)
+                Text("• Aim where you want a comment, then pinch to drop one")
+                Text("• Aim + pinch on an existing comment to open its thread")
+                Text("• Save publishes pending comments to your team")
             }
         }
         .font(.callout)
@@ -1057,6 +1107,134 @@ struct SplatViewerView: View {
     }
 
     /// M6.1 — title + content_type + markdown/url editor for the renderer's
+    /// M7.7 — comment thread inspector. Two modes:
+    /// 1. A pending comment is selected → text editor for body, Discard
+    ///    button. Save button on the editor commits it (handled in saveAll).
+    /// 2. A committed comment is selected → render the thread (root + replies),
+    ///    let the author edit, let editors+ resolve / delete, and let any
+    ///    member post a reply via direct Supabase call.
+    @ViewBuilder
+    private var commentInspectorPanel: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Comment")
+                .font(.headline)
+            if let pending = panelComments.first(where: { $0.id == selectedPendingCommentId }) {
+                pendingCommentEditor(pending: pending)
+            } else if let committed = comments.first(where: { $0.id == selectedCommittedCommentId }) {
+                committedCommentThread(root: committed)
+            } else {
+                Text("Aim + pinch to drop a new comment, or to open an existing one.")
+                    .font(.callout)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .frame(maxWidth: 520, alignment: .leading)
+        .padding(.horizontal, 4)
+    }
+
+    @ViewBuilder
+    private func pendingCommentEditor(pending: SplatImmersiveRenderer.PendingComment) -> some View {
+        let id = pending.id
+        let bodyBinding = Binding<String>(
+            get: { panelComments.first(where: { $0.id == id })?.body ?? "" },
+            set: { newValue in
+                if let idx = panelComments.firstIndex(where: { $0.id == id }) {
+                    panelComments[idx].body = newValue
+                }
+                SplatImmersiveRenderer.currentRenderer?.updatePendingComment(id: id, body: newValue)
+            }
+        )
+        VStack(alignment: .leading, spacing: 6) {
+            TextField("Comment body", text: bodyBinding, axis: .vertical)
+                .lineLimit(3...6)
+                .textFieldStyle(.roundedBorder)
+                .accessibilityLabel("Pending comment body")
+            HStack {
+                Text("New (unsaved) — saves on Save All")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                Spacer()
+                Button(role: .destructive) {
+                    if let idx = panelComments.firstIndex(where: { $0.id == id }) {
+                        SplatImmersiveRenderer.currentRenderer?.removePendingComment(at: idx)
+                    }
+                    refreshPanelSnapshots()
+                } label: {
+                    Label("Discard", systemImage: "trash")
+                        .font(.callout)
+                }
+                .buttonStyle(.bordered)
+                .accessibilityLabel("Discard pending comment")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func committedCommentThread(root: Comment) -> some View {
+        let replies = comments.filter { $0.parentId == root.id }
+            .sorted { $0.createdAt < $1.createdAt }
+        VStack(alignment: .leading, spacing: 8) {
+            commentRow(comment: root, isRoot: true)
+            ForEach(replies) { reply in
+                commentRow(comment: reply, isRoot: false)
+                    .padding(.leading, 24)
+            }
+            HStack {
+                TextField("Reply…", text: $commentReplyDraft, axis: .vertical)
+                    .lineLimit(1...3)
+                    .textFieldStyle(.roundedBorder)
+                Button {
+                    Task { await postReply(parent: root) }
+                } label: {
+                    Label("Reply", systemImage: "arrow.up.circle.fill")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(commentReplyDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func commentRow(comment: Comment, isRoot: Bool) -> some View {
+        let isAuthor = (currentUserId == comment.authorId)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Image(systemName: isRoot ? "bubble.left.fill" : "arrow.turn.down.right")
+                    .foregroundStyle(.secondary)
+                Text(isAuthor ? "You" : comment.authorId.uuidString.prefix(8).description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if comment.resolved {
+                    Label("Resolved", systemImage: "checkmark.seal.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.green)
+                }
+                Spacer()
+                if isRoot {
+                    Button {
+                        Task { await toggleResolved(comment) }
+                    } label: {
+                        Image(systemName: comment.resolved ? "circle" : "checkmark.circle")
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel(comment.resolved ? "Reopen comment" : "Mark comment resolved")
+                }
+                if isAuthor {
+                    Button(role: .destructive) {
+                        Task { await deleteComment(comment) }
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Delete comment")
+                }
+            }
+            Text(comment.body)
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     /// `selectedPendingHotspotId`. Selection follows the most recent
     /// place / aim+pinch action; the picker below lets the user re-pick from
     /// the list without re-aiming.
@@ -1318,6 +1496,7 @@ struct SplatViewerView: View {
                 Label("Calibrate", systemImage: "ruler").tag(ToolMode.calibrate)
                 Label("Waypoint", systemImage: "mappin.and.ellipse").tag(ToolMode.waypoint)
                 Label("Hotspot", systemImage: "star.bubble").tag(ToolMode.hotspot)
+                Label("Comment", systemImage: "bubble.left.and.text.bubble.right").tag(ToolMode.comment)
                 Label("Brush", systemImage: "paintbrush.pointed").tag(ToolMode.brush)
                 Label("Box", systemImage: "cube.transparent").tag(ToolMode.box)
                 Label("Lasso", systemImage: "lasso").tag(ToolMode.lasso)
@@ -1354,6 +1533,9 @@ struct SplatViewerView: View {
             }
 
             // M6.1 — hotspot inspector
+            if activeTool == .comment {
+                commentInspectorPanel
+            }
             if activeTool == .hotspot {
                 hotspotInspectorPanel
             }
@@ -1616,6 +1798,87 @@ struct SplatViewerView: View {
                 .value
         } catch {
             hotspots = []
+        }
+    }
+
+    private func loadComments() async {
+        do {
+            comments = try await AppSupabase.client
+                .from("comments")
+                .select()
+                .eq("scene_id", value: currentScene.id.uuidString)
+                .order("created_at", ascending: true)
+                .execute()
+                .value
+        } catch {
+            comments = []
+        }
+    }
+
+    private func loadCurrentUser() async {
+        do {
+            let user = try await AppSupabase.client.auth.user()
+            currentUserId = user.id
+        } catch {
+            currentUserId = nil
+        }
+    }
+
+    /// M7.7 — post a reply to a committed comment thread. RLS gates this
+    /// to org members. After insert we reload comments so the new row
+    /// appears under the thread.
+    private func postReply(parent: Comment) async {
+        let body = commentReplyDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !body.isEmpty, let me = currentUserId else { return }
+        do {
+            struct ReplyInsert: Encodable {
+                let scene_id: String
+                let body: String
+                let position_3d: Position3D
+                let parent_id: String
+                let author_id: String
+            }
+            let row = ReplyInsert(
+                scene_id: parent.sceneId.uuidString,
+                body: body,
+                position_3d: parent.position3D,
+                parent_id: parent.id.uuidString,
+                author_id: me.uuidString
+            )
+            try await AppSupabase.client.from("comments").insert(row).execute()
+            commentReplyDraft = ""
+            await loadComments()
+        } catch {
+            saveError = "Reply failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func toggleResolved(_ comment: Comment) async {
+        do {
+            struct ResolvedPatch: Encodable { let resolved: Bool }
+            try await AppSupabase.client.from("comments")
+                .update(ResolvedPatch(resolved: !comment.resolved))
+                .eq("id", value: comment.id.uuidString)
+                .execute()
+            await loadComments()
+        } catch {
+            saveError = "Resolve toggle failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func deleteComment(_ comment: Comment) async {
+        do {
+            try await AppSupabase.client.from("comments")
+                .delete()
+                .eq("id", value: comment.id.uuidString)
+                .execute()
+            if selectedCommittedCommentId == comment.id {
+                SplatImmersiveRenderer.currentRenderer?.selectCommittedComment(nil)
+                selectedCommittedCommentId = nil
+            }
+            await loadComments()
+        } catch {
+            saveError = "Delete failed: \(error.localizedDescription)"
         }
     }
 }

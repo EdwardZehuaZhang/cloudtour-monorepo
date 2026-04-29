@@ -1139,3 +1139,36 @@ Deferred (with explicit reason in M6.md):
   - Snapshot the pre-drag state on the first `onChanged` of a `DragGesture` — not on `onEnded` — and only register undo if `before != after`. Otherwise a tap-without-drag pollutes the undo stack with no-op entries.
   - `WindowGroup(id:for:)` opens with a typed value (here `Tour`) and you reach it from any view via `Environment(\.openWindow).callAsFunction(id:value:)`. The presented closure receives a `Binding<Tour?>` — unwrap before passing to a child that expects a non-optional.
 ---
+
+## 2026-04-29 - US-047 (AVP M7.7 comments / annotation overlay)
+- Migration `packages/db/migrations/018_comments.sql`: `comments` table with `id, scene_id, author_id, parent_id, body, position_3d, resolved, created_at, updated_at`. Indexes on `scene_id` + `parent_id`. RLS policies:
+  - SELECT: published-tour comments are publicly readable; org members of any role can read on owned tours.
+  - INSERT: org members of any role; `author_id = auth.uid()` enforced (no impersonation).
+  - UPDATE: author can edit body; org editors+ can toggle `resolved` (two policies, OR-evaluated).
+  - DELETE: author OR org admin/owner.
+- BE `cloudtour-be/src/routes/org-tours.ts`: appended GET / POST `/orgs/:orgId/tours/:tourId/scenes/:sceneId/comments` and PATCH / DELETE `/.../comments/:commentId`. Zod schemas: `createCommentSchema` (body + position_3d + optional parent_id) and `updateCommentSchema` (.strict, body or resolved).
+- AVP renderer (`SplatImmersiveRenderer.swift`):
+  - `comments: [CommentMarker]` field + `EditState.pendingComments / commentPinchPending / selectedPendingCommentId / selectedCommittedCommentId`.
+  - `HistorySnapshot` includes pending comments + selected pending id (so undo/redo is coherent across tools).
+  - `processHandUpdate` `.comment` case (rising-edge pinch).
+  - `updateNavigation` block: aim+pinch on a committed comment selects it; on a pending comment re-selects; otherwise drops a new pending at reticle in splat-local space and selects.
+  - `aimedPendingComment` static helper + `aimedCommittedComment` instance helper.
+  - `buildMarkers` always renders committed comments (violet, half-alpha when resolved) and pending comments (green-violet; selected → amber-bright). Marker radius 0.10 m (smaller than waypoints/hotspots so they don't dominate).
+  - Public API: `snapshotPendingComments`, `snapshotSelectedCommentIds`, `updatePendingComment`, `selectPendingComment`, `selectCommittedComment`, `removePendingComment`, `clearCommentEdits`.
+- AVP UI (`SplatViewerView.swift`):
+  - `.comment` added to tool picker (`bubble.left.and.text.bubble.right`).
+  - `editingInstructions` `.comment` case.
+  - New `commentInspectorPanel`: pending-mode editor (multiline body field + Discard) OR committed-mode thread (root + replies + reply field + resolve/delete buttons). Author-only delete; resolve toggle visible to all but RLS gates the actual write to editors+.
+  - `loadComments()` populates per-scene comments after scene load; `enterImmersive` passes them into SplatSession as `[CommentMarker]`.
+  - `loadCurrentUser()` reads `auth.user().id` so the inspector can mark "You" vs other authors and gate the delete button.
+  - Save flow inserts each non-empty pending comment via direct Supabase insert (parent_id nil for top-level). RLS sets author_id from auth context; we don't send it.
+  - Reply / resolve / delete each fire direct Supabase calls and re-load.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED. `pnpm typecheck`: 5/5 packages.
+- Files: `packages/db/migrations/018_comments.sql` (new), `cloudtour-be/src/routes/org-tours.ts`, `cloudtour-avp/CloudTourVision/Models/Comment.swift` (new), `cloudtour-avp/CloudTourVision/Viewer/Tools/EditTool.swift`, `cloudtour-avp/CloudTourVision/Viewer/ImmersiveView.swift`, `cloudtour-avp/CloudTourVision/Viewer/SplatImmersiveRenderer.swift`, `cloudtour-avp/CloudTourVision/Viewer/SplatViewerView.swift`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations:**
+  - Two UPDATE policies on the same table with overlapping coverage is the right RLS pattern when different fields have different gates: `comments_update_author` (full row, author only) + `comments_update_org_resolver` (full row, editor+ only) — Supabase OR-evaluates them so an editor can flip `resolved`, and an author can edit `body`. Don't try to scope via `WITH CHECK` column lists; Supabase doesn't support per-column UPDATE policies.
+  - When inserting via direct Supabase from AVP and `author_id = auth.uid()` is RLS-required: the RLS check reads from JWT, so the client must NOT send `author_id`. Send only the user-supplied fields; Postgres takes the auth.uid() and the RLS check tautologically passes. Conversely, replies need explicit `author_id` since they go through the BE-style direct insert path that doesn't auto-resolve.
+  - `auth.user()` in supabase-swift is async + throwing. Wrap in `Task { try? await ... }` and surface as a `@State var currentUserId: UUID?` — never inline-await it inside a SwiftUI body.
+  - The renderer marker pipeline is sphere-only (`ReticleRenderer.Marker`). "Resolved" comments use a half-alpha violet; selection uses amber-bright. Future shader extension could add a check-mark stamp for resolved or a thread-count badge — out of scope for v1.
+  - When the buildMarkers signature grows past 15 args, default-value ordering matters: leave optional comment / hotspot params before the `hideX: Bool = false` block so call-sites can keep passing only the `hide` flags by name if they don't have comment state to hand.
+---

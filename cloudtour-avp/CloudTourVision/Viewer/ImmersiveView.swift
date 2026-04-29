@@ -69,6 +69,29 @@ struct HotspotMarker: Codable, Hashable, Sendable {
     }
 }
 
+/// Lightweight view of a Comment for the immersive renderer. Read-only —
+/// committed comments render as purple-violet spheres; replies aren't
+/// drawn in 3D, only in the SwiftUI thread popover.
+struct CommentMarker: Codable, Hashable, Sendable {
+    let id: UUID
+    let sceneId: UUID
+    let x: Float
+    let y: Float
+    let z: Float
+    let resolved: Bool
+
+    var position: SIMD3<Float> { SIMD3(x, y, z) }
+
+    init(from comment: Comment) {
+        self.id = comment.id
+        self.sceneId = comment.sceneId
+        self.x = Float(comment.position3D.x)
+        self.y = Float(comment.position3D.y)
+        self.z = Float(comment.position3D.z)
+        self.resolved = comment.resolved
+    }
+}
+
 /// All session state passed from the 2D pre-immersive view into the
 /// CompositorLayer. Replaces the older `SplatFileIdentifier`. The session
 /// itself stays intentionally small (URL + identifiers + edits + waypoints)
@@ -85,6 +108,7 @@ struct SplatSession: Hashable, Codable {
     let sceneEdits: SceneEdits?
     let waypoints: [WaypointMarker]
     let hotspots: [HotspotMarker]
+    let comments: [CommentMarker]
 
     init(
         url: URL,
@@ -94,7 +118,8 @@ struct SplatSession: Hashable, Codable {
         editMode: Bool = false,
         sceneEdits: SceneEdits? = nil,
         waypoints: [WaypointMarker] = [],
-        hotspots: [HotspotMarker] = []
+        hotspots: [HotspotMarker] = [],
+        comments: [CommentMarker] = []
     ) {
         self.url = url
         self.sceneId = sceneId
@@ -104,5 +129,6 @@ struct SplatSession: Hashable, Codable {
         self.sceneEdits = sceneEdits
         self.waypoints = waypoints
         self.hotspots = hotspots
+        self.comments = comments
     }
 }

@@ -12,6 +12,7 @@ enum ToolMode: String, Codable, Hashable, Sendable, CaseIterable {
     case box
     case lasso
     case hotspot
+    case comment
 }
 
 extension SceneTransform {

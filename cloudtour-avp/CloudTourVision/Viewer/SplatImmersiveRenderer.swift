@@ -67,6 +67,16 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
     static let pendingHotspotColor = SIMD4<Float>(0.30, 0.85, 0.55, 0.70)
     static let pendingHotspotSelectedColor = SIMD4<Float>(1.0, 0.85, 0.40, 0.95)
     static let hotspotRadius: Float = 0.14
+    /// M7.7 — committed comment marker (violet). Resolved comments render
+    /// at half alpha so the user sees them de-emphasised.
+    static let commentColor = SIMD4<Float>(0.55, 0.40, 0.90, 0.65)
+    static let commentResolvedColor = SIMD4<Float>(0.55, 0.40, 0.90, 0.25)
+    static let commentAimedColor = SIMD4<Float>(0.85, 0.70, 1.0, 0.95)
+    /// Pending (unsaved) comment — green-violet, mirrors the pending-
+    /// hotspot / pending-waypoint hue language.
+    static let pendingCommentColor = SIMD4<Float>(0.55, 0.85, 0.55, 0.70)
+    static let pendingCommentSelectedColor = SIMD4<Float>(1.0, 0.85, 0.40, 0.95)
+    static let commentRadius: Float = 0.10
     /// Pending (in-session-not-yet-saved) waypoints — green to clearly
     /// signal "this is a draft you haven't committed yet".
     static let pendingWaypointColor = SIMD4<Float>(0.30, 0.85, 0.55, 0.65)
@@ -97,6 +107,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
     private let session: SplatSession
     private let waypoints: [WaypointMarker]
     private let hotspots: [HotspotMarker]
+    private let comments: [CommentMarker]
 
     /// M6.3 — splat-local AABB computed at load time from raw points (post
     /// deletions). nil until `load()` finishes. Read by snap-to-floor.
@@ -175,6 +186,16 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         var mediaUrl: String?
     }
 
+    /// M7.7 — in-session not-yet-persisted comment. Save flushes to
+    /// `comments` table; the body field is filled from the SwiftUI
+    /// inspector. `parentId` stays nil for top-level (replies use the
+    /// committed-comment popover, which posts directly to BE).
+    struct PendingComment: Sendable, Hashable {
+        let id: UUID
+        var localPosition: SIMD3<Float>
+        var body: String
+    }
+
     /// Editor state shared between the hand-tracking consumer and the render
     /// thread. Separate from `NavigationState` because tool dispatch and live
     /// transform mutation operate on a different lifecycle than dolly.
@@ -234,6 +255,15 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         /// reads/writes the matching entry by id.
         var selectedPendingHotspotId: UUID? = nil
 
+        // ── M7.7 comment tool ──────────────────────────────────────────
+        var commentPinchPending: Bool = false
+        var pendingComments: [PendingComment] = []
+        var selectedPendingCommentId: UUID? = nil
+        /// When the comment tool aims at an *already-committed* comment,
+        /// the SwiftUI thread popover resolves it via this id and queries
+        /// Supabase directly for the body + replies.
+        var selectedCommittedCommentId: UUID? = nil
+
         // ── M5.1 undo/redo history ──────────────────────────────────────
         var undoStack: [HistorySnapshot] = []
         var redoStack: [HistorySnapshot] = []
@@ -253,6 +283,8 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         let pendingDeletionLassos: [DeletionLasso]
         let pendingHotspots: [PendingHotspot]
         let selectedPendingHotspotId: UUID?
+        let pendingComments: [PendingComment]
+        let selectedPendingCommentId: UUID?
     }
     /// Cap to keep memory predictable on large erase sessions.
     private static let undoStackCap = 64
@@ -282,6 +314,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         self.session = session
         self.waypoints = session.waypoints
         self.hotspots = session.hotspots
+        self.comments = session.comments
         let initialTransform = session.sceneEdits?.transform ?? .identity
         // Force calibrate mode if the scene has never been calibrated, even
         // when the session was opened in view mode — uncalibrated splats
@@ -605,6 +638,59 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         }
     }
 
+    // MARK: - M7.7 comment APIs
+
+    func snapshotPendingComments() -> [PendingComment] {
+        editLock.withLock { $0.pendingComments }
+    }
+
+    func snapshotSelectedCommentIds() -> (pending: UUID?, committed: UUID?) {
+        editLock.withLock { ($0.selectedPendingCommentId, $0.selectedCommittedCommentId) }
+    }
+
+    func updatePendingComment(id: UUID, body: String) {
+        editLock.withLock { state in
+            guard let idx = state.pendingComments.firstIndex(where: { $0.id == id }) else { return }
+            Self.recordHistory(&state)
+            state.pendingComments[idx].body = body
+        }
+    }
+
+    func selectPendingComment(_ id: UUID?) {
+        editLock.withLock {
+            $0.selectedPendingCommentId = id
+            if id != nil { $0.selectedCommittedCommentId = nil }
+        }
+    }
+
+    func selectCommittedComment(_ id: UUID?) {
+        editLock.withLock {
+            $0.selectedCommittedCommentId = id
+            if id != nil { $0.selectedPendingCommentId = nil }
+        }
+    }
+
+    func removePendingComment(at idx: Int) {
+        editLock.withLock { state in
+            guard idx >= 0, idx < state.pendingComments.count else { return }
+            Self.recordHistory(&state)
+            let removedId = state.pendingComments[idx].id
+            state.pendingComments.remove(at: idx)
+            if state.selectedPendingCommentId == removedId {
+                state.selectedPendingCommentId = state.pendingComments.last?.id
+            }
+        }
+    }
+
+    func clearCommentEdits() {
+        editLock.withLock {
+            $0.pendingComments = []
+            $0.selectedPendingCommentId = nil
+            $0.selectedCommittedCommentId = nil
+            $0.commentPinchPending = false
+        }
+    }
+
     func clearPendingDeletions() {
         editLock.withLock {
             $0.pendingDeletionSpheres = []
@@ -635,7 +721,9 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             pendingDeletionBoxes: state.pendingDeletionBoxes,
             pendingDeletionLassos: state.pendingDeletionLassos,
             pendingHotspots: state.pendingHotspots,
-            selectedPendingHotspotId: state.selectedPendingHotspotId
+            selectedPendingHotspotId: state.selectedPendingHotspotId,
+            pendingComments: state.pendingComments,
+            selectedPendingCommentId: state.selectedPendingCommentId
         )
     }
 
@@ -650,6 +738,8 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         state.pendingDeletionLassos = snap.pendingDeletionLassos
         state.pendingHotspots = snap.pendingHotspots
         state.selectedPendingHotspotId = snap.selectedPendingHotspotId
+        state.pendingComments = snap.pendingComments
+        state.selectedPendingCommentId = snap.selectedPendingCommentId
     }
 
     /// Push a pre-mutation snapshot onto `undoStack` and clear `redoStack`.
@@ -1161,6 +1251,23 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                     state.hotspotPinchPending = true
                 }
             }
+        case .comment:
+            editLock.withLock { state in
+                let wasPinched: Bool
+                switch anchor.chirality {
+                case .left:
+                    wasPinched = state.leftWasPinched
+                    state.leftWasPinched = pinch.isPinching
+                    state.leftHandPos = pinch.isPinching ? pinch.position : nil
+                case .right:
+                    wasPinched = state.rightWasPinched
+                    state.rightWasPinched = pinch.isPinching
+                    state.rightHandPos = pinch.isPinching ? pinch.position : nil
+                }
+                if pinch.isPinching && !wasPinched {
+                    state.commentPinchPending = true
+                }
+            }
         }
     }
 
@@ -1369,6 +1476,54 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         return best?.hs
     }
 
+    /// M7.7 — closest pending comment along the head-forward ray.
+    private static func aimedPendingComment(
+        headPos: SIMD3<Float>,
+        forward: SIMD3<Float>,
+        splatModelMatrix: matrix_float4x4,
+        pending: [PendingComment]
+    ) -> PendingComment? {
+        guard !pending.isEmpty else { return nil }
+        let hitRadius = SplatImmersiveRenderer.commentRadius * SplatImmersiveRenderer.waypointHitRadiusMultiplier
+        var best: (proj: Float, c: PendingComment)?
+        for c in pending {
+            let local = SIMD4<Float>(c.localPosition.x, c.localPosition.y, c.localPosition.z, 1)
+            let world4 = splatModelMatrix * local
+            let world = SIMD3<Float>(world4.x, world4.y, world4.z)
+            let to = world - headPos
+            let proj = dot(to, forward)
+            guard proj > 0, proj < SplatImmersiveRenderer.waypointMaxAimDistance else { continue }
+            let perp = length(to - forward * proj)
+            guard perp < hitRadius else { continue }
+            if best == nil || proj < best!.proj { best = (proj, c) }
+        }
+        return best?.c
+    }
+
+    /// M7.7 — closest committed comment along the head-forward ray. Used
+    /// to switch the popover thread to the comment the user is aiming at.
+    private func aimedCommittedComment(
+        headPos: SIMD3<Float>,
+        forward: SIMD3<Float>,
+        splatModelMatrix: matrix_float4x4
+    ) -> CommentMarker? {
+        guard !comments.isEmpty else { return nil }
+        let hitRadius = Self.commentRadius * Self.waypointHitRadiusMultiplier
+        var best: (proj: Float, c: CommentMarker)?
+        for c in comments {
+            let local = SIMD4<Float>(c.x, c.y, c.z, 1)
+            let world4 = splatModelMatrix * local
+            let world = SIMD3<Float>(world4.x, world4.y, world4.z)
+            let to = world - headPos
+            let proj = dot(to, forward)
+            guard proj > 0, proj < Self.waypointMaxAimDistance else { continue }
+            let perp = length(to - forward * proj)
+            guard perp < hitRadius else { continue }
+            if best == nil || proj < best!.proj { best = (proj, c) }
+        }
+        return best?.c
+    }
+
     /// Same hit-test as `aimedWaypoint` but against the in-session pending
     /// waypoint list. Returns the closest hit (by projection along forward).
     private static func aimedPending(
@@ -1505,6 +1660,45 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                     )
                 )
                 state.selectedPendingHotspotId = newId
+            }
+        }
+
+        // M7.7 — Comment-tool pinch consumption: aim at a committed comment
+        // marker → select it (SwiftUI thread popover queries its body+replies);
+        // aim at a pending comment → re-select it; otherwise drop a new
+        // pending comment at the reticle.
+        let aimedCommittedCommentNow = aimedCommittedComment(
+            headPos: headPos,
+            forward: forward,
+            splatModelMatrix: preSplatModel
+        )
+        editLock.withLock { state in
+            guard state.activeTool == .comment, state.commentPinchPending else { return }
+            state.commentPinchPending = false
+            let aimedPendingCommentVal = Self.aimedPendingComment(
+                headPos: headPos,
+                forward: forward,
+                splatModelMatrix: preSplatModel,
+                pending: state.pendingComments
+            )
+            if let committed = aimedCommittedCommentNow {
+                state.selectedCommittedCommentId = committed.id
+                state.selectedPendingCommentId = nil
+            } else if let aimedPendingCommentVal {
+                state.selectedPendingCommentId = aimedPendingCommentVal.id
+                state.selectedCommittedCommentId = nil
+            } else {
+                Self.recordHistory(&state)
+                let worldDrop = headPos + forward * Self.reticleDistance
+                let inverseSplat = preSplatModel.inverse
+                let local4 = inverseSplat * SIMD4<Float>(worldDrop.x, worldDrop.y, worldDrop.z, 1)
+                let local = SIMD3<Float>(local4.x, local4.y, local4.z)
+                let newId = UUID()
+                state.pendingComments.append(
+                    PendingComment(id: newId, localPosition: local, body: "")
+                )
+                state.selectedPendingCommentId = newId
+                state.selectedCommittedCommentId = nil
             }
         }
 
@@ -1699,6 +1893,9 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         activeTool: ToolMode,
         pendingHotspots: [PendingHotspot] = [],
         selectedPendingHotspotId: UUID? = nil,
+        pendingComments: [PendingComment] = [],
+        selectedPendingCommentId: UUID? = nil,
+        selectedCommittedCommentId: UUID? = nil,
         yawPreviewOrigin: SIMD3<Float>? = nil,
         yawPreviewYaw: Float? = nil,
         hideWaypoints: Bool = false,
@@ -1755,6 +1952,28 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                 worldPosition: SIMD3<Float>(world4.x, world4.y, world4.z),
                 radius: Self.hotspotRadius,
                 color: selected ? Self.pendingHotspotSelectedColor : Self.pendingHotspotColor
+            ))
+        }
+        // M7.7 — committed + pending comments.
+        for c in comments {
+            let local = SIMD4<Float>(c.x, c.y, c.z, 1)
+            let world4 = splatModelMatrix * local
+            let selected = (c.id == selectedCommittedCommentId)
+            let baseColor = c.resolved ? Self.commentResolvedColor : Self.commentColor
+            markers.append(ReticleRenderer.Marker(
+                worldPosition: SIMD3<Float>(world4.x, world4.y, world4.z),
+                radius: Self.commentRadius,
+                color: selected ? Self.commentAimedColor : baseColor
+            ))
+        }
+        for c in pendingComments {
+            let local = SIMD4<Float>(c.localPosition.x, c.localPosition.y, c.localPosition.z, 1)
+            let world4 = splatModelMatrix * local
+            let selected = (c.id == selectedPendingCommentId)
+            markers.append(ReticleRenderer.Marker(
+                worldPosition: SIMD3<Float>(world4.x, world4.y, world4.z),
+                radius: Self.commentRadius,
+                color: selected ? Self.pendingCommentSelectedColor : Self.pendingCommentColor
             ))
         }
         if activeTool == .calibrate {
@@ -1929,7 +2148,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                     }
                 }
             }
-        case .view, .calibrate, .waypoint, .hotspot:
+        case .view, .calibrate, .waypoint, .hotspot, .comment:
             break
         }
         // M6.5 — arrival-yaw preview arrow at the aimed waypoint. Stack of
@@ -2071,7 +2290,10 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             hideSilhouette: Bool,
             hideReticle: Bool,
             pendingHotspots: [PendingHotspot],
-            selectedPendingHotspotId: UUID?
+            selectedPendingHotspotId: UUID?,
+            pendingComments: [PendingComment],
+            selectedPendingCommentId: UUID?,
+            selectedCommittedCommentId: UUID?
         ) = editLock.withLock {
             (
                 $0.activeTool,
@@ -2088,7 +2310,10 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                 $0.hideSilhouette,
                 $0.hideReticle,
                 $0.pendingHotspots,
-                $0.selectedPendingHotspotId
+                $0.selectedPendingHotspotId,
+                $0.pendingComments,
+                $0.selectedPendingCommentId,
+                $0.selectedCommittedCommentId
             )
         }
         let markers = buildMarkers(
@@ -2107,6 +2332,9 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             activeTool: editSnapshot.activeTool,
             pendingHotspots: editSnapshot.pendingHotspots,
             selectedPendingHotspotId: editSnapshot.selectedPendingHotspotId,
+            pendingComments: editSnapshot.pendingComments,
+            selectedPendingCommentId: editSnapshot.selectedPendingCommentId,
+            selectedCommittedCommentId: editSnapshot.selectedCommittedCommentId,
             yawPreviewOrigin: nav.yawPreviewOrigin,
             yawPreviewYaw: nav.yawPreviewYaw,
             hideWaypoints: editSnapshot.hideWaypoints,

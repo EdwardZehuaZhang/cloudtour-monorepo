@@ -7,7 +7,7 @@ import type { Plan, SplatFileFormat } from "@cloudtour/types";
 
 export const orgTourRoutes = new Hono();
 
-// ©¤©¤©¤ Plan limits ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Plan limits ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 type PlanLimits = { tours: number | null; scenes_per_tour: number | null; storage_bytes: number | null; members: number | null };
 const PLAN_LIMITS: Record<Plan, PlanLimits> = {
@@ -39,7 +39,7 @@ function getStripe(): Stripe {
   return _stripe;
 }
 
-// ©¤©¤©¤ Tours ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Tours ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 orgTourRoutes.get("/orgs/:orgId/tours", async (c) => {
   const { orgId } = c.req.param();
@@ -117,7 +117,7 @@ orgTourRoutes.get("/orgs/:orgId/tours/:tourId", async (c) => {
 
   const { data: scenes } = await supabase
     .from("scenes")
-    .select("id, title, description, sort_order, splat_url, splat_file_format, thumbnail_url, default_camera_position, created_at, updated_at")
+    .select("id, title, description, sort_order, splat_url, splat_file_format, thumbnail_url, default_camera_position, scene_edits, created_at, updated_at")
     .eq("tour_id", tourId)
     .order("sort_order", { ascending: true });
 
@@ -186,7 +186,7 @@ orgTourRoutes.post("/orgs/:orgId/tours/:tourId/publish", async (c) => {
   return c.json(tour);
 });
 
-// ©¤©¤©¤ Scenes ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Scenes ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 orgTourRoutes.get("/orgs/:orgId/tours/:tourId/scenes", async (c) => {
   const { orgId, tourId } = c.req.param();
@@ -199,7 +199,7 @@ orgTourRoutes.get("/orgs/:orgId/tours/:tourId/scenes", async (c) => {
 
   const { data: scenes, error } = await supabase
     .from("scenes")
-    .select("id, tour_id, title, description, sort_order, splat_url, splat_file_format, thumbnail_url, default_camera_position, created_at, updated_at")
+    .select("id, tour_id, title, description, sort_order, splat_url, splat_file_format, thumbnail_url, default_camera_position, scene_edits, created_at, updated_at")
     .eq("tour_id", tourId)
     .order("sort_order", { ascending: true });
 
@@ -248,11 +248,34 @@ orgTourRoutes.post("/orgs/:orgId/tours/:tourId/scenes", async (c) => {
 const position3dSchema = z.object({ x: z.number(), y: z.number(), z: z.number() });
 const cameraPositionSchema = z.object({ position: position3dSchema, target: position3dSchema });
 
+const quaternionSchema = z.object({ x: z.number(), y: z.number(), z: z.number(), w: z.number() });
+const sceneTransformSchema = z.object({
+  scale: z.number().positive().finite(),
+  rotation: quaternionSchema,
+  translation: position3dSchema,
+});
+const tuple3 = z.tuple([z.number(), z.number(), z.number()]);
+const sceneDeletionsSchema = z.object({
+  indices: z.string().optional(),
+  spheres: z.array(z.object({ center: tuple3, radius: z.number().positive() })).optional(),
+  boxes: z.array(z.object({ min: tuple3, max: tuple3 })).optional(),
+  lassos: z.array(z.object({
+    plane: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+    polygon: z.array(z.tuple([z.number(), z.number()])),
+  })).optional(),
+});
+const sceneEditsSchema = z.object({
+  version: z.number().int().min(1),
+  transform: sceneTransformSchema,
+  deletions: sceneDeletionsSchema,
+});
+
 const updateSceneSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).nullable().optional(),
   sort_order: z.number().int().min(0).optional(),
   default_camera_position: cameraPositionSchema.nullable().optional(),
+  scene_edits: sceneEditsSchema.optional(),
 }).strict();
 
 orgTourRoutes.patch("/orgs/:orgId/tours/:tourId/scenes/:sceneId", async (c) => {
@@ -270,6 +293,22 @@ orgTourRoutes.patch("/orgs/:orgId/tours/:tourId/scenes/:sceneId", async (c) => {
   const supabase = getSupabaseForUser((c as any).get("token") as string);
   const { data: tour } = await supabase.from("tours").select("id").eq("id", tourId).eq("org_id", orgId).single();
   if (!tour) return c.json({ error: "Tour not found" }, 404);
+
+  // Optimistic concurrency: if the client sends scene_edits, its `version`
+  // must equal currentVersion + 1. Prevents two editors silently overwriting.
+  if (parsed.data.scene_edits) {
+    const { data: current } = await supabase
+      .from("scenes").select("scene_edits").eq("id", sceneId).eq("tour_id", tourId).single();
+    if (!current) return c.json({ error: "Scene not found" }, 404);
+    const currentVersion = (current.scene_edits as { version?: number } | null)?.version ?? 0;
+    if (parsed.data.scene_edits.version !== currentVersion + 1) {
+      return c.json({
+        error: "VERSION_CONFLICT",
+        server_version: currentVersion,
+        client_version: parsed.data.scene_edits.version,
+      }, 409);
+    }
+  }
 
   const { data: scene, error } = await supabase
     .from("scenes").update(parsed.data).eq("id", sceneId).eq("tour_id", tourId).select().single();
@@ -292,7 +331,7 @@ orgTourRoutes.delete("/orgs/:orgId/tours/:tourId/scenes/:sceneId", async (c) => 
   return c.json({ success: true });
 });
 
-// ©¤©¤©¤ Waypoints ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Waypoints ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 orgTourRoutes.get("/orgs/:orgId/tours/:tourId/scenes/:sceneId/waypoints", async (c) => {
   const { orgId, tourId, sceneId } = c.req.param();
@@ -302,7 +341,7 @@ orgTourRoutes.get("/orgs/:orgId/tours/:tourId/scenes/:sceneId/waypoints", async 
 
   const { data, error } = await supabase
     .from("waypoints")
-    .select("id, scene_id, target_scene_id, label, icon, position_3d, created_at, updated_at")
+    .select("id, scene_id, target_scene_id, label, icon, position_3d, target_position_3d, target_yaw, created_at, updated_at")
     .eq("scene_id", sceneId);
 
   if (error) return c.json({ error: "Failed to fetch waypoints" }, 500);
@@ -314,6 +353,8 @@ const createWaypointSchema = z.object({
   label: z.string().min(1).max(200),
   icon: z.string().max(50).nullable().optional(),
   position_3d: position3dSchema.optional(),
+  target_position_3d: position3dSchema.nullable().optional(),
+  target_yaw: z.number().nullable().optional(),
 });
 
 orgTourRoutes.post("/orgs/:orgId/tours/:tourId/scenes/:sceneId/waypoints", async (c) => {
@@ -340,6 +381,8 @@ const updateWaypointSchema = z.object({
   label: z.string().min(1).max(200).optional(),
   icon: z.string().max(50).nullable().optional(),
   position_3d: position3dSchema.optional(),
+  target_position_3d: position3dSchema.nullable().optional(),
+  target_yaw: z.number().nullable().optional(),
 }).strict();
 
 orgTourRoutes.patch("/orgs/:orgId/tours/:tourId/scenes/:sceneId/waypoints/:waypointId", async (c) => {
@@ -374,7 +417,7 @@ orgTourRoutes.delete("/orgs/:orgId/tours/:tourId/scenes/:sceneId/waypoints/:wayp
   return c.json({ success: true });
 });
 
-// ©¤©¤©¤ Hotspots ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Hotspots ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 orgTourRoutes.get("/orgs/:orgId/tours/:tourId/scenes/:sceneId/hotspots", async (c) => {
   const { orgId, tourId, sceneId } = c.req.param();
@@ -459,7 +502,7 @@ orgTourRoutes.delete("/orgs/:orgId/tours/:tourId/scenes/:sceneId/hotspots/:hotsp
   return c.json({ success: true });
 });
 
-// ©¤©¤©¤ Upload ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Upload ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 const UPLOAD_RATE_LIMIT = 10;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -516,7 +559,7 @@ orgTourRoutes.post("/orgs/:orgId/tours/:tourId/scenes/:sceneId/upload", async (c
   return c.json({ upload_url: signedUrl.signedUrl, token: signedUrl.token, path: signedUrl.path, format, expires_in: 900 });
 });
 
-// ©¤©¤©¤ Billing ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Billing ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 const STRIPE_PRICE_IDS = () => {
   const env = getEnv();
@@ -593,5 +636,108 @@ orgTourRoutes.get("/orgs/:orgId/billing", async (c) => {
 
 orgTourRoutes.get("/orgs/:orgId/billing/portal", async (c) => {
   return c.redirect(`/api/orgs/${c.req.param("orgId")}/billing`);
+});
+
+// â”€â”€ Comments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const createCommentSchema = z.object({
+  body: z.string().min(1).max(4000),
+  position_3d: position3dSchema,
+  parent_id: z.string().uuid().nullable().optional(),
+});
+
+const updateCommentSchema = z.object({
+  body: z.string().min(1).max(4000).optional(),
+  resolved: z.boolean().optional(),
+}).strict();
+
+orgTourRoutes.get("/orgs/:orgId/tours/:tourId/scenes/:sceneId/comments", async (c) => {
+  const { orgId, tourId, sceneId } = c.req.param();
+  const auth = await requireOrgRole(c, orgId, "viewer");
+  if (auth instanceof Response) return auth;
+  const supabase = getSupabaseForUser((c as any).get("token") as string);
+
+  const { data: tour } = await supabase.from("tours").select("id").eq("id", tourId).eq("org_id", orgId).single();
+  if (!tour) return c.json({ error: "Tour not found" }, 404);
+
+  const { data, error } = await supabase
+    .from("comments")
+    .select("id, scene_id, author_id, parent_id, body, position_3d, resolved, created_at, updated_at")
+    .eq("scene_id", sceneId)
+    .order("created_at", { ascending: true });
+
+  if (error) return c.json({ error: "Failed to fetch comments" }, 500);
+  return c.json(data ?? []);
+});
+
+orgTourRoutes.post("/orgs/:orgId/tours/:tourId/scenes/:sceneId/comments", async (c) => {
+  const { orgId, tourId, sceneId } = c.req.param();
+  const auth = await requireOrgRole(c, orgId, "viewer");
+  if (auth instanceof Response) return auth;
+
+  let body: unknown;
+  try { body = await c.req.json(); } catch { return c.json({ error: "Invalid JSON body" }, 400); }
+
+  const parsed = createCommentSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: "Validation failed", details: parsed.error.flatten().fieldErrors }, 400);
+
+  const supabase = getSupabaseForUser((c as any).get("token") as string);
+  const { data: tour } = await supabase.from("tours").select("id").eq("id", tourId).eq("org_id", orgId).single();
+  if (!tour) return c.json({ error: "Tour not found" }, 404);
+
+  const { data: comment, error } = await supabase
+    .from("comments")
+    .insert({
+      scene_id: sceneId,
+      author_id: auth.userId,
+      body: parsed.data.body,
+      position_3d: parsed.data.position_3d,
+      parent_id: parsed.data.parent_id ?? null,
+    })
+    .select()
+    .single();
+
+  if (error || !comment) return c.json({ error: "Failed to create comment" }, 500);
+  return c.json(comment, 201);
+});
+
+orgTourRoutes.patch("/orgs/:orgId/tours/:tourId/scenes/:sceneId/comments/:commentId", async (c) => {
+  const { orgId, tourId, sceneId, commentId } = c.req.param();
+  const auth = await requireOrgRole(c, orgId, "viewer");
+  if (auth instanceof Response) return auth;
+
+  let body: unknown;
+  try { body = await c.req.json(); } catch { return c.json({ error: "Invalid JSON body" }, 400); }
+
+  const parsed = updateCommentSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: "Validation failed", details: parsed.error.flatten().fieldErrors }, 400);
+  if (Object.keys(parsed.data).length === 0) return c.json({ error: "No fields to update" }, 400);
+
+  const supabase = getSupabaseForUser((c as any).get("token") as string);
+  // RLS enforces author-or-org-resolver: editing `body` is gated to the
+  // author, toggling `resolved` is gated to org editors+. We send the
+  // whole patch and let Supabase reject the disallowed fields.
+  const { data: comment, error } = await supabase
+    .from("comments")
+    .update(parsed.data)
+    .eq("id", commentId)
+    .eq("scene_id", sceneId)
+    .select()
+    .single();
+
+  if (error || !comment) return c.json({ error: "Comment not found or update failed" }, 404);
+  return c.json(comment);
+});
+
+orgTourRoutes.delete("/orgs/:orgId/tours/:tourId/scenes/:sceneId/comments/:commentId", async (c) => {
+  const { orgId, tourId, sceneId, commentId } = c.req.param();
+  const auth = await requireOrgRole(c, orgId, "viewer");
+  if (auth instanceof Response) return auth;
+  const supabase = getSupabaseForUser((c as any).get("token") as string);
+
+  // RLS gates delete to author OR org admin/owner â€” see migration 018.
+  const { error } = await supabase.from("comments").delete().eq("id", commentId).eq("scene_id", sceneId);
+  if (error) return c.json({ error: "Failed to delete comment" }, 500);
+  return c.json({ success: true });
 });
 

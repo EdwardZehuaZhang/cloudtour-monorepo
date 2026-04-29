@@ -10,6 +10,7 @@
 		03800DA29CE1AEE75731969D /* OrgMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60F1D8661A3A87D7FBFB8222 /* OrgMember.swift */; };
 		0495B288C2FB05A9F3F968A4 /* Sidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 044035287F40930BC514909A /* Sidebar.swift */; };
 		14A2B894C951BAE69239593B /* StreetViewSearchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 739E7128CEC8AB661A5F5862 /* StreetViewSearchModel.swift */; };
+		17B536801DCACECAAA75A277 /* Comment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ECEE0F5B42C1667A4E207F5 /* Comment.swift */; };
 		17DE1F73AF8C670237382730 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FA5BEF31A606E92F9F9C3E0 /* ForgotPasswordView.swift */; };
 		224AD5148081B7AC968153B3 /* Scene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 303EAC6B87B732CE38D7BD51 /* Scene.swift */; };
 		26CABF0FED7532575CB4ECB2 /* Waypoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA8C7C34AC39478A537E98C8 /* Waypoint.swift */; };
@@ -96,6 +97,7 @@
 		7F129DEB52AB2A8A7130E2BF /* PanoramaLoadState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanoramaLoadState.swift; sourceTree = "<group>"; };
 		7FA5BEF31A606E92F9F9C3E0 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
 		8B6FD14A34F7C372C542513A /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		8ECEE0F5B42C1667A4E207F5 /* Comment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Comment.swift; sourceTree = "<group>"; };
 		9044E66E98A9C1BDBF193182 /* WaypointSelectionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaypointSelectionState.swift; sourceTree = "<group>"; };
 		913BEAC47718D835D2649D3B /* ReticleRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReticleRenderer.swift; sourceTree = "<group>"; };
 		91CEC5149BBF70509D7DD5B8 /* WaypointEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaypointEditorView.swift; sourceTree = "<group>"; };
@@ -120,7 +122,7 @@
 		F8BB9454E1E24925DA78410E /* MembersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersViewModel.swift; sourceTree = "<group>"; };
 		F9E67D9EBF1F9507900F92E9 /* StreetViewMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewMapView.swift; sourceTree = "<group>"; };
 		FF1497FD895E885B44BAB7D3 /* SplatUploadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatUploadView.swift; sourceTree = "<group>"; };
-		"TEMP_85E6D272-015B-48C6-BE68-4FEFFAF13F0D" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		"TEMP_8808963E-BD1B-455C-9FBD-C76FAD977D5C" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -238,6 +240,7 @@
 		8674FD6A010B85C67920EB7C /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				8ECEE0F5B42C1667A4E207F5 /* Comment.swift */,
 				0B919D824E29B29D99E631A6 /* FloorPlan.swift */,
 				E243C19C7BD92D73F8B72331 /* Hotspot.swift */,
 				9FE0A2ED90E5314EB7619381 /* Organization.swift */,
@@ -317,10 +320,10 @@
 			path = FAQ;
 			sourceTree = "<group>";
 		};
-		"TEMP_2ABAFCEB-29E8-4FC3-B19C-56D937A9A9F5" /* cloudtour-avp */ = {
+		"TEMP_A90DD3C1-D7C6-42BE-8A0F-E0E148D272AD" /* cloudtour-avp */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_85E6D272-015B-48C6-BE68-4FEFFAF13F0D" /* Config.xcconfig */,
+				"TEMP_8808963E-BD1B-455C-9FBD-C76FAD977D5C" /* Config.xcconfig */,
 			);
 			path = "cloudtour-avp";
 			sourceTree = "<group>";
@@ -404,6 +407,7 @@
 				A8877FB3BC631AF7F33D5DD5 /* AppShell.swift in Sources */,
 				CC9D4BE8D2B60436818EDF49 /* AuthViewModel.swift in Sources */,
 				4EF5B188B461F2493DD23058 /* CloudTourVisionApp.swift in Sources */,
+				17B536801DCACECAAA75A277 /* Comment.swift in Sources */,
 				7F209B0BC0F578E766891DD1 /* DashboardView.swift in Sources */,
 				2771DC4D1F0FEB02B3D98026 /* DashboardViewModel.swift in Sources */,
 				57F7B76F02CCB69E3EF3473C /* EditTool.swift in Sources */,
@@ -502,7 +506,7 @@
 		};
 		791F49A1A75E631F71936C78 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_85E6D272-015B-48C6-BE68-4FEFFAF13F0D" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_8808963E-BD1B-455C-9FBD-C76FAD977D5C" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -567,7 +571,7 @@
 		};
 		8C265FB73CDBD82CE541319B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_85E6D272-015B-48C6-BE68-4FEFFAF13F0D" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_8808963E-BD1B-455C-9FBD-C76FAD977D5C" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
