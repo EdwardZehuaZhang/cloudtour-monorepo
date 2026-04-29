@@ -793,7 +793,7 @@
         "xcodebuild green + pnpm typecheck green"
       ],
       "priority": 48,
-      "passes": false,
+      "passes": true,
       "notes": "Was M6.15. New `cloudtour-avp/CloudTourVision/Realtime/EditorPresence.swift`. BE: extend scene_edits with `version` int + bump on every PATCH."
     },
     {

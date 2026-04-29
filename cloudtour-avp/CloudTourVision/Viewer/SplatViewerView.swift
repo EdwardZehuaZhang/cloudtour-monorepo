@@ -24,6 +24,12 @@ struct SplatViewerView: View {
     @State private var selectedPendingCommentId: UUID? = nil
     @State private var selectedCommittedCommentId: UUID? = nil
     @State private var commentReplyDraft: String = ""
+    // M7.6 — Realtime presence + scene_edits conflict.
+    @State private var presence = EditorPresence()
+    @State private var profileDisplayName: String = ""
+    @State private var profileAvatarUrl: String? = nil
+    @State private var conflictPending: Bool = false
+    @State private var conflictServerVersion: Int = 0
     @State private var isImmersiveOpen = false
     @State private var isEditingMode = false
     @State private var activeTool: ToolMode = .calibrate
@@ -276,12 +282,27 @@ struct SplatViewerView: View {
             let result = await openImmersiveSpace(value: session)
             if case .error = result {
                 loadState.set(.failed("Could not open immersive space."))
+                return
+            }
+            // M7.6 — start the per-scene presence channel after the
+            // immersive space opens. Stops cleanly on exitImmersive().
+            if let me = currentUserId {
+                await presence.start(
+                    tourId: tourId,
+                    sceneId: currentScene.id,
+                    editorId: me,
+                    displayName: profileDisplayName.isEmpty
+                        ? me.uuidString.prefix(8).description
+                        : profileDisplayName,
+                    avatarUrl: profileAvatarUrl
+                )
             }
         }
     }
 
     private func exitImmersive() {
         Task {
+            await presence.stop()
             await dismissImmersiveSpace()
             isImmersiveOpen = false
             isEditingMode = false
@@ -482,6 +503,28 @@ struct SplatViewerView: View {
         Task {
             do {
                 if needsSceneEditsSave {
+                    // M7.6 — optimistic-lock check: if another editor saved
+                    // between our open and our save, the server-side version
+                    // will already be > oldVersion. Surface the conflict and
+                    // abort the save instead of silently overwriting.
+                    struct VersionRow: Decodable { let scene_edits: SceneEdits? }
+                    let cur: VersionRow = try await AppSupabase.client
+                        .from("scenes")
+                        .select("scene_edits")
+                        .eq("id", value: currentScene.id.uuidString)
+                        .single()
+                        .execute()
+                        .value
+                    let serverVersion = cur.scene_edits?.version ?? 0
+                    if serverVersion != oldVersion {
+                        await MainActor.run {
+                            conflictServerVersion = serverVersion
+                            conflictPending = true
+                            saveError = "Another editor saved version \(serverVersion). Reload latest before saving again."
+                            isSaving = false
+                        }
+                        return
+                    }
                     // Merge any new in-session brush spheres onto the
                     // already-committed deletions.
                     let existing = currentScene.sceneEdits?.deletions ?? .empty
@@ -839,6 +882,18 @@ struct SplatViewerView: View {
                                 perfDrawables = perf.drawables
                                 perfSplatPoints = perf.splatPoints
                             }
+                            // M7.6 — broadcast our aim to the channel and push
+                            // the latest peer aims into the renderer. Run at
+                            // 4 Hz alongside the existing poll; cheap enough
+                            // to share the same loop.
+                            if let pose = SplatImmersiveRenderer.currentRenderer?.snapshotHeadPoseInSplatLocal() {
+                                await presence.updateAim(pose.position)
+                            }
+                            let peerAims: [SIMD3<Float>] = presence.peers.compactMap { p in
+                                guard let a = p.aim else { return nil }
+                                return SIMD3<Float>(Float(a.x), Float(a.y), Float(a.z))
+                            }
+                            SplatImmersiveRenderer.currentRenderer?.setPeerAims(peerAims)
                             // Autosave every 20 ticks (~5 s).
                             if ticks % 20 == 0 { autosaveDraft() }
                             ticks += 1
@@ -1702,6 +1757,66 @@ struct SplatViewerView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 520)
             }
+
+            // M7.6 — co-editor presence chip + conflict resolver.
+            if !presence.peers.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "person.2.fill")
+                        .foregroundStyle(.tint)
+                    Text("\(presence.peers.count) other editor\(presence.peers.count == 1 ? "" : "s") in this scene")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(presence.peers.count) co-editors active")
+            }
+            if conflictPending {
+                HStack(spacing: 12) {
+                    Label("Conflict: server is at version \(conflictServerVersion)", systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                        .font(.callout)
+                    Spacer()
+                    Button {
+                        Task { await reloadLatestScene() }
+                    } label: {
+                        Label("Reload latest", systemImage: "arrow.clockwise")
+                            .font(.callout)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityLabel("Reload latest scene")
+                    .accessibilityHint("Re-fetches the scene so you can re-apply your edits on top of the newer server version")
+                }
+                .frame(maxWidth: 520)
+            }
+        }
+    }
+
+    /// M7.6 — re-fetch the scene row, reset the renderer's transform/edits
+    /// to the server state, and clear the conflict banner. The user keeps
+    /// their pending waypoint/hotspot/comment lists since those are
+    /// non-conflicting operations (each is its own row in its own table).
+    private func reloadLatestScene() async {
+        do {
+            let updated: Scene = try await AppSupabase.client
+                .from("scenes")
+                .select()
+                .eq("id", value: currentScene.id.uuidString)
+                .single()
+                .execute()
+                .value
+            await MainActor.run {
+                currentScene = updated
+                conflictPending = false
+                conflictServerVersion = 0
+                saveError = nil
+            }
+            if let edits = updated.sceneEdits {
+                SplatImmersiveRenderer.currentRenderer?.applyTransform(edits.transform)
+            }
+        } catch {
+            await MainActor.run {
+                saveError = "Reload failed: \(error.localizedDescription)"
+            }
         }
     }
 
@@ -1819,6 +1934,22 @@ struct SplatViewerView: View {
         do {
             let user = try await AppSupabase.client.auth.user()
             currentUserId = user.id
+            // Best-effort profile lookup for presence broadcasts; falls
+            // through silently if the row hasn't been provisioned yet.
+            struct ProfileRow: Decodable {
+                let display_name: String?
+                let avatar_url: String?
+            }
+            if let row: ProfileRow = try? await AppSupabase.client
+                .from("profiles")
+                .select("display_name, avatar_url")
+                .eq("id", value: user.id.uuidString)
+                .single()
+                .execute()
+                .value {
+                profileDisplayName = row.display_name ?? ""
+                profileAvatarUrl = row.avatar_url
+            }
         } catch {
             currentUserId = nil
         }

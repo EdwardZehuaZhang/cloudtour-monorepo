@@ -61,6 +61,7 @@
 		E4E896EEC0F2FC1F60500462 /* SignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8623F672FC7815B0248A80 /* SignInView.swift */; };
 		E69CA8F6C652010D2A0EA4AF /* MembersViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BB9454E1E24925DA78410E /* MembersViewModel.swift */; };
 		E7321DD4E5367D2CE3F9C67C /* ReticleRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 913BEAC47718D835D2649D3B /* ReticleRenderer.swift */; };
+		EA935160C70F7F571FC033C2 /* EditorPresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C251E4DD775033E82DC3DB9 /* EditorPresence.swift */; };
 		F70916792848666517BDD7B2 /* StreetViewTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3891FDA6CDFC8BC7209742B /* StreetViewTabView.swift */; };
 		F9A9DAFC31135AC7F1DC668D /* SplatViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D153849A08FB278C8FB2838 /* SplatViewerView.swift */; };
 		FC1C03D7F7854BAEF47BC552 /* TourEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76CF2C97FE30B87747B644F2 /* TourEditorView.swift */; };
@@ -90,6 +91,7 @@
 		3D153849A08FB278C8FB2838 /* SplatViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatViewerView.swift; sourceTree = "<group>"; };
 		3E8623F672FC7815B0248A80 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		44904FF1C8BEC0ED6098A96F /* FloorPlanEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloorPlanEditorView.swift; sourceTree = "<group>"; };
+		4C251E4DD775033E82DC3DB9 /* EditorPresence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorPresence.swift; sourceTree = "<group>"; };
 		60F1D8661A3A87D7FBFB8222 /* OrgMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrgMember.swift; sourceTree = "<group>"; };
 		6982D46DAB7D453CE6B216B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		739E7128CEC8AB661A5F5862 /* StreetViewSearchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewSearchModel.swift; sourceTree = "<group>"; };
@@ -122,7 +124,7 @@
 		F8BB9454E1E24925DA78410E /* MembersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersViewModel.swift; sourceTree = "<group>"; };
 		F9E67D9EBF1F9507900F92E9 /* StreetViewMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewMapView.swift; sourceTree = "<group>"; };
 		FF1497FD895E885B44BAB7D3 /* SplatUploadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatUploadView.swift; sourceTree = "<group>"; };
-		"TEMP_8808963E-BD1B-455C-9FBD-C76FAD977D5C" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		"TEMP_B6BB6C07-6677-4417-8871-E03CC69D06D8" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -272,6 +274,7 @@
 				5BE1D213891CDBFFECEE33EB /* Invite */,
 				461D3B64C338686A66030B2E /* Members */,
 				8674FD6A010B85C67920EB7C /* Models */,
+				D52CA1BE51C9799CD37E2AD1 /* Realtime */,
 				2CE3792A732252F70B31B7F7 /* Settings */,
 				BF5FA43FE2677488B53F94B7 /* Shell */,
 				62338E6CE04F91627E0FA290 /* StreetView */,
@@ -312,6 +315,14 @@
 			path = Dashboard;
 			sourceTree = "<group>";
 		};
+		D52CA1BE51C9799CD37E2AD1 /* Realtime */ = {
+			isa = PBXGroup;
+			children = (
+				4C251E4DD775033E82DC3DB9 /* EditorPresence.swift */,
+			);
+			path = Realtime;
+			sourceTree = "<group>";
+		};
 		D904625DE4EC38EEDD1C0A9D /* FAQ */ = {
 			isa = PBXGroup;
 			children = (
@@ -320,10 +331,10 @@
 			path = FAQ;
 			sourceTree = "<group>";
 		};
-		"TEMP_A90DD3C1-D7C6-42BE-8A0F-E0E148D272AD" /* cloudtour-avp */ = {
+		"TEMP_A72F6A56-F784-4CE9-8784-2FD018FD2C06" /* cloudtour-avp */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_8808963E-BD1B-455C-9FBD-C76FAD977D5C" /* Config.xcconfig */,
+				"TEMP_B6BB6C07-6677-4417-8871-E03CC69D06D8" /* Config.xcconfig */,
 			);
 			path = "cloudtour-avp";
 			sourceTree = "<group>";
@@ -412,6 +423,7 @@
 				2771DC4D1F0FEB02B3D98026 /* DashboardViewModel.swift in Sources */,
 				57F7B76F02CCB69E3EF3473C /* EditTool.swift in Sources */,
 				60AAE0BC1ED31CCE873BBE31 /* EditorDraftStore.swift in Sources */,
+				EA935160C70F7F571FC033C2 /* EditorPresence.swift in Sources */,
 				826A938CD93A68AD014C13F2 /* FAQView.swift in Sources */,
 				2A0F2306ED9A6FF0CDD82103 /* FloorPlan.swift in Sources */,
 				280F715F2218A66856379AD9 /* FloorPlanEditorView.swift in Sources */,
@@ -506,7 +518,7 @@
 		};
 		791F49A1A75E631F71936C78 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_8808963E-BD1B-455C-9FBD-C76FAD977D5C" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_B6BB6C07-6677-4417-8871-E03CC69D06D8" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -571,7 +583,7 @@
 		};
 		8C265FB73CDBD82CE541319B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_8808963E-BD1B-455C-9FBD-C76FAD977D5C" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_B6BB6C07-6677-4417-8871-E03CC69D06D8" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

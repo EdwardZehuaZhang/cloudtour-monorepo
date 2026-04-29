@@ -77,6 +77,10 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
     static let pendingCommentColor = SIMD4<Float>(0.55, 0.85, 0.55, 0.70)
     static let pendingCommentSelectedColor = SIMD4<Float>(1.0, 0.85, 0.40, 0.95)
     static let commentRadius: Float = 0.10
+    /// M7.6 — peer editor aim cone marker (cyan; high alpha so co-editor
+    /// presence reads at a glance).
+    static let peerAimColor = SIMD4<Float>(0.30, 0.85, 1.0, 0.85)
+    static let peerAimRadius: Float = 0.08
     /// Pending (in-session-not-yet-saved) waypoints — green to clearly
     /// signal "this is a draft you haven't committed yet".
     static let pendingWaypointColor = SIMD4<Float>(0.30, 0.85, 0.55, 0.65)
@@ -115,6 +119,11 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
     /// `SplatScenePoint.position` — i.e. before any user calibrate transform.
     private let aabbLock = OSAllocatedUnfairLock(initialState: AABB?(nil))
     private struct AABB { let lo: SIMD3<Float>; let hi: SIMD3<Float> }
+
+    /// M7.6 — peer editor aim positions in splat-local coords. Updated by
+    /// SwiftUI as Realtime presence broadcasts arrive; `buildMarkers`
+    /// projects each through `splatModelMatrix` and renders a cyan sphere.
+    private let peerAimsLock = OSAllocatedUnfairLock(initialState: [SIMD3<Float>]())
 
     /// M6.6 — perf counters. Frame counts + last-fps sample + last-frame
     /// marker count. Read by SwiftUI HUD via `snapshotPerfCounters()`.
@@ -680,6 +689,12 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                 state.selectedPendingCommentId = state.pendingComments.last?.id
             }
         }
+    }
+
+    /// M7.6 — push the latest peer-editor aim positions (splat-local).
+    /// Called from SwiftUI on each Realtime presence tick.
+    func setPeerAims(_ aims: [SIMD3<Float>]) {
+        peerAimsLock.withLock { $0 = aims }
     }
 
     func clearCommentEdits() {
@@ -1952,6 +1967,18 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                 worldPosition: SIMD3<Float>(world4.x, world4.y, world4.z),
                 radius: Self.hotspotRadius,
                 color: selected ? Self.pendingHotspotSelectedColor : Self.pendingHotspotColor
+            ))
+        }
+        // M7.6 — peer-editor aim cones. Read once per frame from the lock
+        // so concurrent Realtime updates don't tear the marker list.
+        let peerAims = peerAimsLock.withLock { $0 }
+        for aim in peerAims {
+            let local = SIMD4<Float>(aim.x, aim.y, aim.z, 1)
+            let world4 = splatModelMatrix * local
+            markers.append(ReticleRenderer.Marker(
+                worldPosition: SIMD3<Float>(world4.x, world4.y, world4.z),
+                radius: Self.peerAimRadius,
+                color: Self.peerAimColor
             ))
         }
         // M7.7 — committed + pending comments.
