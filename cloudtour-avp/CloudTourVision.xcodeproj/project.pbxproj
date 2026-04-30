@@ -124,7 +124,7 @@
 		F8BB9454E1E24925DA78410E /* MembersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembersViewModel.swift; sourceTree = "<group>"; };
 		F9E67D9EBF1F9507900F92E9 /* StreetViewMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreetViewMapView.swift; sourceTree = "<group>"; };
 		FF1497FD895E885B44BAB7D3 /* SplatUploadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplatUploadView.swift; sourceTree = "<group>"; };
-		"TEMP_B6BB6C07-6677-4417-8871-E03CC69D06D8" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		"TEMP_88263C8A-E2D3-4D40-A181-190387AD6D77" /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -331,10 +331,10 @@
 			path = FAQ;
 			sourceTree = "<group>";
 		};
-		"TEMP_A72F6A56-F784-4CE9-8784-2FD018FD2C06" /* cloudtour-avp */ = {
+		"TEMP_4B21B4FB-42A8-44BD-B175-B56172226859" /* cloudtour-avp */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_B6BB6C07-6677-4417-8871-E03CC69D06D8" /* Config.xcconfig */,
+				"TEMP_88263C8A-E2D3-4D40-A181-190387AD6D77" /* Config.xcconfig */,
 			);
 			path = "cloudtour-avp";
 			sourceTree = "<group>";
@@ -386,7 +386,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				B45BF3CF1015CF37F593DF2A /* XCRemoteSwiftPackageReference "Inject" */,
-				83B0F38BBF2350898DB21EA7 /* XCRemoteSwiftPackageReference "MetalSplatter" */,
+				4C60D3D02EEFECDA189A9D0C /* XCRemoteSwiftPackageReference "MetalSplatter" */,
 				67E16C3D0FEF74F48B3818AB /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -518,7 +518,7 @@
 		};
 		791F49A1A75E631F71936C78 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_B6BB6C07-6677-4417-8871-E03CC69D06D8" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_88263C8A-E2D3-4D40-A181-190387AD6D77" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -583,7 +583,7 @@
 		};
 		8C265FB73CDBD82CE541319B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_B6BB6C07-6677-4417-8871-E03CC69D06D8" /* Config.xcconfig */;
+			baseConfigurationReference = "TEMP_88263C8A-E2D3-4D40-A181-190387AD6D77" /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -663,20 +663,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		4C60D3D02EEFECDA189A9D0C /* XCRemoteSwiftPackageReference "MetalSplatter" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/EdwardZehuaZhang/MetalSplatter";
+			requirement = {
+				kind = exactVersion;
+				version = "1.0.1-cloudtour.1";
+			};
+		};
 		67E16C3D0FEF74F48B3818AB /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 2.0.0;
-			};
-		};
-		83B0F38BBF2350898DB21EA7 /* XCRemoteSwiftPackageReference "MetalSplatter" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/scier/MetalSplatter";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
 			};
 		};
 		B45BF3CF1015CF37F593DF2A /* XCRemoteSwiftPackageReference "Inject" */ = {
@@ -702,7 +702,7 @@
 		};
 		7F7C76A96F294A1F82BEFF99 /* MetalSplatter */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 83B0F38BBF2350898DB21EA7 /* XCRemoteSwiftPackageReference "MetalSplatter" */;
+			package = 4C60D3D02EEFECDA189A9D0C /* XCRemoteSwiftPackageReference "MetalSplatter" */;
 			productName = MetalSplatter;
 		};
 /* End XCSwiftPackageProductDependency section */

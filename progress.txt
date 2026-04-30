@@ -1203,11 +1203,17 @@ Deferred (with explicit reason in M6.md):
   - When the linter flips `passes:true` because the user knows code shipped, trust it — but still re-run typecheck + xcodebuild to confirm the audit isn't lying about a regression.
 ---
 
-## 2026-04-30 - US-049 (AVP M7.1 fork execute) — paused, awaiting authorization
-- Story requires creating a new public GitHub repo (`EdwardZehuaZhang/MetalSplatter`), implementing the M4.16 fork plan's Metal/Swift changes (public SplatBuffer view, per-splat mask attribute, frameDepthTexture accessor, applyMaskRange API) against a third-party Swift package, tagging `1.0.1-cloudtour.1`, and swapping the SPM pin.
-- gh CLI auth confirmed (account `EdwardZehuaZhang`, scopes `repo` + `workflow`). Target repo does not yet exist (`gh repo view EdwardZehuaZhang/MetalSplatter` returned 404).
-- Halted before executing because the work is BOTH irreversible external action (public repo creation, tagged release) AND substantial third-party code modification (Metal renderer changes that require domain expertise to land correctly upstream-compatible). Requires explicit user direction.
-- US-050 / US-051 / US-052 are blocked on US-049 per the M6 → M7 dependency chain documented in `cloudtour-avp/METALSPLATTER_FORK_PLAN.md`.
+## 2026-04-30 - US-049 (AVP M7.1 fork execute) — shipped after authorization
+- User authorized GitHub write. Created public repo `EdwardZehuaZhang/MetalSplatter` via `gh repo create --public`; added `fork` remote on the local clone; pushed branches `cloudtour/main`, `cloudtour/mask-attribute`, `cloudtour/depth-readback` and tag `1.0.1-cloudtour.1`. Tag verified via `gh api repos/EdwardZehuaZhang/MetalSplatter/git/refs/tags/1.0.1-cloudtour.1` (ref object returned).
+- Swapped SPM pin in `cloudtour-avp/project.yml`: `scier/MetalSplatter from:1.0.0` → `EdwardZehuaZhang/MetalSplatter exactVersion:1.0.1-cloudtour.1`. Ran `xcodegen generate`, then `xcodebuild -resolvePackageDependencies` (Package.resolved now points at fork at the new tag), then `xcodebuild build -destination 'generic/platform=visionOS Simulator'` → BUILD SUCCEEDED.
+- `cloudtour-avp/METALSPLATTER_FORK_PLAN.md` status flipped from "Drafted locally — awaiting GitHub fork creation and push" to "Shipped 2026-04-30".
+- US-050 / US-051 / US-052 are now unblocked by storage + write API. The shader visibility test (vertex-shader gate on the mask byte) was deliberately left out of this fork — US-051 (erase-the-eraser) will need that shader patch before the visual works end-to-end.
+- Files: `cloudtour-avp/project.yml`, `cloudtour-avp/CloudTourVision.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`, `cloudtour-avp/METALSPLATTER_FORK_PLAN.md`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations:**
+  - `gh repo create <user>/<name> --public --description "..."` creates an empty repo and prints the URL; pair with manual `git remote add fork ...` + `git push fork <branches> <tag>` from the local clone. Keeps `origin` pointed at upstream for rebases and `fork` for tagged releases.
+  - Default branch on the new repo stays as upstream's `main` unless changed. Leaving `main` as default makes `gh pr create --base main` route upstream contribution PRs correctly without a `--head` trick. Don't change it just because `cloudtour/main` is your active branch.
+  - `xcodebuild -resolvePackageDependencies` rewrites `Package.resolved` to match the new pin; commit that file alongside `project.yml` so other developers don't redo the resolution and produce a churn-only diff later.
+  - Always verify the tag was accepted by the remote via `gh api repos/<user>/<name>/git/refs/tags/<tag>` — `git push fork <tag>` succeeds quietly even if branch-protection on the tag namespace later rejects it. If the API call returns the ref object, SPM can consume it.
 ---
 
 ## 2026-04-30 - US-049 (AVP M7.1 MetalSplatter fork — local execution)

@@ -2,10 +2,10 @@
 
 ## Status
 
-**Drafted locally — awaiting GitHub fork creation and push.** Topic
-branches and the `1.0.1-cloudtour.1` tag have been built and tested in
-`/Users/gel/Desktop/Github/MetalSplatter`. The next steps require GitHub
-write access and are listed under "Push to GitHub" below.
+**Shipped 2026-04-30.** Fork live at
+<https://github.com/EdwardZehuaZhang/MetalSplatter>, tag
+`1.0.1-cloudtour.1` published, AVP project pinned via `exactVersion`.
+xcodebuild visionOS Simulator green against the fork.
 
 ## Current Dependency
 

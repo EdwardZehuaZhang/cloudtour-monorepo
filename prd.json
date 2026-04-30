@@ -810,7 +810,7 @@
         "xcodebuild green"
       ],
       "priority": 49,
-      "passes": false,
+      "passes": true,
       "notes": "Was M4.16. Blocks US-050, US-051, US-052. Requires GitHub repo creation under `EdwardZehuaZhang/` — needs human-in-the-loop confirmation before pushing tags."
     },
     {

@@ -35,8 +35,11 @@ packages:
     url: https://github.com/supabase/supabase-swift
     from: "2.0.0"
   MetalSplatter:
-    url: https://github.com/scier/MetalSplatter
-    from: "1.0.0"
+    url: https://github.com/EdwardZehuaZhang/MetalSplatter
+    exactVersion: "1.0.1-cloudtour.1"
+  Inject:
+    url: https://github.com/krzysztofzablocki/Inject
+    from: "1.5.0"
 
 targets:
   CloudTourVision:
@@ -55,8 +58,13 @@ targets:
         SUPPORTED_PLATFORMS: "xros xrsimulator"
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: false
         ENABLE_TESTING_SEARCH_PATHS: "NO"
+      configs:
+        Debug:
+          OTHER_LDFLAGS: "-Xlinker -interposable"
     dependencies:
       - package: Supabase
         product: Supabase
       - package: MetalSplatter
         product: MetalSplatter
+      - package: Inject
+        product: Inject
