@@ -1192,3 +1192,20 @@ Deferred (with explicit reason in M6.md):
   - For optimistic-lock detection from a Supabase-direct client, a pre-update SELECT of the version field is the cheapest way to surface a conflict without routing through BE. There IS a TOCTOU window (another writer between SELECT and UPDATE), but for human edit cadences (~seconds apart) it's acceptable; for tighter races the server-side BE PATCH route handles it atomically.
   - When a conflict surfaces, the user's pending edits in OTHER tables (waypoints, hotspots, comments) are still safe to flush — those rows are independent inserts. Only the `scenes.scene_edits` write needs to abort + reload. Keeping that distinction in the UX (banner says "version X" not "lost everything") matters for trust.
 ---
+
+## 2026-04-30 - US-047 + US-048 verification (passes:true confirmed)
+- Both stories were already implemented in a prior session and the prd.json linter flipped them to `passes: true`. This iteration verified the implementation is real and green:
+  - **US-047 (M7.7 comments)**: migration `packages/db/migrations/018_comments.sql` (full RLS — public-read on published tours, org-member read/insert/update, author-only update, owner+admin delete), BE routes at `cloudtour-be/src/routes/org-tours.ts:654-739` (GET / POST / PATCH / DELETE under `/orgs/:orgId/tours/:tourId/scenes/:sceneId/comments`), AVP `Models/Comment.swift` + `SplatViewerView.swift` thread popover + renderer-side CommentMarker integration. `pnpm typecheck` ✓ + xcodebuild ✓.
+  - **US-048 (M7.6 presence + conflict)**: `cloudtour-avp/CloudTourVision/Realtime/EditorPresence.swift` Supabase Realtime channel per (tour, scene) with peer-aim broadcast; `SplatViewerView.swift:1761-1771` peer chip + `SplatViewerView.swift:518` scene_edits.version optimistic-lock check at save time. `pnpm typecheck` ✓ + xcodebuild ✓.
+- No code changes in this iteration — only verification. PRD reflects ground truth.
+- **Learnings for future iterations:**
+  - Always grep for the story's headline artifacts (table name, route path, file name) before assuming a story is unstarted. The audit cost is one `grep` per story but saves you from rebuilding what already exists. Run the grep BEFORE planning the implementation.
+  - When the linter flips `passes:true` because the user knows code shipped, trust it — but still re-run typecheck + xcodebuild to confirm the audit isn't lying about a regression.
+---
+
+## 2026-04-30 - US-049 (AVP M7.1 fork execute) — paused, awaiting authorization
+- Story requires creating a new public GitHub repo (`EdwardZehuaZhang/MetalSplatter`), implementing the M4.16 fork plan's Metal/Swift changes (public SplatBuffer view, per-splat mask attribute, frameDepthTexture accessor, applyMaskRange API) against a third-party Swift package, tagging `1.0.1-cloudtour.1`, and swapping the SPM pin.
+- gh CLI auth confirmed (account `EdwardZehuaZhang`, scopes `repo` + `workflow`). Target repo does not yet exist (`gh repo view EdwardZehuaZhang/MetalSplatter` returned 404).
+- Halted before executing because the work is BOTH irreversible external action (public repo creation, tagged release) AND substantial third-party code modification (Metal renderer changes that require domain expertise to land correctly upstream-compatible). Requires explicit user direction.
+- US-050 / US-051 / US-052 are blocked on US-049 per the M6 → M7 dependency chain documented in `cloudtour-avp/METALSPLATTER_FORK_PLAN.md`.
+---
