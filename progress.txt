@@ -1274,3 +1274,14 @@ Files: `cloudtour-avp/METALSPLATTER_FORK_PLAN.md`, `prd.json`, `progress.txt`. P
   - HistorySnapshot needs every `[X]` array that's part of the committable surface, not just the ones that the active tool currently mutates. Forgetting `pendingDeletionRestores` here means `recordHistory` snapshots an empty array and undo silently misses restore drops — easy to miss until a user reports "Cmd-Z doesn't undo my restore".
   - The lasso pendingDeletion fallback is "any lasso is a candidate volume". Document this conservativism in the helper so a future maintainer knows the exact-cone test was deliberately deferred, not forgotten.
 ---
+
+## 2026-04-30 - US-052 (AVP M7.9 stamp tool) — blocked on fork scope expansion
+- Acceptance demands: capture gaussians from a region into a "brush" with canonical local frame, paste at target pose with blend cap (overlap density check) and jitter (±10% scale, ±15% in-plane rotation), with undo on each stamp.
+- Blocker: paste requires the MetalSplatter renderer to accept *new* splats appended to an existing chunk at runtime. Today's fork (`1.0.1-cloudtour.2`) extends `SplatChunk` with mask STORAGE + write API (US-049, US-050) but does not expose a mutable append path. `SplatChunk` allocates `splatCount` and the SplatSorter's acceleration structures on creation; appending requires re-allocating GPU buffers AND re-sorting, which `METALSPLATTER_FORK_PLAN.md` explicitly lists as out of scope: "Re-sort acceleration structure changes."
+- Even capture is non-trivial without a public API: reading splat positions inside a volume requires walking the chunk's `EncodedSplatPoint` array on CPU, which works on Apple Silicon (shared storage) but isn't exposed as a public iterator on the fork.
+- Decision: do NOT mark `passes: true`. Real implementation requires a `cloudtour/chunk-append` topic on the fork (probably also `cloudtour/chunk-iter`), which is its own milestone-class chunk of Metal work. Tracked here for future planning, not auto-iterated by Ralph.
+- US-052 stays `passes: false` until the fork expands scope or the AVP team accepts a marker-only fallback (capture+paste rendered as overlay markers instead of real gaussians, similar to waypoints). The latter does NOT meet "save gaussians as brush" verbatim.
+- **Learnings for future iterations:**
+  - When a Ralph story's acceptance bullets demand a third-party-API change, audit the fork plan FIRST. Don't start the AVP-side work expecting to backfill the fork mid-story; you'll either ship a non-passing partial or expand the fork's scope without explicit alignment.
+  - Out-of-scope items in `METALSPLATTER_FORK_PLAN.md` are deliberate boundaries — re-sorting and chunk-append both have correctness implications upstream and are exactly the kind of change that needs its own milestone, not a per-story carve-out.
+---
