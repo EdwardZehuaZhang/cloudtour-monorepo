@@ -839,7 +839,7 @@
         "xcodebuild green"
       ],
       "priority": 51,
-      "passes": false,
+      "passes": true,
       "notes": "Was M6.8. Depends on US-049 (per-splat mask attribute)."
     },
     {

@@ -248,6 +248,18 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         var lassoLive: LassoLiveState? = nil
         var pendingDeletionLassos: [DeletionLasso] = []
 
+        // ── M7.3 erase-the-eraser ───────────────────────────────────────
+        /// Positive-mask spheres that subtract from any overlapping
+        /// negative deletion volume. Persisted via SceneEdits on Save.
+        var pendingDeletionRestores: [DeletionRestore] = []
+        /// Wall-clock instant the right hand started pinching, used to
+        /// classify a "long pinch" (≥0.5s) inside a pending volume as a
+        /// restore drop instead of a tool's normal action.
+        var rightPinchStartedAt: Date? = nil
+        /// Same for the left hand, for symmetry — left-hand long-pinch
+        /// also drops a restore so the gesture isn't right-hand-only.
+        var leftPinchStartedAt: Date? = nil
+
         // ── M5.11 display HUD flags ─────────────────────────────────────
         var hideWaypoints: Bool = false
         var hidePendingDeletions: Bool = false
@@ -290,6 +302,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         let pendingDeletionSpheres: [DeletionSphere]
         let pendingDeletionBoxes: [DeletionBox]
         let pendingDeletionLassos: [DeletionLasso]
+        let pendingDeletionRestores: [DeletionRestore]
         let pendingHotspots: [PendingHotspot]
         let selectedPendingHotspotId: UUID?
         let pendingComments: [PendingComment]
@@ -735,6 +748,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             pendingDeletionSpheres: state.pendingDeletionSpheres,
             pendingDeletionBoxes: state.pendingDeletionBoxes,
             pendingDeletionLassos: state.pendingDeletionLassos,
+            pendingDeletionRestores: state.pendingDeletionRestores,
             pendingHotspots: state.pendingHotspots,
             selectedPendingHotspotId: state.selectedPendingHotspotId,
             pendingComments: state.pendingComments,
@@ -751,6 +765,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         state.pendingDeletionSpheres = snap.pendingDeletionSpheres
         state.pendingDeletionBoxes = snap.pendingDeletionBoxes
         state.pendingDeletionLassos = snap.pendingDeletionLassos
+        state.pendingDeletionRestores = snap.pendingDeletionRestores
         state.pendingHotspots = snap.pendingHotspots
         state.selectedPendingHotspotId = snap.selectedPendingHotspotId
         state.pendingComments = snap.pendingComments
@@ -767,6 +782,72 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             state.undoStack.removeFirst(state.undoStack.count - undoStackCap)
         }
         state.redoStack.removeAll(keepingCapacity: true)
+    }
+
+    /// M7.3 — long-pinch (≥0.5s) ending inside a pending deletion volume
+    /// drops a positive-mask DeletionRestore at the hand position. The
+    /// restore's radius matches the active brush radius so users can
+    /// dial precision via the brush sphere slider. No-op when the pinch
+    /// was short, the hand position is nil, or the position is outside
+    /// every pending negative volume.
+    fileprivate static let restoreLongPinchThreshold: TimeInterval = 0.5
+    private static func maybeDropDeletionRestore(
+        state: inout EditState,
+        chirality: HandAnchor.Chirality,
+        now: Date
+    ) {
+        let started: Date?
+        let handPos: SIMD3<Float>?
+        switch chirality {
+        case .left:
+            started = state.leftPinchStartedAt
+            handPos = state.leftHandPos
+        case .right:
+            started = state.rightPinchStartedAt
+            handPos = state.rightHandPos
+        @unknown default:
+            return
+        }
+        guard let started, let handPos else { return }
+        guard now.timeIntervalSince(started) >= restoreLongPinchThreshold else { return }
+        guard pendingDeletionsContain(handPos, state: state) else { return }
+        let restore = DeletionRestore(
+            center: [Double(handPos.x), Double(handPos.y), Double(handPos.z)],
+            radius: Double(state.brushRadius)
+        )
+        recordHistory(&state)
+        state.pendingDeletionRestores.append(restore)
+        // Consume the brush-pinch event so we don't ALSO drop a negative
+        // sphere on this same release — restore takes precedence.
+        state.brushPinchPending = false
+    }
+
+    private static func pendingDeletionsContain(
+        _ point: SIMD3<Float>,
+        state: EditState
+    ) -> Bool {
+        for sphere in state.pendingDeletionSpheres {
+            let cx = Float(sphere.center[0]), cy = Float(sphere.center[1]), cz = Float(sphere.center[2])
+            let dx = point.x - cx, dy = point.y - cy, dz = point.z - cz
+            if dx * dx + dy * dy + dz * dz <= Float(sphere.radius * sphere.radius) {
+                return true
+            }
+        }
+        for box in state.pendingDeletionBoxes {
+            if Float(box.min[0]) <= point.x && point.x <= Float(box.max[0]) &&
+                Float(box.min[1]) <= point.y && point.y <= Float(box.max[1]) &&
+                Float(box.min[2]) <= point.z && point.z <= Float(box.max[2]) {
+                return true
+            }
+        }
+        // Lasso volumes are projection cones; a precise test requires the
+        // lasso polygon + view direction at commit time. Conservative
+        // fallback: treat any lasso as a candidate volume so the user can
+        // still drop restores inside its visible silhouette.
+        if !state.pendingDeletionLassos.isEmpty {
+            return true
+        }
+        return false
     }
 
     /// Public undo. Returns true if a step was reverted.
@@ -1231,10 +1312,30 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                     wasPinched = state.leftWasPinched
                     state.leftWasPinched = pinch.isPinching
                     state.leftHandPos = pinch.isPinching ? pinch.position : nil
+                    if pinch.isPinching && !wasPinched {
+                        state.leftPinchStartedAt = Date()
+                    } else if !pinch.isPinching && wasPinched {
+                        Self.maybeDropDeletionRestore(
+                            state: &state,
+                            chirality: .left,
+                            now: Date()
+                        )
+                        state.leftPinchStartedAt = nil
+                    }
                 case .right:
                     wasPinched = state.rightWasPinched
                     state.rightWasPinched = pinch.isPinching
                     state.rightHandPos = pinch.isPinching ? pinch.position : nil
+                    if pinch.isPinching && !wasPinched {
+                        state.rightPinchStartedAt = Date()
+                    } else if !pinch.isPinching && wasPinched {
+                        Self.maybeDropDeletionRestore(
+                            state: &state,
+                            chirality: .right,
+                            now: Date()
+                        )
+                        state.rightPinchStartedAt = nil
+                    }
                 }
                 if pinch.isPinching && !wasPinched {
                     state.brushPinchPending = true

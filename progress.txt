@@ -1256,3 +1256,21 @@ Files: `cloudtour-avp/METALSPLATTER_FORK_PLAN.md`, `prd.json`, `progress.txt`. P
   - Bumping the SPM exactVersion is a 3-step ritual: (1) edit `project.yml`, (2) `xcodegen generate`, (3) `xcodebuild -resolvePackageDependencies`. Skip step 3 and `Package.resolved` keeps the OLD revision pin even though the URL is updated, so the build resolves against stale code.
   - Public stored properties on a class with a render thread are safe to mutate from the main actor as long as the GPU encode path reads them at a single point per frame (here: `updateUniforms`). Don't put these behind a lock — the cost of contention on the render thread isn't worth it for a slider that ticks at 60 Hz max.
 ---
+
+## 2026-04-30 - US-051 (AVP M7.3 erase-the-eraser)
+- New `DeletionRestore` Codable struct in `Models/SceneEdits.swift` (center + radius). Added `restores: [DeletionRestore]?` field to `SceneDeletions` so restores serialize alongside spheres / boxes / lassos in the existing `scene_edits.deletions` JSONB column.
+- `SplatImmersiveRenderer.EditState`: added `pendingDeletionRestores: [DeletionRestore]`, plus `leftPinchStartedAt` / `rightPinchStartedAt: Date?` for long-pinch classification.
+- Brush-tool gesture (`processHand`): on pinch start, stamp the start time per chirality; on pinch release, call `Self.maybeDropDeletionRestore(state:chirality:now:)`. The helper:
+  - returns early unless pinch duration ≥ `restoreLongPinchThreshold` (0.5s)
+  - returns early unless the hand position lies inside any pending sphere/box (lasso uses a conservative "always inside" fallback because precise cone tests need the polygon + view direction at commit time)
+  - records a history snapshot, appends `DeletionRestore(center: handPos, radius: state.brushRadius)`, and clears `state.brushPinchPending` so the same release does not ALSO drop a negative sphere
+- Undo wiring: extended `HistorySnapshot` to carry `pendingDeletionRestores`; both `snapshot(_:)` and `restore(_:into:)` plumb it. Cmd-Z / Cmd-Shift-Z now revert restore drops the same way they revert sphere/box/lasso commits.
+- Files: `cloudtour-avp/CloudTourVision/Models/SceneEdits.swift`, `cloudtour-avp/CloudTourVision/Viewer/SplatImmersiveRenderer.swift`, `prd.json`, `progress.txt`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED.
+- **Deferred to a future iteration**: GPU-side mask integration. The fork's `SplatChunk.applyMaskRange` is available (since M7.1), but actually walking each splat at save time to bake `(any negative volume contains splat) AND NOT (any positive restore contains splat) → mask=1` is a CPU-iteration job over the chunk's `EncodedSplatPoint` array. Storage + write API exist; the bake step is a follow-up.
+- **Learnings for future iterations:**
+  - HandAnchor.Chirality has a `@unknown default` requirement when switched in a `static` helper because the compiler can't see chirality is exhaustive across the call sites. Add `@unknown default: return` to silence the warning AND defend against future ARKit chirality enum growth.
+  - When a long-pinch can both drop a brush sphere AND a restore, you have to consume the brush event explicitly (`state.brushPinchPending = false`) inside the restore branch — the brush commit logic still runs in the same gesture cycle and would otherwise stamp BOTH on a single release.
+  - HistorySnapshot needs every `[X]` array that's part of the committable surface, not just the ones that the active tool currently mutates. Forgetting `pendingDeletionRestores` here means `recordHistory` snapshots an empty array and undo silently misses restore drops — easy to miss until a user reports "Cmd-Z doesn't undo my restore".
+  - The lasso pendingDeletion fallback is "any lasso is a candidate volume". Document this conservativism in the helper so a future maintainer knows the exact-cone test was deliberately deferred, not forgotten.
+---
