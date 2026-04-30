@@ -824,7 +824,7 @@
         "xcodebuild green"
       ],
       "priority": 50,
-      "passes": false,
+      "passes": true,
       "notes": "Was M6.7. Depends on US-049 (fork)."
     },
     {

@@ -36,7 +36,7 @@ packages:
     from: "2.0.0"
   MetalSplatter:
     url: https://github.com/EdwardZehuaZhang/MetalSplatter
-    exactVersion: "1.0.1-cloudtour.1"
+    exactVersion: "1.0.1-cloudtour.2"
   Inject:
     url: https://github.com/krzysztofzablocki/Inject
     from: "1.5.0"

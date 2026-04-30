@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/EdwardZehuaZhang/MetalSplatter",
       "state" : {
-        "revision" : "04ab846c6ff7d56cc7b709afa6d3f9e1627ad063",
-        "version" : "1.0.1-cloudtour.1"
+        "revision" : "d5a199d0fbec8568c56485de9c90a4712e48904f",
+        "version" : "1.0.1-cloudtour.2"
       }
     },
     {

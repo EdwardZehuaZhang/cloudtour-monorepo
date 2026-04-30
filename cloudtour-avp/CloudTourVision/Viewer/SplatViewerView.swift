@@ -51,6 +51,10 @@ struct SplatViewerView: View {
     // the existing history-depth poll while the editor is open.
     // M7.13 — bottom ornament reticle visibility toggle
     @State private var hideReticle: Bool = false
+    // M7.2 — runtime render-uniform multipliers, plumbed to MetalSplatter
+    // 1.0.1-cloudtour.2 fork's opacityMultiplier / pointSizeMultiplier.
+    @State private var splatOpacity: Double = 1.0
+    @State private var splatPointSize: Double = 1.0
     @State private var showPerfCounters: Bool = false
     @State private var perfFps: Double = 0
     @State private var perfMarkers: Int = 0
@@ -802,6 +806,15 @@ struct SplatViewerView: View {
         )
     }
 
+    // M7.2 — flush render-time multipliers down to the MetalSplatter
+    // SplatRenderer instance owned by SplatImmersiveRenderer.
+    private func pushRenderUniforms() {
+        SplatImmersiveRenderer.currentRenderer?.setRenderUniforms(
+            opacity: Float(splatOpacity),
+            pointSize: Float(splatPointSize)
+        )
+    }
+
     private func captureStartingView() {
         guard let pose = SplatImmersiveRenderer.currentRenderer?.snapshotHeadPoseInSplatLocal() else {
             saveError = "No frame yet — wait for the splat to render once."
@@ -1519,6 +1532,46 @@ struct SplatViewerView: View {
                     .onChange(of: hidePendingDeletions) { _, _ in pushDisplayFlags() }
                 Toggle("Hide calibration silhouette", isOn: $hideSilhouette)
                     .onChange(of: hideSilhouette) { _, _ in pushDisplayFlags() }
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Label("Opacity", systemImage: "circle.lefthalf.filled")
+                        Spacer()
+                        Text(String(format: "%.0f%%", splatOpacity * 100))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                        Button {
+                            splatOpacity = 1.0
+                            pushRenderUniforms()
+                        } label: {
+                            Image(systemName: "arrow.uturn.backward")
+                        }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("Reset opacity")
+                    }
+                    Slider(value: $splatOpacity, in: 0.1...1.0)
+                        .onChange(of: splatOpacity) { _, _ in pushRenderUniforms() }
+                        .accessibilityLabel("Splat opacity")
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Label("Point size", systemImage: "dot.circle.and.hand.point.up.left.fill")
+                        Spacer()
+                        Text(String(format: "%.2fx", splatPointSize))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                        Button {
+                            splatPointSize = 1.0
+                            pushRenderUniforms()
+                        } label: {
+                            Image(systemName: "arrow.uturn.backward")
+                        }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("Reset point size")
+                    }
+                    Slider(value: $splatPointSize, in: 0.5...2.0)
+                        .onChange(of: splatPointSize) { _, _ in pushRenderUniforms() }
+                        .accessibilityLabel("Splat point-size multiplier")
+                }
                 Toggle("Show perf counters", isOn: $showPerfCounters)
                     .accessibilityHint("Overlay frames-per-second and marker count")
                 if showPerfCounters {

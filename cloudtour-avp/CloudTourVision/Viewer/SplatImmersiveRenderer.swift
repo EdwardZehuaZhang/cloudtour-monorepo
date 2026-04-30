@@ -820,6 +820,15 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         }
     }
 
+    /// M7.2 — runtime render-uniform multipliers. Forwarded to the
+    /// MetalSplatter fork's public `opacityMultiplier` / `pointSizeMultiplier`
+    /// stored properties. The next `render(...)` call rebuilds Uniforms with
+    /// the new values; no per-frame state on our side.
+    func setRenderUniforms(opacity: Float, pointSize: Float) {
+        splatRenderer?.opacityMultiplier = max(0.0, min(1.0, opacity))
+        splatRenderer?.pointSizeMultiplier = max(0.1, min(4.0, pointSize))
+    }
+
     /// Simulator-only: injects a pinch event as if the user had tapped their
     /// fingers together. The render loop will treat it identically to a real
     /// hand-tracked pinch and dolly forward on the next frame.
