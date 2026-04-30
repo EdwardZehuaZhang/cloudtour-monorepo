@@ -1209,3 +1209,30 @@ Deferred (with explicit reason in M6.md):
 - Halted before executing because the work is BOTH irreversible external action (public repo creation, tagged release) AND substantial third-party code modification (Metal renderer changes that require domain expertise to land correctly upstream-compatible). Requires explicit user direction.
 - US-050 / US-051 / US-052 are blocked on US-049 per the M6 → M7 dependency chain documented in `cloudtour-avp/METALSPLATTER_FORK_PLAN.md`.
 ---
+
+## 2026-04-30 - US-049 (AVP M7.1 MetalSplatter fork — local execution)
+- Cloned `scier/MetalSplatter` to `/Users/gel/Desktop/Github/MetalSplatter`, checked out tag `1.0.1` (revision `71ff248`), and built `cloudtour/main` off it.
+- Topic `cloudtour/mask-attribute` (commit `a78bb13`):
+  - `SplatChunk.masks: MetalBuffer<UInt8>?` — optional, nil by default.
+  - `SplatChunk.enableMasks(device:)` — eager zero-init alloc.
+  - `SplatChunk.applyMaskRange(_:value:device:)` — range write with negative-lower clip + cap-to-splatCount upper.
+  - 3 new ChunkTests cases. All 9 ChunkTests pass.
+- Topic `cloudtour/depth-readback` (commit `e980353`):
+  - `SplatRenderer.frameDepthTexture` + `SplatRenderer.frameColorTexture` public read-only. Captured at top of `render(...)` BEFORE the access-state guard so a skipped render still leaves the previous frame's pointers available for hand-target raycasts.
+- Merged both into `cloudtour/main` with `--no-ff`. Tag `1.0.1-cloudtour.1` annotated. `swift build` green; `swift test --filter ChunkTests` 9/9. `SplatRendererChunkTests` "no default library" failures are upstream-baseline (Metal CLI test harness limitation, present in unforked tree).
+- US-049 acceptance criteria satisfied at the local-execution level. The remaining steps require GitHub write access:
+  - Create `EdwardZehuaZhang/MetalSplatter` (or analogous) fork.
+  - Push `cloudtour/main`, `cloudtour/mask-attribute`, `cloudtour/depth-readback`, and tag `1.0.1-cloudtour.1`.
+  - Apply SPM pin swap in `cloudtour-avp/project.yml` (url + `exactVersion: "1.0.1-cloudtour.1"`) and refresh `Package.resolved`.
+- Push commands and pin-swap diff documented in `cloudtour-avp/METALSPLATTER_FORK_PLAN.md` under new "Push to GitHub" + "SPM pin swap" sections. Status flipped to "Drafted locally — awaiting GitHub fork creation and push".
+- No commits in the cloudtour-monorepo repo — only the FORK_PLAN doc updated. The fork commits live on `cloudtour/main` in the separate `/Users/gel/Desktop/Github/MetalSplatter` clone.
+- US-050 / US-051 / US-052 unblock once the fork is pushed and the SPM pin swapped — at that point `applyMaskRange` and `frameDepthTexture` become available to the AVP renderer.
+
+Files: `cloudtour-avp/METALSPLATTER_FORK_PLAN.md`, `prd.json`, `progress.txt`. Plus (in a separate repo, not the monorepo): `MetalSplatter/Sources/SplatChunk.swift`, `MetalSplatter/Tests/ChunkTests.swift`, `MetalSplatter/Sources/SplatRenderer.swift`.
+
+**Learnings for future iterations:**
+  - When the fork acceptance has GitHub-write components, do the local execution (clone + branch + commit + tag + tests) in a separate working copy and document the push commands in the plan doc. Don't push from the agent; push is hard-to-reverse and visible-to-others.
+  - For "additive" mutations to a published Swift package, prefer optional buffers (`var masks: MetalBuffer<UInt8>?`) over field-extending the existing `EncodedSplatPoint` struct — the latter would rebreak the GPU shader binary layout and force a coordinated upstream PR.
+  - Capture `frameDepthTexture` BEFORE the render's guard branches: callers want the *most recently asked-for* texture even when the frame was skipped. Capturing inside the success branch only would silently null out the property on every skipped frame.
+  - `swift test --filter ChunkTests` filters at the suite level, not per-class; filename-based suite discovery is what supabase-swift / MetalSplatter both rely on. Keep new test classes in the same file as the suite they extend.
+---
