@@ -285,9 +285,58 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         /// Supabase directly for the body + replies.
         var selectedCommittedCommentId: UUID? = nil
 
+        // ── M7.9 stamp tool ─────────────────────────────────────────────
+        /// Captured EncodedSplatPoints (in splat-local space, recentered on
+        /// brush origin) ready to be stamped at the reticle. nil until the
+        /// user box-selects a region in stamp mode.
+        var activeBrush: StampBrush? = nil
+        /// Live capture box during a dual-pinch. Reuses the same gesture
+        /// layout as `.box` but consumes into `activeBrush` on release
+        /// instead of `pendingDeletionBoxes`.
+        var liveStampBoxLocal: (lo: SIMD3<Float>, hi: SIMD3<Float>)? = nil
+        /// Single-edge paste pinch (rising-edge of either hand). Consumed in
+        /// `updateNavigation` once per frame.
+        var stampPastePinchPending: Bool = false
+        /// Most-recent stamped chunk records (for in-session undo).
+        /// SwiftUI ⌘Z while in `.stamp` mode pops here and removes the
+        /// matching SplatRenderer chunk.
+        var stampUndoStack: [StampRecord] = []
+        var stampRedoStack: [StampRecord] = []
+        /// Inspector sliders. ScaleJitter ±10% of brush scale, rotation
+        /// jitter ±15° around vertical axis, blendCap 0..1 chance to
+        /// keep each splat (probabilistic density cap).
+        var stampScaleJitter: Float = 0.10
+        var stampRotationJitter: Float = 0.15  // not used in v1; reserved
+        var stampBlendCap: Float = 1.0
+        /// Optional in-plane yaw applied per-stamp. Sampled at paste time
+        /// in updateNavigation; covariance rotation is deferred so v1 only
+        /// rotates positions (acceptable artifact at ±15°).
+        var stampInPlaneRotationDeg: Float = 15.0
+
         // ── M5.1 undo/redo history ──────────────────────────────────────
         var undoStack: [HistorySnapshot] = []
         var redoStack: [HistorySnapshot] = []
+    }
+
+    /// M7.9 — captured gaussian region. Stored in splat-local coordinates
+    /// re-centered so brush origin = (0,0,0). We hold `SplatPoint` (the
+    /// public IO type) rather than the GPU-encoded form because the fork
+    /// keeps `EncodedSplatPoint`'s fields internal — converting to encoded
+    /// form happens inside `performStampPaste` via the public
+    /// `EncodedSplatPoint.init(_ splat: SplatPoint)`.
+    struct StampBrush: Sendable {
+        var splats: [SplatPoint]
+        var bbox: (lo: SIMD3<Float>, hi: SIMD3<Float>)
+        var center: SIMD3<Float>
+    }
+
+    /// M7.9 — one stamp commit. `chunkId` is set when the async
+    /// `SplatRenderer.addChunk` completes; nil on a stamp that's been
+    /// undone (kept around for redo).
+    struct StampRecord: Sendable {
+        let recordId: UUID
+        let splats: [SplatPoint]
+        var chunkId: ChunkID?
     }
 
     /// M5.1 — frozen slice of `EditState` covering everything a Save can
@@ -719,6 +768,184 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         }
     }
 
+    // MARK: - M7.9 stamp tool public API
+
+    /// Inspector slider mirror. Each is clamped to its valid range.
+    func setStampJitter(scale: Float, rotationDeg: Float) {
+        editLock.withLock {
+            $0.stampScaleJitter = max(0, min(0.5, scale))
+            $0.stampInPlaneRotationDeg = max(0, min(45, rotationDeg))
+        }
+    }
+
+    func setStampBlendCap(_ cap: Float) {
+        editLock.withLock { $0.stampBlendCap = max(0, min(1, cap)) }
+    }
+
+    /// Snapshot the current brush state for the SwiftUI inspector. Returns
+    /// nil if no brush is loaded.
+    func snapshotStampBrush() -> (splatCount: Int, extent: SIMD3<Float>)? {
+        editLock.withLock { state in
+            guard let b = state.activeBrush else { return nil }
+            return (b.splats.count, b.bbox.hi - b.bbox.lo)
+        }
+    }
+
+    func snapshotStampUndoDepth() -> (undo: Int, redo: Int) {
+        editLock.withLock { ($0.stampUndoStack.count, $0.stampRedoStack.count) }
+    }
+
+    func clearStampBrush() {
+        editLock.withLock {
+            $0.activeBrush = nil
+            $0.liveStampBoxLocal = nil
+            $0.stampPastePinchPending = false
+        }
+    }
+
+    /// Pop the most recent stamp commit and remove its chunk from the
+    /// renderer. Pushed onto the redo stack so the user can re-apply it.
+    @discardableResult
+    func undoStamp() -> Bool {
+        let popped: StampRecord? = editLock.withLock { state in
+            guard !state.stampUndoStack.isEmpty else { return nil as StampRecord? }
+            let r = state.stampUndoStack.removeLast()
+            state.stampRedoStack.append(r)
+            return r
+        }
+        guard let r = popped, let chunkId = r.chunkId, let renderer = splatRenderer else {
+            return popped != nil
+        }
+        Task { await renderer.removeChunk(chunkId) }
+        return true
+    }
+
+    /// Replay the most recent undone stamp. Re-builds the chunk from the
+    /// cached `SplatPoint`s so a redo after a destructive remove is still
+    /// possible. Updates the StampRecord with the new chunkId.
+    @discardableResult
+    func redoStamp() -> Bool {
+        let popped: StampRecord? = editLock.withLock { state in
+            guard !state.stampRedoStack.isEmpty else { return nil as StampRecord? }
+            return state.stampRedoStack.removeLast()
+        }
+        guard let r = popped, let renderer = splatRenderer else { return popped != nil }
+        let recordId = r.recordId
+        let cachedPoints = r.splats
+        let device = self.device
+        Task { [weak self] in
+            do {
+                let chunk = try SplatChunk(device: device, from: cachedPoints)
+                let newId = await renderer.addChunk(chunk)
+                self?.editLock.withLock { state in
+                    state.stampUndoStack.append(StampRecord(
+                        recordId: recordId,
+                        splats: cachedPoints,
+                        chunkId: newId
+                    ))
+                }
+            } catch {
+                Self.log.error("stamp redo failed: \(error.localizedDescription)")
+                self?.editLock.withLock { state in
+                    state.stampUndoStack.append(StampRecord(
+                        recordId: recordId,
+                        splats: cachedPoints,
+                        chunkId: nil
+                    ))
+                }
+            }
+        }
+        return true
+    }
+
+    // MARK: - M7.9 stamp tool internals
+
+    /// Walk the cached `[SplatPoint]` and copy any entry whose position
+    /// falls inside `box` into a new brush. Heavy for very large scenes —
+    /// single-shot CPU O(N), runs once per dual-pinch release. Future:
+    /// accelerate via spatial index.
+    private func captureStampBrush(box: (lo: SIMD3<Float>, hi: SIMD3<Float>)) {
+        guard let loaded = loadedChunkLock.withLock({ $0 }) else { return }
+        var captured: [SplatPoint] = []
+        captured.reserveCapacity(min(loaded.points.count, 4096))
+        let center = (box.lo + box.hi) * 0.5
+        for s in loaded.points {
+            let p = s.position
+            if p.x >= box.lo.x && p.x <= box.hi.x
+                && p.y >= box.lo.y && p.y <= box.hi.y
+                && p.z >= box.lo.z && p.z <= box.hi.z {
+                // Recenter onto brush origin so paste = translate-only.
+                var recentered = s
+                recentered.position = p - center
+                captured.append(recentered)
+            }
+        }
+        guard !captured.isEmpty else { return }
+        let brush = StampBrush(splats: captured, bbox: box, center: center)
+        editLock.withLock { state in
+            state.activeBrush = brush
+        }
+    }
+
+    /// Build a stamped chunk from the active brush at the target world
+    /// position, apply jitter, push onto the renderer asynchronously, and
+    /// record the commit for in-session undo.
+    private func performStampPaste(
+        brush: StampBrush,
+        worldPos: SIMD3<Float>,
+        splatModelInverse: matrix_float4x4,
+        scaleJitter: Float,
+        rotJitterDeg: Float,
+        blendCap: Float
+    ) {
+        let target4 = splatModelInverse * SIMD4<Float>(worldPos.x, worldPos.y, worldPos.z, 1)
+        let targetLocal = SIMD3<Float>(target4.x, target4.y, target4.z)
+        // Per-stamp jitter samples. Scale is uniform within ±scaleJitter
+        // (e.g. 0.10 → 0.90..1.10). In-plane rotation is sampled in
+        // [-rotJitterDeg, +rotJitterDeg] and applied to position only;
+        // covariance rotation deferred to a follow-up.
+        let scaleS: Float = 1 + Float.random(in: -scaleJitter...scaleJitter)
+        let yawRad: Float = Float.random(in: -rotJitterDeg...rotJitterDeg) * .pi / 180
+        let cosY = cos(yawRad), sinY = sin(yawRad)
+
+        var output: [SplatPoint] = []
+        output.reserveCapacity(brush.splats.count)
+        for s in brush.splats {
+            // Probabilistic blend cap: keep each splat with probability
+            // `blendCap`. 1.0 = always; 0 = drop everything.
+            if blendCap < 1.0 && Float.random(in: 0...1) > blendCap { continue }
+            let p = s.position
+            let rx = (p.x * cosY - p.z * sinY) * scaleS
+            let rz = (p.x * sinY + p.z * cosY) * scaleS
+            let ry = p.y * scaleS
+            var copy = s
+            copy.position = SIMD3<Float>(targetLocal.x + rx, targetLocal.y + ry, targetLocal.z + rz)
+            output.append(copy)
+        }
+        guard !output.isEmpty, let renderer = splatRenderer else { return }
+        let recordId = UUID()
+        let cachedPoints = output
+        let device = self.device
+
+        Task { [weak self] in
+            do {
+                let chunk = try SplatChunk(device: device, from: cachedPoints)
+                let chunkId = await renderer.addChunk(chunk)
+                self?.editLock.withLock { state in
+                    state.stampUndoStack.append(StampRecord(
+                        recordId: recordId,
+                        splats: cachedPoints,
+                        chunkId: chunkId
+                    ))
+                    // Any new commit invalidates the redo trail.
+                    state.stampRedoStack.removeAll(keepingCapacity: true)
+                }
+            } catch {
+                Self.log.error("stamp paste failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
     func clearPendingDeletions() {
         editLock.withLock {
             $0.pendingDeletionSpheres = []
@@ -1038,9 +1265,24 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         let pointsCountSnapshot = points.count
         perfLock.withLock { $0.splatPointCount = pointsCountSnapshot }
         let chunk = try SplatChunk(device: device, from: points)
-        await splat.addChunk(chunk)
+        let chunkId = await splat.addChunk(chunk)
         splatRenderer = splat
+        // M7.9 — cache the base chunk + post-deletion `[SplatPoint]` so
+        // the stamp tool can capture from a public type. Memory cost is
+        // ~150 bytes/splat for SH-bearing scenes (the SH coefficient
+        // arrays dominate); acceptable on visionOS hardware.
+        loadedChunkLock.withLock {
+            $0 = LoadedChunk(id: chunkId, chunk: chunk, points: points)
+        }
     }
+
+    /// M7.9 — base scene chunk + cached `[SplatPoint]` recorded at load().
+    /// The stamp tool reads `points` for capture (positions are public on
+    /// `SplatPoint` but internal on `EncodedSplatPoint`). `id` is excluded
+    /// from any stamp-undo removal so the user can't accidentally erase
+    /// the underlying scene.
+    private struct LoadedChunk { let id: ChunkID; let chunk: SplatChunk; let points: [SplatPoint] }
+    private let loadedChunkLock = OSAllocatedUnfairLock(initialState: LoadedChunk?(nil))
 
     /// M6.3 — snap the user's translation so the lowest face of the
     /// splat-local AABB lands on world y=0 under the current transform.
@@ -1391,6 +1633,39 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                 }
                 if pinch.isPinching && !wasPinched {
                     state.commentPinchPending = true
+                }
+            }
+        case .stamp:
+            // Stamp tool: dual-pinch behaves like .box (capture region);
+            // single-pinch (when a brush is loaded) pastes a stamp at the
+            // reticle. We track per-hand state and a single-edge paste flag
+            // so updateNavigation can dispatch on the next frame.
+            editLock.withLock { state in
+                let wasPinched: Bool
+                switch anchor.chirality {
+                case .left:
+                    wasPinched = state.leftWasPinched
+                    state.leftWasPinched = pinch.isPinching
+                    state.leftHandPos = pinch.isPinching ? pinch.position : nil
+                case .right:
+                    wasPinched = state.rightWasPinched
+                    state.rightWasPinched = pinch.isPinching
+                    state.rightHandPos = pinch.isPinching ? pinch.position : nil
+                }
+                // Rising-edge paste: only if a brush is loaded AND the
+                // OTHER hand isn't currently pinching (so dual-pinch is
+                // unambiguously capture, not paste). Without this guard a
+                // dual-pinch start would also enqueue a paste at the
+                // first hand's pinch frame.
+                if pinch.isPinching && !wasPinched, state.activeBrush != nil {
+                    let otherIsPinching: Bool
+                    switch anchor.chirality {
+                    case .left: otherIsPinching = state.rightWasPinched
+                    case .right: otherIsPinching = state.leftWasPinched
+                    }
+                    if !otherIsPinching {
+                        state.stampPastePinchPending = true
+                    }
                 }
             }
         }
@@ -1873,6 +2148,63 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             }
         }
 
+        // M7.9 stamp-tool capture phase: identical AABB tracking to .box,
+        // but on dual-pinch release we sample EncodedSplatPoints from the
+        // base chunk into `state.activeBrush` instead of recording a
+        // pending deletion. Single-hand pinch falls through to the paste
+        // path consumed below.
+        let stampCaptureCommit: (lo: SIMD3<Float>, hi: SIMD3<Float>)? = editLock.withLock { state in
+            guard state.activeTool == .stamp else { return nil as (lo: SIMD3<Float>, hi: SIMD3<Float>)? }
+            let inv = preSplatModel.inverse
+            if let l = state.leftHandPos, let r = state.rightHandPos {
+                let l4 = inv * SIMD4<Float>(l.x, l.y, l.z, 1)
+                let r4 = inv * SIMD4<Float>(r.x, r.y, r.z, 1)
+                let lA = SIMD3<Float>(l4.x, l4.y, l4.z)
+                let rA = SIMD3<Float>(r4.x, r4.y, r4.z)
+                state.liveStampBoxLocal = (simd_min(lA, rA), simd_max(lA, rA))
+                return nil
+            } else if let live = state.liveStampBoxLocal {
+                let extent = live.hi - live.lo
+                state.liveStampBoxLocal = nil
+                if extent.x * extent.y * extent.z > 1e-6 {
+                    return live
+                }
+                return nil
+            }
+            return nil
+        }
+        if let box = stampCaptureCommit {
+            captureStampBrush(box: box)
+        }
+
+        // M7.9 stamp-tool paste phase: rising-edge single pinch with a
+        // loaded brush enqueues the paste via async addChunk on the splat
+        // renderer.
+        let pastePayload: (brush: StampBrush, world: SIMD3<Float>, scaleJitter: Float, rotJitterDeg: Float, blendCap: Float)? = editLock.withLock { state in
+            guard state.activeTool == .stamp,
+                  state.stampPastePinchPending,
+                  let brush = state.activeBrush else { return nil }
+            state.stampPastePinchPending = false
+            let world = state.rightHandPos ?? state.leftHandPos ?? (headPos + forward * Self.reticleDistance)
+            return (
+                brush: brush,
+                world: world,
+                scaleJitter: state.stampScaleJitter,
+                rotJitterDeg: state.stampInPlaneRotationDeg,
+                blendCap: state.stampBlendCap
+            )
+        }
+        if let p = pastePayload {
+            performStampPaste(
+                brush: p.brush,
+                worldPos: p.world,
+                splatModelInverse: preSplatModel.inverse,
+                scaleJitter: p.scaleJitter,
+                rotJitterDeg: p.rotJitterDeg,
+                blendCap: p.blendCap
+            )
+        }
+
         // Lasso-tool: while pinching one hand, sample the hand position into
         // the polyline. On release, commit the polygon projected onto the
         // gaze plane captured at first sample.
@@ -2012,6 +2344,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
         pendingDeletionBoxes: [DeletionBox],
         pendingDeletionLassos: [DeletionLasso],
         liveBoxLocal: (lo: SIMD3<Float>, hi: SIMD3<Float>)?,
+        liveStampBoxLocal: (lo: SIMD3<Float>, hi: SIMD3<Float>)? = nil,
         liveLasso: LassoLiveState?,
         brushRadius: Float,
         brushPreviewWorldPos: SIMD3<Float>?,
@@ -2285,6 +2618,17 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                     }
                 }
             }
+        case .stamp:
+            // Live capture box preview while both hands are pinching.
+            if let live = liveStampBoxLocal {
+                Self.appendBoxCorners(
+                    markers: &markers,
+                    lo: live.lo,
+                    hi: live.hi,
+                    splatModelMatrix: splatModelMatrix,
+                    color: SIMD4<Float>(0.40, 0.85, 1.0, 0.55)
+                )
+            }
         case .view, .calibrate, .waypoint, .hotspot, .comment:
             break
         }
@@ -2419,6 +2763,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             pendingDeletionBoxes: [DeletionBox],
             pendingDeletionLassos: [DeletionLasso],
             liveBoxLocal: (lo: SIMD3<Float>, hi: SIMD3<Float>)?,
+            liveStampBoxLocal: (lo: SIMD3<Float>, hi: SIMD3<Float>)?,
             liveLasso: LassoLiveState?,
             brushRadius: Float,
             brushPreview: SIMD3<Float>?,
@@ -2439,6 +2784,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
                 $0.pendingDeletionBoxes,
                 $0.pendingDeletionLassos,
                 $0.liveBoxLocal,
+                $0.liveStampBoxLocal,
                 $0.lassoLive,
                 $0.brushRadius,
                 $0.brushPreviewWorldPos,
@@ -2463,6 +2809,7 @@ final class SplatImmersiveRenderer: @unchecked Sendable {
             pendingDeletionBoxes: editSnapshot.pendingDeletionBoxes,
             pendingDeletionLassos: editSnapshot.pendingDeletionLassos,
             liveBoxLocal: editSnapshot.liveBoxLocal,
+            liveStampBoxLocal: editSnapshot.liveStampBoxLocal,
             liveLasso: editSnapshot.liveLasso,
             brushRadius: editSnapshot.brushRadius,
             brushPreviewWorldPos: editSnapshot.brushPreview,

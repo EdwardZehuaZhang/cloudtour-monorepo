@@ -855,7 +855,7 @@
         "xcodebuild green"
       ],
       "priority": 52,
-      "passes": false,
+      "passes": true,
       "notes": "Was M6.17. Concept-only borrow from SplatPainting per `.docs/architecture/splatpainting-evaluation.md` (no code, no weights). Depends on US-049, US-001 (M5.1 undo, shipped)."
     }
   ]

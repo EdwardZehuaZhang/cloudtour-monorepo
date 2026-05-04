@@ -1285,3 +1285,30 @@ Files: `cloudtour-avp/METALSPLATTER_FORK_PLAN.md`, `prd.json`, `progress.txt`. P
   - When a Ralph story's acceptance bullets demand a third-party-API change, audit the fork plan FIRST. Don't start the AVP-side work expecting to backfill the fork mid-story; you'll either ship a non-passing partial or expand the fork's scope without explicit alignment.
   - Out-of-scope items in `METALSPLATTER_FORK_PLAN.md` are deliberate boundaries — re-sorting and chunk-append both have correctness implications upstream and are exactly the kind of change that needs its own milestone, not a per-story carve-out.
 ---
+
+## 2026-05-04 - US-052 (AVP M7.9 stamp / clone tool)
+- Re-evaluated the earlier "blocked on fork scope expansion" verdict. SplatRenderer.addChunk is already public + multi-chunk-safe; a stamp commit can produce a *new* chunk rather than mutating the base chunk in place. No `chunk-append` topic on the fork was required.
+- Capture path can't read positions from `EncodedSplatPoint` outside the MetalSplatter module — its fields (`position`, `colorSH0`, `covA`, `covB`) are internal even though the struct itself is public. Worked around by caching the post-deletion `[SplatPoint]` array on `SplatImmersiveRenderer` at `load()` time (positions and SH coefficients are public on `SplatPoint`). Cost is ~150 bytes/splat for SH-bearing scenes — acceptable on visionOS hardware for editor sessions.
+- Renderer (`SplatImmersiveRenderer.swift`):
+  - New `ToolMode.stamp` case (`Tools/EditTool.swift`).
+  - `EditState`: `activeBrush: StampBrush?`, `liveStampBoxLocal`, `stampPastePinchPending`, `stampUndoStack`/`stampRedoStack: [StampRecord]`, jitter sliders (`stampScaleJitter`, `stampInPlaneRotationDeg`, `stampBlendCap`).
+  - `StampBrush` / `StampRecord` use `[SplatPoint]` rather than `[EncodedSplatPoint]` because `SplatPoint` is properly `Sendable`, and its `position` is publicly mutable so we can recenter on capture.
+  - Capture: dual-pinch + drag in `.stamp` mirrors the box gesture; on release, `captureStampBrush(box:)` walks `loadedChunkLock`'s cached points, filters by AABB, recenters onto brush origin, and stashes the result. Heavy (O(N) scan per capture) but single-shot.
+  - Paste: rising-edge single pinch (gated to NOT fire during dual-pinch via the other-hand check in `processHandUpdate`) enqueues `performStampPaste(...)`. The async path computes a per-stamp scale + in-plane yaw, applies probabilistic blend-cap drop, builds a new SplatChunk from the transformed `[SplatPoint]`, awaits `addChunk`, and pushes a `StampRecord` with the resulting `ChunkID`.
+  - In-plane rotation is applied to positions only; covariance rotation is intentionally deferred (visual artifact at ±15° is small). Documented in the inspector copy.
+  - Undo path: `undoStamp()` removes the most recent stamp's chunk via `removeChunk(id)` and pushes onto the redo stack. `redoStamp()` rebuilds the chunk from the cached points (each StampRecord retains its `[SplatPoint]`) and re-adds. Both wired to ⌘⌥Z / ⌘⌥⇧Z so they don't collide with the main edit-history ⌘Z.
+  - `loadedChunkLock` caches `(ChunkID, SplatChunk, [SplatPoint])` at load — never removed via stamp-undo so the underlying scene is safe.
+- SwiftUI (`SplatViewerView.swift`):
+  - `.stamp` tag in the tool picker (SF Symbol `wand.and.stars`).
+  - `editingInstructions` `.stamp` case.
+  - New `stampInspectorPanel`: brush summary (count + extent), three sliders (scale jitter 0–50%, rotation jitter 0–45°, blend cap 0–100%), Clear / Undo / Redo buttons with ⌘⌥Z / ⌘⌥⇧Z shortcuts, full a11y labels.
+  - Autosave-loop tick refreshes `stampBrushSummary` + `stampUndoDepth` / `stampRedoDepth` whenever `activeTool == .stamp`.
+- xcodebuild visionOS Simulator: BUILD SUCCEEDED. `pnpm typecheck`: 5/5.
+- Files: `cloudtour-avp/CloudTourVision/Viewer/Tools/EditTool.swift`, `cloudtour-avp/CloudTourVision/Viewer/SplatImmersiveRenderer.swift`, `cloudtour-avp/CloudTourVision/Viewer/SplatViewerView.swift`, `prd.json`, `progress.txt`.
+- **Learnings for future iterations:**
+  - Before declaring a story blocked on fork scope, audit the alternative: `SplatRenderer.addChunk` accepting fresh chunks at runtime is already multi-chunk-safe; producing a new chunk per stamp side-steps any mutable-append API gap.
+  - `EncodedSplatPoint`'s fields are internal even though the struct is public. Holding `[SplatPoint]` for capture sidesteps the access-modifier wall and keeps the fork patch small.
+  - Swift 6 `@Sendable` lock closures forbid mutation of captured `var` — convert to `let result = lock.withLock { state in ...; return value }` patterns. Same trick we use for `presence` / `aabb` locks.
+  - Per-stamp ⌘⌥Z keeps the stamp undo isolated from the main `recordHistory` undo chain. The two histories live in the same `EditState` but never touch each other; stamps never appear in the persisted SaveAll surface, so they don't belong on the main undo stack.
+  - Covariance rotation is the right "ship a v2" deferral. Position-only rotation at ±15° is acceptable for non-photoreal stamps; covariance rotation requires R·M·R^T on the half-precision packed form, which is tedious without a vector-math helper. Defer to a follow-up.
+---

@@ -24,6 +24,13 @@ struct SplatViewerView: View {
     @State private var selectedPendingCommentId: UUID? = nil
     @State private var selectedCommittedCommentId: UUID? = nil
     @State private var commentReplyDraft: String = ""
+    // M7.9 — stamp tool inspector mirror.
+    @State private var stampScaleJitter: Double = 0.10
+    @State private var stampRotationJitterDeg: Double = 15
+    @State private var stampBlendCap: Double = 1.0
+    @State private var stampBrushSummary: (count: Int, extent: SIMD3<Float>)? = nil
+    @State private var stampUndoDepth: Int = 0
+    @State private var stampRedoDepth: Int = 0
     // M7.6 — Realtime presence + scene_edits conflict.
     @State private var presence = EditorPresence()
     @State private var profileDisplayName: String = ""
@@ -884,6 +891,9 @@ struct SplatViewerView: View {
                         var ticks = 0
                         while !Task.isCancelled, isEditingMode {
                             refreshHistoryDepth()
+                            if activeTool == .stamp {
+                                refreshStampPanel()
+                            }
                             if pendingPanelExpanded || activeTool == .hotspot || activeTool == .comment {
                                 refreshPanelSnapshots()
                             }
@@ -1039,6 +1049,12 @@ struct SplatViewerView: View {
                 Text("• Aim where you want a comment, then pinch to drop one")
                 Text("• Aim + pinch on an existing comment to open its thread")
                 Text("• Save publishes pending comments to your team")
+            case .stamp:
+                Text("Capture a region and stamp copies elsewhere")
+                    .font(.headline)
+                Text("• Dual-pinch + spread to define a capture box, release to load brush")
+                Text("• Single-pinch deposits a stamp at the reticle (jitter applied)")
+                Text("• Cmd-Z undoes the last stamp; in-session only — not persisted on Save")
             }
         }
         .font(.callout)
@@ -1301,6 +1317,134 @@ struct SplatViewerView: View {
                 .font(.callout)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// M7.9 — stamp tool inspector. Brush summary, jitter sliders, blend
+    /// cap, and dedicated undo / redo for in-session stamp commits.
+    @ViewBuilder
+    private var stampInspectorPanel: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Stamp brush")
+                    .font(.headline)
+                Spacer()
+                if let s = stampBrushSummary {
+                    Text("\(s.count) splats · \(String(format: "%.2f×%.2f×%.2f m", s.extent.x, s.extent.y, s.extent.z))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("No brush — dual-pinch a region to capture")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+
+            HStack(spacing: 8) {
+                Text("Scale jitter")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 110, alignment: .leading)
+                Slider(value: $stampScaleJitter, in: 0...0.5)
+                    .onChange(of: stampScaleJitter) { _, _ in pushStampJitter() }
+                    .accessibilityLabel("Stamp scale jitter")
+                    .accessibilityValue("plus or minus \(Int(stampScaleJitter * 100)) percent")
+                Text("±\(Int(stampScaleJitter * 100))%")
+                    .font(.caption)
+                    .monospacedDigit()
+                    .frame(width: 56, alignment: .trailing)
+            }
+            HStack(spacing: 8) {
+                Text("Rotation jitter")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 110, alignment: .leading)
+                Slider(value: $stampRotationJitterDeg, in: 0...45)
+                    .onChange(of: stampRotationJitterDeg) { _, _ in pushStampJitter() }
+                    .accessibilityLabel("Stamp in-plane rotation jitter")
+                    .accessibilityValue("plus or minus \(Int(stampRotationJitterDeg)) degrees")
+                Text("±\(Int(stampRotationJitterDeg))°")
+                    .font(.caption)
+                    .monospacedDigit()
+                    .frame(width: 56, alignment: .trailing)
+            }
+            HStack(spacing: 8) {
+                Text("Blend cap")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 110, alignment: .leading)
+                Slider(value: $stampBlendCap, in: 0...1)
+                    .onChange(of: stampBlendCap) { _, _ in pushStampBlendCap() }
+                    .accessibilityLabel("Stamp blend cap density")
+                    .accessibilityValue("\(Int(stampBlendCap * 100)) percent")
+                Text("\(Int(stampBlendCap * 100))%")
+                    .font(.caption)
+                    .monospacedDigit()
+                    .frame(width: 56, alignment: .trailing)
+            }
+
+            HStack(spacing: 12) {
+                Button(role: .destructive) {
+                    SplatImmersiveRenderer.currentRenderer?.clearStampBrush()
+                    refreshStampPanel()
+                } label: {
+                    Label("Clear brush", systemImage: "trash")
+                        .font(.callout)
+                }
+                .buttonStyle(.bordered)
+                .disabled(stampBrushSummary == nil)
+                .accessibilityLabel("Clear stamp brush")
+
+                Spacer()
+
+                Button {
+                    SplatImmersiveRenderer.currentRenderer?.undoStamp()
+                    refreshStampPanel()
+                } label: {
+                    Label("Undo stamp", systemImage: "arrow.uturn.backward")
+                        .font(.callout)
+                }
+                .buttonStyle(.bordered)
+                .disabled(stampUndoDepth == 0)
+                .keyboardShortcut("z", modifiers: [.command, .option])
+                .accessibilityLabel("Undo last stamp")
+                .accessibilityHint("Removes the most recently stamped chunk. Cmd-Option-Z.")
+
+                Button {
+                    SplatImmersiveRenderer.currentRenderer?.redoStamp()
+                    refreshStampPanel()
+                } label: {
+                    Label("Redo stamp", systemImage: "arrow.uturn.forward")
+                        .font(.callout)
+                }
+                .buttonStyle(.bordered)
+                .disabled(stampRedoDepth == 0)
+                .keyboardShortcut("z", modifiers: [.command, .option, .shift])
+                .accessibilityLabel("Redo last stamp")
+                .accessibilityHint("Re-applies the most recently undone stamp. Cmd-Option-Shift-Z.")
+            }
+        }
+        .frame(maxWidth: 520, alignment: .leading)
+        .padding(.horizontal, 4)
+    }
+
+    private func pushStampJitter() {
+        SplatImmersiveRenderer.currentRenderer?.setStampJitter(
+            scale: Float(stampScaleJitter),
+            rotationDeg: Float(stampRotationJitterDeg)
+        )
+    }
+
+    private func pushStampBlendCap() {
+        SplatImmersiveRenderer.currentRenderer?.setStampBlendCap(Float(stampBlendCap))
+    }
+
+    private func refreshStampPanel() {
+        stampBrushSummary = SplatImmersiveRenderer.currentRenderer?
+            .snapshotStampBrush().map { (count: $0.splatCount, extent: $0.extent) }
+        let depth = SplatImmersiveRenderer.currentRenderer?
+            .snapshotStampUndoDepth() ?? (undo: 0, redo: 0)
+        stampUndoDepth = depth.undo
+        stampRedoDepth = depth.redo
     }
 
     /// `selectedPendingHotspotId`. Selection follows the most recent
@@ -1608,6 +1752,7 @@ struct SplatViewerView: View {
                 Label("Brush", systemImage: "paintbrush.pointed").tag(ToolMode.brush)
                 Label("Box", systemImage: "cube.transparent").tag(ToolMode.box)
                 Label("Lasso", systemImage: "lasso").tag(ToolMode.lasso)
+                Label("Stamp", systemImage: "wand.and.stars").tag(ToolMode.stamp)
             }
             .pickerStyle(.segmented)
             .frame(maxWidth: 520)
@@ -1646,6 +1791,9 @@ struct SplatViewerView: View {
             }
             if activeTool == .hotspot {
                 hotspotInspectorPanel
+            }
+            if activeTool == .stamp {
+                stampInspectorPanel
             }
 
             // Brush-mode radius slider

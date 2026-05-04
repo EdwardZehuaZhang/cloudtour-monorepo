@@ -13,6 +13,11 @@ enum ToolMode: String, Codable, Hashable, Sendable, CaseIterable {
     case lasso
     case hotspot
     case comment
+    /// M7.9 — capture-and-stamp tool. Pinch+drag both hands to define a
+    /// capture box; release to load it as the active brush. Single-pinch
+    /// thereafter deposits a stamped copy at the reticle, with jitter +
+    /// blend cap applied per the inspector sliders.
+    case stamp
 }
 
 extension SceneTransform {
