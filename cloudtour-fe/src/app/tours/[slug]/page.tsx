@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createServerClient } from "@cloudtour/db";
-import type { CameraPosition, Position3D, ContentType, SplatFileFormat } from "@cloudtour/types";
+import type { CameraPosition, Position3D, ContentType, SplatFileFormat, SceneEdits } from "@cloudtour/types";
 import { TourViewerPage } from "@/components/tour-viewer/tour-viewer-page";
 
 interface PageProps {
@@ -15,6 +15,8 @@ interface WaypointRow {
   label: string;
   icon: string | null;
   position_3d: Position3D;
+  target_position_3d: Position3D | null;
+  target_yaw: number | null;
 }
 
 interface HotspotRow {
@@ -38,6 +40,7 @@ interface SceneRow {
   splat_file_format: SplatFileFormat | null;
   thumbnail_url: string | null;
   default_camera_position: CameraPosition | null;
+  scene_edits: SceneEdits | null;
 }
 
 async function getTour(slug: string) {
@@ -57,7 +60,7 @@ async function getTour(slug: string) {
   const { data: rawScenes } = await supabase
     .from("scenes")
     .select(
-      "id, tour_id, title, description, sort_order, splat_url, splat_file_format, thumbnail_url, default_camera_position"
+      "id, tour_id, title, description, sort_order, splat_url, splat_file_format, thumbnail_url, default_camera_position, scene_edits"
     )
     .eq("tour_id", tour.id)
     .order("sort_order", { ascending: true });
@@ -72,7 +75,7 @@ async function getTour(slug: string) {
     const [wpResult, hsResult] = await Promise.all([
       supabase
         .from("waypoints")
-        .select("id, scene_id, target_scene_id, label, icon, position_3d")
+        .select("id, scene_id, target_scene_id, label, icon, position_3d, target_position_3d, target_yaw")
         .in("scene_id", sceneIds),
       supabase
         .from("hotspots")

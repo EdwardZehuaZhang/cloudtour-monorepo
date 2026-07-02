@@ -27,6 +27,13 @@ export interface Position3D {
   z: number;
 }
 
+export interface Quaternion {
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+}
+
 export interface CameraPosition {
   position: Position3D;
   target: Position3D;
@@ -36,6 +43,49 @@ export interface ScenePosition {
   scene_id: string;
   x: number;
   y: number;
+}
+
+// ─── AVP Editor Edit-List ───────────────────────────────────────────────────
+//
+// Non-destructive edit-list produced by the visionOS in-scene editor and
+// applied at draw time on both AVP and web. NULL on the scene record means
+// identity transform + no deletions.
+
+export interface SceneTransform {
+  scale: number;
+  rotation: Quaternion;
+  translation: Position3D;
+}
+
+export interface DeletionSphere {
+  center: [number, number, number];
+  radius: number;
+}
+
+export interface DeletionBox {
+  min: [number, number, number];
+  max: [number, number, number];
+}
+
+/** Lasso recorded as a polygon on a plane (plane = ax+by+cz+d). */
+export interface DeletionLasso {
+  plane: [number, number, number, number];
+  polygon: [number, number][];
+}
+
+export interface SceneDeletions {
+  /** Base64-packed bitset over splat indices (one bit per splat, deleted = 1). */
+  indices?: string;
+  spheres?: DeletionSphere[];
+  boxes?: DeletionBox[];
+  lassos?: DeletionLasso[];
+}
+
+export interface SceneEdits {
+  /** Monotonic version, bumped on every save. Used for optimistic concurrency. */
+  version: number;
+  transform: SceneTransform;
+  deletions: SceneDeletions;
 }
 
 // ─── Database Table Interfaces ──────────────────────────────────────────────
@@ -100,6 +150,7 @@ export interface Scene {
   splat_file_format: SplatFileFormat | null;
   thumbnail_url: string | null;
   default_camera_position: CameraPosition | null;
+  scene_edits: SceneEdits | null;
   created_at: string;
   updated_at: string;
 }
@@ -111,6 +162,8 @@ export interface Waypoint {
   label: string;
   icon: string | null;
   position_3d: Position3D;
+  target_position_3d: Position3D | null;
+  target_yaw: number | null;
   created_at: string;
   updated_at: string;
 }

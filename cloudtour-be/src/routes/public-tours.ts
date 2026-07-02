@@ -5,8 +5,8 @@ import { createHash } from "crypto";
 export const publicTourRoutes = new Hono();
 
 /**
- * GET /api/tours ¡ª Returns paginated, filterable published tours.
- * Public endpoint ¡ª no auth required.
+ * GET /api/tours ï¿½ï¿½ Returns paginated, filterable published tours.
+ * Public endpoint ï¿½ï¿½ no auth required.
  */
 publicTourRoutes.get("/tours", async (c) => {
   const page = Math.max(1, parseInt(c.req.query("page") ?? "1") || 1);
@@ -92,8 +92,8 @@ publicTourRoutes.get("/tours", async (c) => {
 });
 
 /**
- * GET /api/tours/:slug ¡ª Returns a published tour with scenes, waypoints, and hotspots.
- * Public endpoint ¡ª no auth required.
+ * GET /api/tours/:slug ï¿½ï¿½ Returns a published tour with scenes, waypoints, and hotspots.
+ * Public endpoint ï¿½ï¿½ no auth required.
  */
 publicTourRoutes.get("/tours/:slug", async (c) => {
   const slug = c.req.param("slug");
@@ -110,7 +110,7 @@ publicTourRoutes.get("/tours/:slug", async (c) => {
 
   const { data: scenes } = await supabase
     .from("scenes")
-    .select("id, tour_id, title, description, sort_order, splat_url, splat_file_format, thumbnail_url, default_camera_position, created_at, updated_at")
+    .select("id, tour_id, title, description, sort_order, splat_url, splat_file_format, thumbnail_url, default_camera_position, scene_edits, created_at, updated_at")
     .eq("tour_id", tour.id).order("sort_order", { ascending: true });
 
   const sceneIds = (scenes ?? []).map((s: { id: string }) => s.id);
@@ -119,7 +119,7 @@ publicTourRoutes.get("/tours/:slug", async (c) => {
 
   if (sceneIds.length > 0) {
     const [wpResult, hsResult] = await Promise.all([
-      supabase.from("waypoints").select("id, scene_id, target_scene_id, label, icon, position_3d, created_at, updated_at").in("scene_id", sceneIds),
+      supabase.from("waypoints").select("id, scene_id, target_scene_id, label, icon, position_3d, target_position_3d, target_yaw, created_at, updated_at").in("scene_id", sceneIds),
       supabase.from("hotspots").select("id, scene_id, title, content_type, content_markdown, media_url, icon, position_3d, created_at, updated_at").in("scene_id", sceneIds),
     ]);
     waypointRows = wpResult.data ?? [];
@@ -149,8 +149,8 @@ publicTourRoutes.get("/tours/:slug", async (c) => {
 });
 
 /**
- * POST /api/tours/:slug/view ¡ª Increment view count (deduped by IP).
- * Public endpoint ¡ª no auth required.
+ * POST /api/tours/:slug/view ï¿½ï¿½ Increment view count (deduped by IP).
+ * Public endpoint ï¿½ï¿½ no auth required.
  */
 publicTourRoutes.post("/tours/:slug/view", async (c) => {
   const slug = c.req.param("slug");

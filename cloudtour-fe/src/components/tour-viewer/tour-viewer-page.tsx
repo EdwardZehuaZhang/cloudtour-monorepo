@@ -8,6 +8,7 @@ import type {
   Position3D,
   ContentType,
   SplatFileFormat,
+  SceneEdits,
 } from "@cloudtour/types";
 import { SplatViewer } from "@/components/viewer/splat-viewer";
 import { ViewerOverlay } from "@/components/viewer/viewer-overlay";
@@ -27,6 +28,7 @@ interface TourScene {
   splat_file_format: SplatFileFormat | null;
   thumbnail_url: string | null;
   default_camera_position: CameraPosition | null;
+  scene_edits: SceneEdits | null;
   waypoints: Array<{
     id: string;
     scene_id: string;
@@ -34,6 +36,8 @@ interface TourScene {
     label: string;
     icon: string | null;
     position_3d: Position3D;
+    target_position_3d: Position3D | null;
+    target_yaw: number | null;
   }>;
   hotspots: Array<{
     id: string;
@@ -166,6 +170,7 @@ export function TourViewerPage({ tour, slug }: TourViewerPageProps) {
                 thumbnailUrl={activeScene.thumbnail_url ?? undefined}
                 initialCameraPosition={initialPosition}
                 initialCameraLookAt={initialLookAt}
+                sceneEdits={activeScene.scene_edits ?? null}
                 className="w-full h-full"
                 onShare={handleShare}
               >

@@ -20,12 +20,18 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSHandsTrackingUsageDescription</key>
+	<string>CloudTour uses hand tracking so you can pinch to navigate within immersive Gaussian splat tours.</string>
+	<key>NSWorldSensingUsageDescription</key>
+	<string>CloudTour uses spatial awareness to anchor immersive tours to your surroundings.</string>
 	<key>SUPABASE_HOST</key>
 	<string>$(SUPABASE_HOST)</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
 	<key>API_BASE_URL</key>
 	<string>$(API_BASE_URL)</string>
+	<key>GoogleMapsAPIKey</key>
+	<string>$(GOOGLE_MAPS_API_KEY)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

@@ -84,6 +84,7 @@ export function EditorViewport({
           ? [cameraPos.target.x, cameraPos.target.y, cameraPos.target.z]
           : undefined
       }
+      sceneEdits={scene.scene_edits ?? null}
     >
       <EditorMarkersOverlay
         waypoints={waypoints}

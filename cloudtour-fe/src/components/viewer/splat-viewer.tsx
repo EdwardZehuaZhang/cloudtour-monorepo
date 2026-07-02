@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { Maximize2, Share2 } from "lucide-react";
+import type { SceneEdits } from "@cloudtour/types";
 import { ViewerProvider } from "./viewer-context";
 import { WebXRButton } from "./webxr-button";
 
@@ -25,6 +26,12 @@ export interface SplatViewerProps {
   initialCameraPosition?: [number, number, number];
   /** Camera look‑at target [x, y, z] */
   initialCameraLookAt?: [number, number, number];
+  /**
+   * Non-destructive edits authored on AVP (calibrated transform + future
+   * deletion masks). Only `transform` is applied at this milestone — deletion
+   * culling lands in M4.
+   */
+  sceneEdits?: SceneEdits | null;
   /** Extra class names for the container */
   className?: string;
   /** Optional children rendered on top of the viewer (waypoints, hotspots) */
@@ -47,6 +54,7 @@ export function SplatViewer({
   thumbnailUrl,
   initialCameraPosition = [0, 10, 15],
   initialCameraLookAt = [0, 0, 0],
+  sceneEdits,
   className,
   children,
   onShare,
@@ -116,9 +124,21 @@ export function SplatViewer({
         }, 80);
 
         console.log('[SplatViewer] calling addSplatScene, src=', src);
+        const transformOptions: {
+          position?: [number, number, number];
+          rotation?: [number, number, number, number];
+          scale?: [number, number, number];
+        } = {};
+        if (sceneEdits?.transform) {
+          const t = sceneEdits.transform;
+          transformOptions.position = [t.translation.x, t.translation.y, t.translation.z];
+          transformOptions.rotation = [t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w];
+          transformOptions.scale = [t.scale, t.scale, t.scale];
+        }
         await viewer.addSplatScene(src, {
           showLoadingUI: false,
           progressiveLoad: true,
+          ...transformOptions,
         });
 
         if (disposed) {

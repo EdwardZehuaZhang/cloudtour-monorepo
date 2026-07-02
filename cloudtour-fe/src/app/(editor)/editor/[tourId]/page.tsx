@@ -46,7 +46,7 @@ export default async function EditorPage({
   // Fetch scenes for this tour
   const { data: scenes } = await supabase
     .from("scenes")
-    .select("id, tour_id, title, description, sort_order, splat_url, splat_file_format, thumbnail_url, default_camera_position")
+    .select("id, tour_id, title, description, sort_order, splat_url, splat_file_format, thumbnail_url, default_camera_position, scene_edits")
     .eq("tour_id", tourId)
     .order("sort_order", { ascending: true });
 
@@ -74,6 +74,7 @@ export default async function EditorPage({
         splat_file_format: s.splat_file_format as "ply" | "splat" | "spz" | null,
         thumbnail_url: s.thumbnail_url,
         default_camera_position: s.default_camera_position as { position: { x: number; y: number; z: number }; target: { x: number; y: number; z: number } } | null,
+        scene_edits: s.scene_edits as import("@cloudtour/types").SceneEdits | null,
       }))}
       userRole={member.role as "owner" | "admin" | "editor" | "viewer"}
     />

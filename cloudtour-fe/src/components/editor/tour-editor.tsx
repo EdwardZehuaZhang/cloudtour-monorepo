@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { TourStatus, TourCategory, Role, SplatFileFormat, CameraPosition, Position3D, ContentType } from "@cloudtour/types";
+import type { TourStatus, TourCategory, Role, SplatFileFormat, CameraPosition, Position3D, ContentType, SceneEdits } from "@cloudtour/types";
 import { EditorHeader } from "./editor-header";
 import { SceneList } from "./scene-list";
 import { InspectorPanel } from "./inspector-panel";
@@ -37,6 +37,7 @@ export interface EditorScene {
   splat_file_format: SplatFileFormat | null;
   thumbnail_url: string | null;
   default_camera_position: CameraPosition | null;
+  scene_edits: SceneEdits | null;
 }
 
 interface TourEditorProps {

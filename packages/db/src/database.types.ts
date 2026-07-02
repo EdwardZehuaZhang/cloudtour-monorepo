@@ -179,6 +179,7 @@ export interface Database {
           splat_file_format: "ply" | "splat" | "spz" | null;
           thumbnail_url: string | null;
           default_camera_position: Json | null;
+          scene_edits: Json | null;
           created_at: string;
           updated_at: string;
         };
@@ -192,6 +193,7 @@ export interface Database {
           splat_file_format?: "ply" | "splat" | "spz" | null;
           thumbnail_url?: string | null;
           default_camera_position?: Json | null;
+          scene_edits?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -205,6 +207,7 @@ export interface Database {
           splat_file_format?: "ply" | "splat" | "spz" | null;
           thumbnail_url?: string | null;
           default_camera_position?: Json | null;
+          scene_edits?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -218,6 +221,8 @@ export interface Database {
           label: string;
           icon: string | null;
           position_3d: Json;
+          target_position_3d: Json | null;
+          target_yaw: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -228,6 +233,8 @@ export interface Database {
           label: string;
           icon?: string | null;
           position_3d: Json;
+          target_position_3d?: Json | null;
+          target_yaw?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -238,6 +245,8 @@ export interface Database {
           label?: string;
           icon?: string | null;
           position_3d?: Json;
+          target_position_3d?: Json | null;
+          target_yaw?: number | null;
           created_at?: string;
           updated_at?: string;
         };
