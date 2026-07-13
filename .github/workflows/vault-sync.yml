@@ -62,7 +62,7 @@ jobs:
       - name: Checkout vault
         uses: actions/checkout@v4
         with:
-          repository: Kelin-Studio/edward-obsidian-vault
+          repository: Kelin-Studio/kelin-studio-vault
           token: ${{ secrets.VAULT_SYNC_TOKEN }}
           path: _vault
           fetch-depth: 1
